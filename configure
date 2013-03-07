@@ -152,6 +152,9 @@ if $cchecklink; then
   fi
 fi
 
+# "Generate" Makefile.local if not existing
+[ -e Makefile.local ] || cp Makefile.local.default Makefile.local
+
 # Generate Makefile.config
 
 rm -f Makefile.config
