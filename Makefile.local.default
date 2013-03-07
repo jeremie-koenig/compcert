@@ -5,7 +5,7 @@ MYCOQDEP=coqdep
 MYCOQDOC=coqdoc
 MYCOQEXEC=coqtop
 MYCOQCHK=coqchk
-MYCOQTOP=mycoqtop
+MYCOQTOP=coqtop
 
 MYOCAMLBUILD=ocamlbuild
 MYOCB_OPTIONS=
