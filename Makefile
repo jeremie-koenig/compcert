@@ -17,14 +17,16 @@ DIRS=lib common $(ARCH)/$(VARIANT) $(ARCH) backend cfrontend driver \
 
 INCLUDES=$(patsubst %,-I %, $(DIRS))
 
-COQC=coqc -q $(INCLUDES)
-COQDEP=coqdep $(INCLUDES)
-COQDOC=coqdoc
-COQEXEC=coqtop $(INCLUDES) -batch -load-vernac-source
-COQCHK=coqchk $(INCLUDES)
+#Allows to specify Coq, OCaml and ocamlbuild locations and options.
+include Makefile.local
 
-OCAMLBUILD=ocamlbuild
-OCB_OPTIONS=\
+COQC=$(MYCOQC) -q $(INCLUDES)
+COQDEP=$(MYCOQDEP) $(INCLUDES)
+COQDOC=$(MYCOQDOC)
+COQEXEC=$(MYCOQTOP) $(INCLUDES) -batch -load-vernac-source
+COQCHK=$(MYCOQCHK) $(INCLUDES)
+OCAMLBUILD=$(MYOCAMLBUILD)
+OCB_OPTIONS=$(MYOCB_OPTIONS)\
   -j 2 \
   -no-hygiene \
   -no-links \
@@ -174,13 +176,13 @@ documentation: doc/coq2html $(FILES)
 	cp doc/coq2html.css doc/coq2html.js doc/html/
 
 doc/coq2html: doc/coq2html.ml
-	ocamlopt -o doc/coq2html str.cmxa doc/coq2html.ml
+	$(OCAMLOPT) -o doc/coq2html str.cmxa doc/coq2html.ml
 
 doc/coq2html.ml: doc/coq2html.mll
-	ocamllex doc/coq2html.mll
+	$(OCAMLLEX) doc/coq2html.mll
 
 tools/ndfun: tools/ndfun.ml
-	ocamlopt -o tools/ndfun str.cmxa tools/ndfun.ml
+	$(OCAMLOPT) -o tools/ndfun str.cmxa tools/ndfun.ml
 
 latexdoc:
 	cd doc; $(COQDOC) --latex -o doc/doc.tex -g $(FILES)
