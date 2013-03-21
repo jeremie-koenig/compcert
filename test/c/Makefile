@@ -13,13 +13,13 @@ TIME=xtime -o /dev/null -mintime 1.0     # Xavier's hack
 PROGS=fib integr qsort fft sha1 aes almabench lists \
   binarytrees fannkuch knucleotide mandelbrot nbody \
   nsieve nsievebits spectral vmach \
-  bisect chomp perlin floats
+  bisect chomp perlin floats floats-basics
 
-PROGS_INTERP=floats
-
-all_s: $(PROGS:%=%.s)
+PROGS_INTERP=floats floats-basics
 
 all: $(PROGS:%=%.compcert)
+
+all_s: $(PROGS:%=%.s)
 
 all_gcc: $(PROGS:%=%.gcc)
 

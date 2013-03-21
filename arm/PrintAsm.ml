@@ -226,33 +226,13 @@ let call_helper oc fn dst arg1 arg2 =
 
 (* Handling of annotations *)
 
-let re_annot_param = Str.regexp "%%\\|%[1-9][0-9]*"
-
-let print_annot_text print_arg oc txt args =
+let print_annot_stmt oc txt targs args =
   fprintf oc "%s annotation: " comment;
-  let print_fragment = function
-  | Str.Text s ->
-      output_string oc s
-  | Str.Delim "%%" ->
-      output_char oc '%'
-  | Str.Delim s ->
-      let n = int_of_string (String.sub s 1 (String.length s - 1)) in
-      try
-        print_arg oc (List.nth args (n-1))
-      with Failure _ ->
-        fprintf oc "<bad parameter %s>" s in
-  List.iter print_fragment (Str.full_split re_annot_param txt);
-  fprintf oc "\n"
-
-let print_annot_stmt oc txt args =
-  let print_annot_param oc = function
-  | APreg r -> preg oc r
-  | APstack(chunk, ofs) ->
-      fprintf oc "mem(R1 + %a, %a)" coqint ofs coqint (size_chunk chunk) in
-  print_annot_text print_annot_param oc txt args
+  PrintAnnot.print_annot_stmt preg "sp" oc txt targs args
 
 let print_annot_val oc txt args res =
-  print_annot_text preg oc txt args;
+  fprintf oc "%s annotation: " comment;
+  PrintAnnot.print_annot_val preg oc txt args;
   match args, res with
   | IR src :: _, IR dst ->
       if dst = src then 0 else (fprintf oc "	mov	%a, %a\n" ireg dst ireg src; 1)
@@ -326,49 +306,65 @@ let print_builtin_memcpy oc sz al args =
 
 (* Handling of volatile reads and writes *)
 
+let print_builtin_vload_common oc chunk args res =
+  match chunk, args, res with
+  | Mint8unsigned, [IR addr], IR res ->
+      fprintf oc "	ldrb	%a, [%a, #0]\n" ireg res ireg addr; 1
+  | Mint8signed, [IR addr], IR res ->
+      fprintf oc "	ldrsb	%a, [%a, #0]\n" ireg res ireg addr; 1
+  | Mint16unsigned, [IR addr], IR res ->
+      fprintf oc "	ldrh	%a, [%a, #0]\n" ireg res ireg addr; 1
+  | Mint16signed, [IR addr], IR res ->
+      fprintf oc "	ldrsh	%a, [%a, #0]\n" ireg res ireg addr; 1
+  | Mint32, [IR addr], IR res ->
+      fprintf oc "	ldr	%a, [%a, #0]\n" ireg res ireg addr; 1
+  | Mfloat32, [IR addr], FR res ->
+      fprintf oc "	flds	%a, [%a, #0]\n" freg_single res ireg addr;
+      fprintf oc "	fcvtds	%a, %a\n" freg res freg_single res; 2
+  | (Mfloat64 | Mfloat64al32), [IR addr], FR res ->
+      fprintf oc "	fldd	%a, [%a, #0]\n" freg res ireg addr; 1
+  | _ ->
+      assert false
+
 let print_builtin_vload oc chunk args res =
   fprintf oc "%s begin builtin __builtin_volatile_read\n" comment;
-  let n = 
-    begin match chunk, args, res with
-    | Mint8unsigned, [IR addr], IR res ->
-        fprintf oc "	ldrb	%a, [%a, #0]\n" ireg res ireg addr; 1
-    | Mint8signed, [IR addr], IR res ->
-        fprintf oc "	ldrsb	%a, [%a, #0]\n" ireg res ireg addr; 1
-    | Mint16unsigned, [IR addr], IR res ->
-        fprintf oc "	ldrh	%a, [%a, #0]\n" ireg res ireg addr; 1
-    | Mint16signed, [IR addr], IR res ->
-        fprintf oc "	ldrsh	%a, [%a, #0]\n" ireg res ireg addr; 1
-    | Mint32, [IR addr], IR res ->
-        fprintf oc "	ldr	%a, [%a, #0]\n" ireg res ireg addr; 1
-    | Mfloat32, [IR addr], FR res ->
-        fprintf oc "	flds	%a, [%a, #0]\n" freg_single res ireg addr;
-        fprintf oc "	fcvtds	%a, %a\n" freg res freg_single res; 2
-    | (Mfloat64 | Mfloat64al32), [IR addr], FR res ->
-        fprintf oc "	fldd	%a, [%a, #0]\n" freg res ireg addr; 1
-    | _ ->
-        assert false
-    end in
+  let n = print_builtin_vload_common oc chunk args res in
   fprintf oc "%s end builtin __builtin_volatile_read\n" comment; n
+
+let print_builtin_vload_global oc chunk id ofs args res =
+  fprintf oc "%s begin builtin __builtin_volatile_read\n" comment;
+  let lbl = label_symbol id ofs in
+  fprintf oc "	ldr	%a, .L%d @ %a\n" ireg IR14 lbl print_symb_ofs (id, ofs);
+  let n = print_builtin_vload_common oc chunk [IR IR14] res in
+  fprintf oc "%s end builtin __builtin_volatile_read\n" comment; n + 1
+
+let print_builtin_vstore_common oc chunk args =
+  match chunk, args with
+  | (Mint8signed | Mint8unsigned), [IR  addr; IR src] ->
+      fprintf oc "	strb	%a, [%a, #0]\n" ireg src ireg addr; 1
+  | (Mint16signed | Mint16unsigned), [IR  addr; IR src] ->
+      fprintf oc "	strh	%a, [%a, #0]\n" ireg src ireg addr; 1
+  | Mint32, [IR  addr; IR src] ->
+      fprintf oc "	str	%a, [%a, #0]\n" ireg src ireg addr; 1
+  | Mfloat32, [IR  addr; FR src] ->
+      fprintf oc "	fcvtsd	%a, %a\n" freg_single FR6 freg src;
+      fprintf oc "	fsts	%a, [%a, #0]\n" freg_single FR6 ireg addr; 2
+  | (Mfloat64 | Mfloat64al32), [IR  addr; FR src] ->
+      fprintf oc "	fstd	%a, [%a, #0]\n" freg src ireg addr; 1
+  | _ ->
+      assert false
 
 let print_builtin_vstore oc chunk args =
   fprintf oc "%s begin builtin __builtin_volatile_write\n" comment;
-  let n =
-    begin match chunk, args with
-    | (Mint8signed | Mint8unsigned), [IR addr; IR src] ->
-        fprintf oc "	strb	%a, [%a, #0]\n" ireg src ireg addr; 1
-    | (Mint16signed | Mint16unsigned), [IR addr; IR src] ->
-        fprintf oc "	strh	%a, [%a, #0]\n" ireg src ireg addr; 1
-    | Mint32, [IR addr; IR src] ->
-        fprintf oc "	str	%a, [%a, #0]\n" ireg src ireg addr; 1
-    | Mfloat32, [IR addr; FR src] ->
-        fprintf oc "	fcvtsd	%a, %a\n" freg_single FR6 freg src;
-        fprintf oc "	fsts	%a, [%a, #0]\n" freg_single FR6 ireg addr; 2
-    | (Mfloat64 | Mfloat64al32), [IR addr; FR src] ->
-        fprintf oc "	fstd	%a, [%a, #0]\n" freg src ireg addr; 1
-    | _ ->
-        assert false
-    end in
+  let n = print_builtin_vstore_common oc chunk args in
   fprintf oc "%s end builtin __builtin_volatile_write\n" comment; n
+
+let print_builtin_vstore_global oc chunk id ofs args =
+  fprintf oc "%s begin builtin __builtin_volatile_write\n" comment;
+  let lbl = label_symbol id ofs in
+  fprintf oc "	ldr	%a, .L%d @ %a\n" ireg IR14 lbl print_symb_ofs (id, ofs);
+  let n = print_builtin_vstore_common oc chunk (IR IR14 :: args) in
+  fprintf oc "%s end builtin __builtin_volatile_write\n" comment; n + 1
 
 (* Magic sequence for byte-swapping *)
 
@@ -597,14 +593,14 @@ let print_instruction oc = function
       fprintf oc "	fsts	%a, [%a, #%a]\n" freg_single FR6 ireg r2 coqint n; 2
   (* Pseudo-instructions *)
   | Pallocframe(sz, ofs) ->
-      fprintf oc "	mov	r12, sp\n";
+      fprintf oc "	mov	r10, sp\n";
       let ninstr = ref 0 in
       List.iter
         (fun n ->
            fprintf oc "	sub	sp, sp, #%a\n" coqint n;
            incr ninstr)
         (Asmgen.decompose_int sz);
-      fprintf oc "	str	r12, [sp, #%a]\n" coqint ofs;
+      fprintf oc "	str	r10, [sp, #%a]\n" coqint ofs;
       2 + !ninstr
   | Pfreeframe(sz, ofs) ->
       if Asmgen.is_immed_arith sz
@@ -618,7 +614,8 @@ let print_instruction oc = function
       fprintf oc "	ldr	%a, .L%d @ %a\n" 
          ireg r1 lbl print_symb_ofs (id, ofs); 1
   | Pbtbl(r, tbl) ->
-      fprintf oc "	ldr	pc, [pc, %a]\n" ireg r;
+      fprintf oc "	mov	r14, %a, lsl #2\n" ireg r;
+      fprintf oc "	ldr	pc, [pc, r14]\n";
       fprintf oc "	mov	r0, r0\n"; (* no-op *)
       List.iter
         (fun l -> fprintf oc "	.word	%a\n" print_label l)
@@ -632,6 +629,10 @@ let print_instruction oc = function
           print_builtin_vload oc chunk args res
       | EF_vstore chunk ->
           print_builtin_vstore oc chunk args
+      | EF_vload_global(chunk, id, ofs) ->
+          print_builtin_vload_global oc chunk id ofs args res
+      | EF_vstore_global(chunk, id, ofs) ->
+          print_builtin_vstore_global oc chunk id ofs args
       | EF_memcpy(sz, al) ->
           print_builtin_memcpy oc (Int32.to_int (camlint_of_coqint sz))
                                   (Int32.to_int (camlint_of_coqint al)) args
@@ -648,7 +649,7 @@ let print_instruction oc = function
   | Pannot(ef, args) ->
       begin match ef with
       | EF_annot(txt, targs) ->
-          print_annot_stmt oc (extern_atom txt) args; 0
+          print_annot_stmt oc (extern_atom txt) targs args; 0
       | _ ->
           assert false
       end
@@ -719,8 +720,8 @@ let print_init oc = function
       fprintf oc "	.quad	%Ld %s %.18g\n" (camlint64_of_coqint (Floats.Float.bits_of_double n))
 	comment (camlfloat_of_coqfloat n)
   | Init_space n ->
-      let n = camlint_of_z n in
-      if n > 0l then fprintf oc "	.space	%ld\n" n
+      if Z.gt n Z.zero then
+        fprintf oc "	.space	%s\n" (Z.to_string n)
   | Init_addrof(symb, ofs) ->
       fprintf oc "	.word	%a\n" print_symb_ofs (symb, ofs)
 

@@ -199,9 +199,9 @@ Lemma eval_static_load_sound:
   val_match_approx ge sp (eval_static_load gapp chunk addr) v.
 Proof.
   intros. unfold eval_static_load. destruct addr; simpl; auto. 
-  destruct (gapp!i) as [il|]_eqn; auto.
+  destruct (gapp!i) as [il|] eqn:?; auto.
   red in H1. subst vaddr. unfold symbol_address in H. 
-  destruct (Genv.find_symbol ge i) as [b'|]_eqn; simpl in H; try discriminate.
+  destruct (Genv.find_symbol ge i) as [b'|] eqn:?; simpl in H; try discriminate.
   exploit H0; eauto. intros [A [B C]]. 
   eapply eval_load_init_sound; eauto. 
   red; auto. 
@@ -290,7 +290,7 @@ Proof.
                \/ id0 <> id /\ ga!id0 = Some il).
   destruct gd.
   rewrite PTree.grspec in H0. destruct (PTree.elt_eq id0 id); [discriminate|auto].
-  destruct (gvar_readonly v && negb (gvar_volatile v)) as []_eqn.
+  destruct (gvar_readonly v && negb (gvar_volatile v)) eqn:?.
   rewrite PTree.gsspec in H0. destruct (peq id0 id).
   inv H0. left. split; auto. 
   destruct v; simpl in *. 
@@ -455,10 +455,10 @@ Lemma match_successor_rec:
 Proof.
   induction n; simpl; intros.
   apply match_pc_base.
-  destruct (fn_code f)!pc as [i|]_eqn; try apply match_pc_base.
+  destruct (fn_code f)!pc as [i|] eqn:?; try apply match_pc_base.
   destruct i; try apply match_pc_base.
   eapply match_pc_nop; eauto. 
-  destruct (eval_static_condition c (approx_regs app l)) as [b|]_eqn.
+  destruct (eval_static_condition c (approx_regs app l)) as [b|] eqn:?.
   eapply match_pc_cond; eauto.
   apply match_pc_base.
 Qed.
@@ -468,6 +468,70 @@ Lemma match_successor:
 Proof.
   unfold successor; intros. apply match_successor_rec.
 Qed.
+
+Section BUILTIN_STRENGTH_REDUCTION.
+Variable app: D.t.
+Variable sp: val.
+Variable rs: regset.
+Hypothesis MATCH: forall r, val_match_approx ge sp (approx_reg app r) rs#r.
+
+Lemma annot_strength_reduction_correct:
+  forall targs args targs' args' eargs,
+  annot_strength_reduction app targs args = (targs', args') ->
+  eventval_list_match ge eargs (annot_args_typ targs) rs##args ->
+  exists eargs',
+  eventval_list_match ge eargs' (annot_args_typ targs') rs##args'
+  /\ annot_eventvals targs' eargs' = annot_eventvals targs eargs.
+Proof.
+  induction targs; simpl; intros.
+- inv H. simpl. exists eargs; auto. 
+- destruct a.
+  + destruct args as [ | arg args0]; simpl in H0; inv H0.
+    destruct (annot_strength_reduction app targs args0) as [targs'' args''] eqn:E.
+    exploit IHtargs; eauto. intros [eargs'' [A B]].
+    assert (DFL:
+      exists eargs',
+      eventval_list_match ge eargs' (annot_args_typ (AA_arg ty :: targs'')) rs##(arg :: args'')
+      /\ annot_eventvals (AA_arg ty :: targs'') eargs' = ev1 :: annot_eventvals targs evl).
+    {
+      exists (ev1 :: eargs''); split.
+      simpl; constructor; auto. simpl. congruence.
+    }
+    destruct ty; destruct (approx_reg app arg) as [] eqn:E2; inv H; auto;
+    exists eargs''; split; auto; simpl; f_equal; auto;
+    generalize (MATCH arg); rewrite E2; simpl; intros E3;
+    rewrite E3 in H5; inv H5; auto.
+  + destruct (annot_strength_reduction app targs args) as [targs'' args''] eqn:E.
+    inv H.
+    exploit IHtargs; eauto. intros [eargs'' [A B]].
+    exists eargs''; simpl; split; auto. congruence.
+  + destruct (annot_strength_reduction app targs args) as [targs'' args''] eqn:E.
+    inv H.
+    exploit IHtargs; eauto. intros [eargs'' [A B]].
+    exists eargs''; simpl; split; auto. congruence.
+Qed.
+
+Lemma builtin_strength_reduction_correct:
+  forall ef args m t vres m',
+  external_call ef ge rs##args m t vres m' ->
+  let (ef', args') := builtin_strength_reduction app ef args in
+  external_call ef' ge rs##args' m t vres m'.
+Proof.
+  intros until m'. functional induction (builtin_strength_reduction app ef args); intros; auto.
++ generalize (MATCH r1); rewrite e1; simpl; intros E. simpl in H.
+  unfold symbol_address in E. destruct (Genv.find_symbol ge symb) as [b|] eqn:?; rewrite E in H.
+  rewrite volatile_load_global_charact. exists b; auto. 
+  inv H.
++ generalize (MATCH r1); rewrite e1; simpl; intros E. simpl in H.
+  unfold symbol_address in E. destruct (Genv.find_symbol ge symb) as [b|] eqn:?; rewrite E in H.
+  rewrite volatile_store_global_charact. exists b; auto. 
+  inv H.
++ inv H. exploit annot_strength_reduction_correct; eauto.
+  intros [eargs' [A B]]. 
+  rewrite <- B. econstructor; eauto. 
+Qed.
+
+End BUILTIN_STRENGTH_REDUCTION.
 
 (** The proof of semantic preservation is a simulation argument
   based on "option" diagrams of the following form:
@@ -607,7 +671,7 @@ Proof.
   assert (MATCH'': regs_match_approx sp (analyze gapp f) # pc' rs # res <- v).
     eapply analyze_correct_1 with (pc := pc); eauto. simpl; auto.
     unfold transfer; rewrite H. auto.  
-  destruct (const_for_result a) as [cop|]_eqn; intros.
+  destruct (const_for_result a) as [cop|] eqn:?; intros.
   (* constant is propagated *)
   left; econstructor; econstructor; split.
   eapply exec_Iop; eauto. 
@@ -640,7 +704,7 @@ Proof.
     eapply approx_regs_val_list; eauto.
   assert (VM2: val_match_approx ge sp ap2 v).
     eapply eval_static_load_sound; eauto.
-  destruct (const_for_result ap2) as [cop|]_eqn; intros.
+  destruct (const_for_result ap2) as [cop|] eqn:?; intros.
   (* constant-propagated *)
   left; econstructor; econstructor; split.
   eapply exec_Iop; eauto. eapply const_for_result_correct; eauto.
@@ -708,15 +772,15 @@ Proof.
   (* Ibuiltin *)
   rename pc'0 into pc.
 Opaque builtin_strength_reduction.
-  destruct (builtin_strength_reduction ef args (approx_regs (analyze gapp f)#pc args)) as [ef' args']_eqn.
-  generalize (builtin_strength_reduction_correct ge sp (analyze gapp f)!!pc rs
-                  MATCH2 ef args (approx_regs (analyze gapp f) # pc args) _ _ _ _ (refl_equal _) H0).
-  rewrite Heqp. intros P.
+  exploit builtin_strength_reduction_correct; eauto. 
+  TransfInstr.
+  destruct (builtin_strength_reduction (analyze gapp f)#pc ef args) as [ef' args'].
+  intros P Q.
   exploit external_call_mem_extends; eauto. 
   instantiate (1 := rs'##args'). apply regs_lessdef_regs; auto.
   intros [v' [m2' [A [B [C D]]]]].
   left; econstructor; econstructor; split.
-  eapply exec_Ibuiltin. TransfInstr. rewrite Heqp. eauto.
+  eapply exec_Ibuiltin. eauto. 
   eapply external_call_symbols_preserved; eauto.
   exact symbols_preserved. exact varinfo_preserved.
   eapply match_states_succ; eauto. simpl; auto.
@@ -732,7 +796,7 @@ Opaque builtin_strength_reduction.
   destruct (cond_strength_reduction cond args (approx_regs (analyze gapp f) # pc args)) as [cond' args'].
   intros EV1 TCODE.
   left; exists O; exists (State s' (transf_function gapp f) sp (if b then ifso else ifnot) rs' m'); split. 
-  destruct (eval_static_condition cond (approx_regs (analyze gapp f) # pc args)) as []_eqn.
+  destruct (eval_static_condition cond (approx_regs (analyze gapp f) # pc args)) eqn:?.
   assert (eval_condition cond rs ## args m = Some b0).
     eapply eval_static_condition_correct; eauto. eapply approx_regs_val_list; eauto.
   assert (b = b0) by congruence. subst b0.
@@ -758,7 +822,7 @@ Opaque builtin_strength_reduction.
   rename pc'0 into pc.
   assert (A: (fn_code (transf_function gapp f))!pc = Some(Ijumptable arg tbl)
              \/ (fn_code (transf_function gapp f))!pc = Some(Inop pc')).
-  TransfInstr. destruct (approx_reg (analyze gapp f) # pc arg) as []_eqn; auto.
+  TransfInstr. destruct (approx_reg (analyze gapp f) # pc arg) eqn:?; auto.
   generalize (MATCH2 arg). unfold approx_reg in Heqt. rewrite Heqt. rewrite H0. 
   simpl. intro EQ; inv EQ. rewrite H1. auto.
   assert (B: rs'#arg = Vint n).

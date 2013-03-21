@@ -31,7 +31,6 @@ Require LTL.
 Require LTLin.
 Require Linear.
 Require Mach.
-Require Machsem.
 Require Asm.
 (** Translation passes. *)
 Require Initializers.
@@ -59,7 +58,6 @@ Require RTLtyping.
 Require LTLtyping.
 Require LTLintyping.
 Require Lineartyping.
-Require Machtyping.
 (** Proofs of semantic preservation and typing preservation. *)
 Require SimplExprproof.
 Require SimplLocalsproof.
@@ -85,7 +83,6 @@ Require Reloadtyping.
 Require RREproof.
 Require RREtyping.
 Require Stackingproof.
-Require Stackingtyping.
 Require Asmgenproof.
 
 (** Pretty-printers (defined in Caml). *)
@@ -217,18 +214,18 @@ Proof.
   repeat rewrite compose_print_identity in H.
   simpl in H.
   set (p1 := Tailcall.transf_program p) in *.
-  destruct (Inlining.transf_program p1) as [p11|]_eqn; simpl in H; try discriminate.
+  destruct (Inlining.transf_program p1) as [p11|] eqn:?; simpl in H; try discriminate.
   set (p12 := Renumber.transf_program p11) in *.
   set (p2 := Constprop.transf_program p12) in *.
   set (p21 := Renumber.transf_program p2) in *.
-  destruct (CSE.transf_program p21) as [p3|]_eqn; simpl in H; try discriminate.
-  destruct (Allocation.transf_program p3) as [p4|]_eqn; simpl in H; try discriminate.
+  destruct (CSE.transf_program p21) as [p3|] eqn:?; simpl in H; try discriminate.
+  destruct (Allocation.transf_program p3) as [p4|] eqn:?; simpl in H; try discriminate.
   set (p5 := Tunneling.tunnel_program p4) in *.
-  destruct (Linearize.transf_program p5) as [p6|]_eqn; simpl in H; try discriminate.
+  destruct (Linearize.transf_program p5) as [p6|] eqn:?; simpl in H; try discriminate.
   set (p7 := CleanupLabels.transf_program p6) in *.
   set (p8 := Reload.transf_program p7) in *.
   set (p9 := RRE.transf_program p8) in *.
-  destruct (Stacking.transf_program p9) as [p10|]_eqn; simpl in H; try discriminate.
+  destruct (Stacking.transf_program p9) as [p10|] eqn:?; simpl in H; try discriminate.
 
   assert(TY1: LTLtyping.wt_program p5).
     eapply Tunnelingtyping.program_typing_preserved. 
@@ -239,8 +236,6 @@ Proof.
   assert(TY3: Lineartyping.wt_program p9).
     eapply RREtyping.program_typing_preserved.
     eapply Reloadtyping.program_typing_preserved; eauto.
-  assert(TY4: Machtyping.wt_program p10).
-    eapply Stackingtyping.program_typing_preserved; eauto.
 
   eapply compose_forward_simulation. apply Tailcallproof.transf_program_correct. 
   eapply compose_forward_simulation. apply Inliningproof.transf_program_correct. eassumption.
@@ -254,7 +249,8 @@ Proof.
   eapply compose_forward_simulation. apply CleanupLabelsproof.transf_program_correct. 
   eapply compose_forward_simulation. apply Reloadproof.transf_program_correct. eauto.
   eapply compose_forward_simulation. apply RREproof.transf_program_correct. eauto.
-  eapply compose_forward_simulation. apply Stackingproof.transf_program_correct. eassumption. eauto.
+  eapply compose_forward_simulation. apply Stackingproof.transf_program_correct.
+    eexact Asmgenproof.return_address_exists. eassumption. eauto. 
   apply Asmgenproof.transf_program_correct; eauto.
   split. auto. 
   apply forward_to_backward_simulation. auto. 
@@ -274,7 +270,7 @@ Proof.
   repeat rewrite compose_print_identity in H.
   simpl in H. 
   set (p1 := Selection.sel_program p) in *.
-  destruct (RTLgen.transl_program p1) as [p2|]_eqn; simpl in H; try discriminate.
+  destruct (RTLgen.transl_program p1) as [p2|] eqn:?; simpl in H; try discriminate.
   eapply compose_forward_simulation. apply Selectionproof.transf_program_correct.
   eapply compose_forward_simulation. apply RTLgenproof.transf_program_correct. eassumption.
   exact (fst (transf_rtl_program_correct _ _ H)).

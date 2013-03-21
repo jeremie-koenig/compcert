@@ -204,7 +204,6 @@ let sp_adjustment sz =
   let sz = int32_align sz stack_alignment in
   (* The top 4 bytes have already been allocated by the "call" instruction. *)
   let sz = Int32.sub sz 4l in
-  assert (sz >= 0l);
   sz
 
 (* Base-2 log of a Caml integer *)
@@ -232,33 +231,13 @@ let need_masks = ref false
 
 (* Handling of annotations *)
 
-let re_annot_param = Str.regexp "%%\\|%[1-9][0-9]*"
-
-let print_annot_text print_arg oc txt args =
+let print_annot_stmt oc txt targs args =
   fprintf oc "%s annotation: " comment;
-  let print_fragment = function
-  | Str.Text s ->
-      output_string oc s
-  | Str.Delim "%%" ->
-      output_char oc '%'
-  | Str.Delim s ->
-      let n = int_of_string (String.sub s 1 (String.length s - 1)) in
-      try
-        print_arg oc (List.nth args (n-1))
-      with Failure _ ->
-        fprintf oc "<bad parameter %s>" s in
-  List.iter print_fragment (Str.full_split re_annot_param txt);
-  fprintf oc "\n"
-
-let print_annot_stmt oc txt args =
-  let print_annot_param oc = function
-  | APreg r -> preg oc r
-  | APstack(chunk, ofs) ->
-      fprintf oc "mem(ESP + %a, %a)" coqint ofs coqint (size_chunk chunk) in
-  print_annot_text print_annot_param oc txt args
+  PrintAnnot.print_annot_stmt preg "ESP" oc txt targs args
 
 let print_annot_val oc txt args res =
-  print_annot_text preg oc txt args;
+  fprintf oc "%s annotation: " comment;
+  PrintAnnot.print_annot_val preg oc txt args;
   match args, res with
   | IR src :: _, IR dst ->
       if dst <> src then fprintf oc "	movl	%a, %a\n" ireg src ireg dst
@@ -724,7 +703,7 @@ let print_instruction oc = function
   | Pannot(ef, args) ->
       begin match ef with
       | EF_annot(txt, targs) ->
-          print_annot_stmt oc (extern_atom txt) args
+          print_annot_stmt oc (extern_atom txt) targs args
       | _ ->
           assert false
       end
@@ -787,8 +766,8 @@ let print_init oc = function
 	(camlint64_of_coqint (Floats.Float.bits_of_double n))
 	comment (camlfloat_of_coqfloat n)
   | Init_space n ->
-      let n = camlint_of_z n in
-      if n > 0l then fprintf oc "	.space	%ld\n" n
+      if Z.gt n Z.zero then
+        fprintf oc "	.space	%s\n" (Z.to_string n)
   | Init_addrof(symb, ofs) ->
       fprintf oc "	.long	%a\n" 
                  symbol_offset (symb, camlint_of_coqint ofs)

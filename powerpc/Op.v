@@ -120,14 +120,16 @@ Proof.
   assert (forall (x y: comparison), {x=y}+{x<>y}). decide equality.
   assert (forall (x y: condition), {x=y}+{x<>y}). decide equality.
   decide equality.
-Qed.
+Defined.
 
 Definition eq_addressing (x y: addressing) : {x=y} + {x<>y}.
 Proof.
   generalize Int.eq_dec; intro.
   assert (forall (x y: ident), {x=y}+{x<>y}). exact peq.
   decide equality.
-Qed.
+Defined.
+
+Global Opaque eq_addressing eq_operation.
 
 (** * Evaluation functions *)
 
@@ -576,8 +578,8 @@ Proof.
   right. apply Int.no_overlap_sound; auto. 
 (* Aglobal *)
   unfold symbol_address in *. 
-  destruct (Genv.find_symbol ge i1) as []_eqn; inv H2.
-  destruct (Genv.find_symbol ge i) as []_eqn; inv H1.
+  destruct (Genv.find_symbol ge i1) eqn:?; inv H2.
+  destruct (Genv.find_symbol ge i) eqn:?; inv H1.
   destruct (ident_eq i i1). subst.
   replace (Int.unsigned n1) with (Int.unsigned (Int.add Int.zero n1)).
   replace (Int.unsigned n2) with (Int.unsigned (Int.add Int.zero n2)).
@@ -587,9 +589,9 @@ Proof.
   left. red; intros; elim n. subst. eapply Genv.genv_vars_inj; eauto.
 (* Abased *)
   unfold symbol_address in *. 
-  destruct (Genv.find_symbol ge i1) as []_eqn; simpl in *; try discriminate.
+  destruct (Genv.find_symbol ge i1) eqn:?; simpl in *; try discriminate.
   destruct v; inv H2.
-  destruct (Genv.find_symbol ge i) as []_eqn; inv H1.
+  destruct (Genv.find_symbol ge i) eqn:?; inv H1.
   destruct (ident_eq i i1). subst.
   rewrite (Int.add_commut i0 i3). rewrite (Int.add_commut i2 i3).
   right. apply Int.no_overlap_sound; auto. 
@@ -652,10 +654,16 @@ Hypothesis valid_pointer_inj:
   Mem.valid_pointer m1 b1 (Int.unsigned ofs) = true ->
   Mem.valid_pointer m2 b2 (Int.unsigned (Int.add ofs (Int.repr delta))) = true.
 
-Hypothesis valid_pointer_no_overflow:
+Hypothesis weak_valid_pointer_inj:
   forall b1 ofs b2 delta,
   f b1 = Some(b2, delta) ->
-  Mem.valid_pointer m1 b1 (Int.unsigned ofs) = true ->
+  Mem.weak_valid_pointer m1 b1 (Int.unsigned ofs) = true ->
+  Mem.weak_valid_pointer m2 b2 (Int.unsigned (Int.add ofs (Int.repr delta))) = true.
+
+Hypothesis weak_valid_pointer_no_overflow:
+  forall b1 ofs b2 delta,
+  f b1 = Some(b2, delta) ->
+  Mem.weak_valid_pointer m1 b1 (Int.unsigned ofs) = true ->
   0 <= Int.unsigned ofs + Int.unsigned (Int.repr delta) <= Int.max_unsigned.
 
 Hypothesis valid_different_pointers_inj:
@@ -683,50 +691,17 @@ Ltac InvInject :=
   | _ => idtac
   end.
 
-Remark val_add_inj:
-  forall v1 v1' v2 v2',
-  val_inject f v1 v1' -> val_inject f v2 v2' -> val_inject f (Val.add v1 v2) (Val.add v1' v2').
-Proof.
-  intros. inv H; inv H0; simpl; econstructor; eauto. 
-  repeat rewrite Int.add_assoc. decEq. apply Int.add_commut.
-  repeat rewrite Int.add_assoc. decEq. apply Int.add_commut.
-Qed.
-
 Lemma eval_condition_inj:
   forall cond vl1 vl2 b,
   val_list_inject f vl1 vl2 ->
   eval_condition cond vl1 m1 = Some b ->
   eval_condition cond vl2 m2 = Some b.
 Proof.
-Opaque Int.add.
-  assert (CMPU:
-    forall c v1 v2 v1' v2' b,
-    val_inject f v1 v1' ->
-    val_inject f v2 v2' ->
-    Val.cmpu_bool (Mem.valid_pointer m1) c v1 v2 = Some b ->
-    Val.cmpu_bool (Mem.valid_pointer m2) c v1' v2' = Some b).
-  intros. inv H; simpl in H1; try discriminate; inv H0; simpl in H1; try discriminate; simpl; auto.
-  destruct (Mem.valid_pointer m1 b1 (Int.unsigned ofs1)) as []_eqn; try discriminate.
-  destruct (Mem.valid_pointer m1 b0 (Int.unsigned ofs0)) as []_eqn; try discriminate.
-  rewrite (valid_pointer_inj _ H2 Heqb4).
-  rewrite (valid_pointer_inj _ H Heqb0). simpl.
-  destruct (zeq b1 b0); simpl in H1.
-  inv H1. rewrite H in H2; inv H2. rewrite zeq_true. 
-  decEq. apply Int.translate_cmpu.
-  eapply valid_pointer_no_overflow; eauto.
-  eapply valid_pointer_no_overflow; eauto.
-  exploit valid_different_pointers_inj; eauto. intros P.
-  destruct (zeq b2 b3); auto.
-  destruct P. congruence. 
-  destruct c; simpl in H1; inv H1.
-  simpl; decEq. rewrite Int.eq_false; auto. congruence.
-  simpl; decEq. rewrite Int.eq_false; auto. congruence.
-
   intros. destruct cond; simpl in H0; FuncInv; InvInject; simpl; auto.
   inv H3; inv H2; simpl in H0; inv H0; auto.
-  eauto.
+  eauto 3 using val_cmpu_bool_inject, Mem.valid_pointer_implies.
   inv H3; simpl in H0; inv H0; auto.
-  eauto. 
+  eauto 3 using val_cmpu_bool_inject, Mem.valid_pointer_implies.
   inv H3; inv H2; simpl in H0; inv H0; auto.
   inv H3; inv H2; simpl in H0; inv H0; auto.
 Qed.
@@ -749,8 +724,8 @@ Proof.
   inv H; simpl; econstructor; eauto. repeat rewrite Int.add_assoc. decEq. apply Int.add_commut.
   inv H4; simpl; auto.
   inv H4; simpl; auto.
-  apply val_add_inj; auto.
-  apply val_add_inj; auto.
+  apply Values.val_add_inject; auto.
+  apply Values.val_add_inject; auto.
   inv H4; inv H2; simpl; auto. econstructor; eauto. 
     rewrite Int.sub_add_l. auto.
     destruct (zeq b1 b0); auto. subst. rewrite H1 in H0. inv H0. rewrite zeq_true. 
@@ -792,7 +767,7 @@ Proof.
   inv H4; simpl in H1; inv H1. simpl. destruct (Float.intoffloat f0); simpl in H2; inv H2.
   exists (Vint i); auto.
   inv H4; inv H2; simpl; auto.
-  subst v1. destruct (eval_condition c vl1 m1) as []_eqn.
+  subst v1. destruct (eval_condition c vl1 m1) eqn:?.
   exploit eval_condition_inj; eauto. intros EQ; rewrite EQ.
   destruct b; simpl; constructor.
   simpl; constructor.
@@ -805,11 +780,8 @@ Lemma eval_addressing_inj:
   eval_addressing genv sp1 addr vl1 = Some v1 ->
   exists v2, eval_addressing genv sp2 addr vl2 = Some v2 /\ val_inject f v1 v2.
 Proof.
-  intros. destruct addr; simpl in H1; simpl; FuncInv; InvInject; TrivialExists.
-  apply val_add_inj; auto.
-  apply val_add_inj; auto.
-  apply val_add_inj; auto.
-  apply val_add_inj; auto.
+  intros. destruct addr; simpl in H1; simpl; FuncInv; InvInject; TrivialExists;
+    auto using Values.val_add_inject.
 Qed.
 
 End EVAL_COMPAT.
@@ -831,10 +803,20 @@ Proof.
   intros. inv H0. rewrite Int.add_zero. eapply Mem.valid_pointer_extends; eauto. 
 Qed.
 
-Remark valid_pointer_no_overflow_extends:
+Remark weak_valid_pointer_extends:
+  forall m1 m2, Mem.extends m1 m2 ->
+  forall b1 ofs b2 delta,
+  Some(b1, 0) = Some(b2, delta) ->
+  Mem.weak_valid_pointer m1 b1 (Int.unsigned ofs) = true ->
+  Mem.weak_valid_pointer m2 b2 (Int.unsigned (Int.add ofs (Int.repr delta))) = true.
+Proof.
+  intros. inv H0. rewrite Int.add_zero. eapply Mem.weak_valid_pointer_extends; eauto.
+Qed.
+
+Remark weak_valid_pointer_no_overflow_extends:
   forall m1 b1 ofs b2 delta,
   Some(b1, 0) = Some(b2, delta) ->
-  Mem.valid_pointer m1 b1 (Int.unsigned ofs) = true ->
+  Mem.weak_valid_pointer m1 b1 (Int.unsigned ofs) = true ->
   0 <= Int.unsigned ofs + Int.unsigned (Int.repr delta) <= Int.max_unsigned.
 Proof.
   intros. inv H. rewrite Zplus_0_r. apply Int.unsigned_range_2.
@@ -862,7 +844,8 @@ Lemma eval_condition_lessdef:
 Proof.
   intros. eapply eval_condition_inj with (f := fun b => Some(b, 0)) (m1 := m1).
   apply valid_pointer_extends; auto.
-  apply valid_pointer_no_overflow_extends; auto. 
+  apply weak_valid_pointer_extends; auto.
+  apply weak_valid_pointer_no_overflow_extends; auto.
   apply valid_different_pointers_extends; auto.
   rewrite <- val_list_inject_lessdef. eauto. auto.
 Qed.
@@ -881,7 +864,8 @@ Proof.
   eapply eval_operation_inj with (m1 := m1) (sp1 := sp).
   intros. rewrite <- val_inject_lessdef; auto.
   apply valid_pointer_extends; auto.
-  apply valid_pointer_no_overflow_extends; auto. 
+  apply weak_valid_pointer_extends; auto.
+  apply weak_valid_pointer_no_overflow_extends; auto.
   apply valid_different_pointers_extends; auto.
   rewrite <- val_inject_lessdef; auto.
   eauto. auto. 
@@ -923,7 +907,7 @@ Hypothesis sp_inj: f sp1 = Some(sp2, delta).
 Remark symbol_address_inject:
   forall id ofs, val_inject f (symbol_address genv id ofs) (symbol_address genv id ofs).
 Proof.
-  intros. unfold symbol_address. destruct (Genv.find_symbol genv id) as []_eqn; auto.
+  intros. unfold symbol_address. destruct (Genv.find_symbol genv id) eqn:?; auto.
   exploit (proj1 globals); eauto. intros. 
   econstructor; eauto. rewrite Int.add_zero; auto.
 Qed.
@@ -937,7 +921,8 @@ Lemma eval_condition_inject:
 Proof.
   intros. eapply eval_condition_inj with (f := f) (m1 := m1); eauto.
   intros; eapply Mem.valid_pointer_inject_val; eauto.
-  intros; eapply Mem.valid_pointer_inject_no_overflow; eauto.
+  intros; eapply Mem.weak_valid_pointer_inject_val; eauto.
+  intros; eapply Mem.weak_valid_pointer_inject_no_overflow; eauto.
   intros; eapply Mem.different_pointers_inject; eauto.
 Qed.
 
@@ -969,7 +954,8 @@ Proof.
   eapply eval_operation_inj with (sp1 := Vptr sp1 Int.zero) (m1 := m1); eauto.
   exact symbol_address_inject.
   intros; eapply Mem.valid_pointer_inject_val; eauto.
-  intros; eapply Mem.valid_pointer_inject_no_overflow; eauto.
+  intros; eapply Mem.weak_valid_pointer_inject_val; eauto.
+  intros; eapply Mem.weak_valid_pointer_inject_no_overflow; eauto.
   intros; eapply Mem.different_pointers_inject; eauto.
 Qed.
 
@@ -1044,8 +1030,7 @@ Fixpoint is_rlw_mask_rec (n: nat) (s: rlw_state) (x: Z) {struct n} : bool :=
   | O =>
       rlw_accepting s
   | S m =>
-      let (b, y) := Int.Z_bin_decomp x in
-      is_rlw_mask_rec m (rlw_transition s b) y
+      is_rlw_mask_rec m (rlw_transition s (Z.odd x)) (Z.div2 x)
   end.
 
 Definition is_rlw_mask (x: int) : bool :=

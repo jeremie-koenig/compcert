@@ -83,7 +83,7 @@ Lemma type_of_global_preserved:
 Proof.
   unfold type_of_global; intros.
   rewrite varinfo_preserved. destruct (Genv.find_var_info ge id). auto. 
-  destruct (Genv.find_funct_ptr ge id) as [fd|]_eqn; inv H.
+  destruct (Genv.find_funct_ptr ge id) as [fd|] eqn:?; inv H.
   exploit function_ptr_translated; eauto. intros [tf [A B]]. rewrite A. 
   decEq. apply type_of_fundef_preserved; auto.
 Qed.
@@ -183,12 +183,12 @@ Lemma match_envs_extcall:
 Proof.
   intros. eapply match_envs_invariant; eauto. 
   intros. destruct H0.  eapply H8. intros; red. auto. auto. 
-  red in H2. intros. destruct (f b) as [[b' delta]|]_eqn. 
+  red in H2. intros. destruct (f b) as [[b' delta]|] eqn:?. 
   eapply H1; eauto.
-  destruct (f' b) as [[b' delta]|]_eqn; auto. 
+  destruct (f' b) as [[b' delta]|] eqn:?; auto. 
   exploit H2; eauto. unfold Mem.valid_block. intros [A B].
   omegaContradiction.
-  intros. destruct (f b) as [[b'' delta']|]_eqn. eauto. 
+  intros. destruct (f b) as [[b'' delta']|] eqn:?. eauto. 
   exploit H2; eauto. unfold Mem.valid_block. intros [A B].
   omegaContradiction.
 Qed.
@@ -219,8 +219,8 @@ Remark cast_int_int_idem:
   forall sz sg i, cast_int_int sz sg (cast_int_int sz sg i) = cast_int_int sz sg i.
 Proof.
   intros. destruct sz; simpl; auto. 
-  destruct sg; [apply Int.sign_ext_idem|apply Int.zero_ext_idem]; compute; auto.
-  destruct sg; [apply Int.sign_ext_idem|apply Int.zero_ext_idem]; compute; auto.
+  destruct sg; [apply Int.sign_ext_idem|apply Int.zero_ext_idem]; compute; intuition congruence.
+  destruct sg; [apply Int.sign_ext_idem|apply Int.zero_ext_idem]; compute; intuition congruence.
   destruct (Int.eq i Int.zero); auto.
 Qed.
 
@@ -288,7 +288,7 @@ Proof.
   destruct si; inversion H0; clear H0; subst chunk; simpl in *; congruence.
   clear H1. inv H0. auto.
   inversion H0; clear H0; subst chunk. simpl in *. 
-  destruct (Int.eq n Int.zero); subst n; auto.
+  destruct (Int.eq n Int.zero); subst n; reflexivity.
   destruct sz; inversion H0; clear H0; subst chunk; simpl in *; congruence.
   inv H0; auto.
   inv H0; auto.
@@ -405,7 +405,7 @@ Lemma match_envs_set_temp:
   match_envs f cenv e (PTree.set id v le) m lo hi te (PTree.set id tv tle) tlo thi.
 Proof.
   intros. unfold check_temp in H1. 
-  destruct (VSet.mem id cenv) as []_eqn; monadInv H1.
+  destruct (VSet.mem id cenv) eqn:?; monadInv H1.
   destruct H. constructor; eauto; intros.
 (* vars *)
   generalize (me_vars0 id0); intros MV; inv MV.
@@ -477,8 +477,8 @@ Remark add_local_variable_charact:
   VSet.In id1 cenv \/ exists chunk, access_mode ty = By_value chunk /\ id = id1 /\ VSet.mem id atk = false.
 Proof.
   intros. unfold add_local_variable. split; intros. 
-  destruct (access_mode ty) as []_eqn; auto.
-  destruct (VSet.mem id atk) as []_eqn; auto.
+  destruct (access_mode ty) eqn:?; auto.
+  destruct (VSet.mem id atk) eqn:?; auto.
   rewrite VSF.add_iff in H. destruct H; auto. right; exists m; auto.
   destruct H as [A | [chunk [A [B C]]]].
   destruct (access_mode ty); auto. destruct (VSet.mem id atk); auto. rewrite VSF.add_iff; auto.
@@ -639,7 +639,7 @@ Proof.
   
   (* inductive case *)
   simpl in H1. inv H1. simpl.
-  destruct (VSet.mem id cenv) as []_eqn. simpl.
+  destruct (VSet.mem id cenv) eqn:?. simpl.
   (* variable is lifted out of memory *)
   exploit Mem.alloc_left_unmapped_inject; eauto. 
   intros [j1 [A [B [C D]]]].
@@ -782,7 +782,7 @@ Proof.
   assert (forall id l1 l2,
           (In id (var_names l1) -> In id (var_names l2)) ->
           (create_undef_temps l1)!id = None \/ (create_undef_temps l1)!id = (create_undef_temps l2)!id).
-    intros. destruct ((create_undef_temps l1)!id) as [v1|]_eqn; auto.
+    intros. destruct ((create_undef_temps l1)!id) as [v1|] eqn:?; auto.
     exploit create_undef_temps_inv; eauto. intros [A B]. subst v1.
     exploit list_in_map_inv. unfold var_names in H. apply H. eexact B.
     intros [[id1 ty1] [P Q]]. simpl in P; subst id1.
@@ -813,7 +813,7 @@ Remark filter_charact:
   In x (List.filter f l) <-> In x l /\ f x = true.
 Proof.
   induction l; simpl. tauto. 
-  destruct (f a) as []_eqn. 
+  destruct (f a) eqn:?. 
   simpl. rewrite IHl. intuition congruence.
   intuition congruence.
 Qed.
@@ -902,7 +902,7 @@ Proof.
   unfold var_names in i. exploit list_in_map_inv; eauto.
   intros [[id' ty] [EQ IN]]; simpl in EQ; subst id'.
   exploit F; eauto. intros [b [P R]]. 
-  destruct (VSet.mem id cenv) as []_eqn.
+  destruct (VSet.mem id cenv) eqn:?.
   (* local var, lifted *)
   destruct R as [U V]. exploit H2; eauto. intros [chunk X]. 
   eapply match_var_lifted with (v := Vundef) (tv := Vundef); eauto.
@@ -918,7 +918,7 @@ Proof.
   (* non-local var *)
   exploit G; eauto. unfold empty_env. rewrite PTree.gempty. intros [U V].
   eapply match_var_not_local; eauto. 
-  destruct (VSet.mem id cenv) as []_eqn; auto.
+  destruct (VSet.mem id cenv) eqn:?; auto.
   elim n; eauto.
 
   (* temps *)
@@ -1006,8 +1006,8 @@ Proof.
     apply RPSRC. omega.
   assert (PDST: Mem.perm m bdst (Int.unsigned odst) Cur Nonempty).
     apply RPDST. omega.
-  exploit Mem.address_inject.  eauto. apply Mem.perm_cur_max. eexact PSRC. eauto. intros EQ1.
-  exploit Mem.address_inject.  eauto. apply Mem.perm_cur_max. eexact PDST. eauto. intros EQ2.
+  exploit Mem.address_inject.  eauto. eexact PSRC. eauto. intros EQ1.
+  exploit Mem.address_inject.  eauto. eexact PDST. eauto. intros EQ2.
   exploit Mem.loadbytes_inject; eauto. intros [bytes2 [A B]].
   exploit Mem.storebytes_mapped_inject; eauto. intros [tm' [C D]].
   exists tm'. 
@@ -1072,7 +1072,7 @@ Proof.
   (* inductive case *)
   inv NOREPET. inv CASTED. inv VINJ.
   exploit me_vars; eauto. instantiate (1 := id); intros MV.
-  destruct (VSet.mem id cenv) as []_eqn.
+  destruct (VSet.mem id cenv) eqn:?.
   (* lifted to temp *)
   eapply IHbind_parameters with (tle1 := PTree.set id v' tle1); eauto.
   eapply match_envs_assign_lifted; eauto. 
@@ -1164,7 +1164,7 @@ Proof.
   induction l; simpl; intros.
   contradiction.
   destruct a as [[b1 lo1] hi1]. 
-  destruct (Mem.free m b1 lo1 hi1) as [m1|]_eqn; try discriminate.
+  destruct (Mem.free m b1 lo1 hi1) as [m1|] eqn:?; try discriminate.
   destruct H0. inv H0. eapply Mem.free_range_perm; eauto. 
   red; intros. eapply Mem.perm_free_3; eauto. eapply IHl; eauto. 
 Qed.
@@ -1209,7 +1209,7 @@ Lemma free_list_right_inject:
 Proof.
   induction l; simpl; intros.
   congruence.
-  destruct a as [[b lo] hi]. destruct (Mem.free m2 b lo hi) as [m21|]_eqn; try discriminate.
+  destruct a as [[b lo] hi]. destruct (Mem.free m2 b lo hi) as [m21|] eqn:?; try discriminate.
   eapply IHl with (m2 := m21); eauto.
   eapply Mem.free_right_inject; eauto. 
 Qed.
@@ -1372,35 +1372,44 @@ Lemma sem_cmp_inject:
   exists tv, sem_cmp cmp tv1 ty1 tv2 ty2 tm = Some tv /\ val_inject f v tv.
 Proof.
   unfold sem_cmp; intros. 
-  assert (MM: sem_cmp_mismatch cmp = Some v ->
-              exists tv, sem_cmp_mismatch cmp = Some tv /\ val_inject f v tv).
+  assert (MM: option_map Val.of_bool (Val.cmp_different_blocks cmp) = Some v ->
+      exists tv, option_map Val.of_bool (Val.cmp_different_blocks cmp) = Some tv /\ val_inject f v tv).
     intros. exists v; split; auto. 
     destruct cmp; simpl in H2; inv H2; auto.
 
   destruct (classify_cmp ty1 ty2); try destruct s; inv H0; try discriminate; inv H1; inv H; TrivialInject.
   destruct (Int.eq i Int.zero); try discriminate; auto.
   destruct (Int.eq i Int.zero); try discriminate; auto.
-  destruct (Mem.valid_pointer m b1 (Int.unsigned ofs1)) as []_eqn; try discriminate.
-  destruct (Mem.valid_pointer m b0 (Int.unsigned ofs0)) as []_eqn; try discriminate.
-  simpl in H3.
-  rewrite (Mem.valid_pointer_inject_val _ _ _ _ _ _ _ MEMINJ Heqb).
-  rewrite (Mem.valid_pointer_inject_val _ _ _ _ _ _ _ MEMINJ Heqb0).
-  simpl.
-  destruct (zeq b1 b0).  subst b1. rewrite H0 in H2; inv H2. rewrite zeq_true.
-  replace  (Int.cmpu cmp (Int.add ofs1 (Int.repr delta))
+
+  destruct (zeq b1 b0); subst.
+  rewrite H0 in H2. inv H2. rewrite zeq_true.
+  destruct (Mem.weak_valid_pointer m b0 (Int.unsigned ofs1)) eqn:?; try discriminate.
+  destruct (Mem.weak_valid_pointer m b0 (Int.unsigned ofs0)) eqn:?; try discriminate.
+  simpl H3.
+  rewrite (Mem.weak_valid_pointer_inject_val _ _ _ _ _ _ _ MEMINJ Heqb) by eauto.
+  rewrite (Mem.weak_valid_pointer_inject_val _ _ _ _ _ _ _ MEMINJ Heqb0) by eauto.
+  simpl. replace  (Int.cmpu cmp (Int.add ofs1 (Int.repr delta))
                          (Int.add ofs0 (Int.repr delta)))
      with  (Int.cmpu cmp ofs1 ofs0).
   inv H3; TrivialInject.
   symmetry. apply Int.translate_cmpu. 
-  eapply Mem.valid_pointer_inject_no_overflow; eauto.
-  eapply Mem.valid_pointer_inject_no_overflow; eauto.
-  destruct (zeq b2 b3).
-  exploit Mem.different_pointers_inject; eauto. intros [A|A]. contradiction.
+  eapply Mem.weak_valid_pointer_inject_no_overflow; eauto.
+  eapply Mem.weak_valid_pointer_inject_no_overflow; eauto.
+  destruct (Mem.valid_pointer m b1 (Int.unsigned ofs1)) eqn:?; try discriminate.
+  destruct (Mem.valid_pointer m b0 (Int.unsigned ofs0)) eqn:?; try discriminate.
+  destruct (zeq b2 b3); subst.
+  rewrite Mem.valid_pointer_implies
+    by (eapply (Mem.valid_pointer_inject_val _ _ _ _ _ _ _ MEMINJ Heqb); eauto).
+  rewrite Mem.valid_pointer_implies
+    by (eapply (Mem.valid_pointer_inject_val _ _ _ _ _ _ _ MEMINJ Heqb0); eauto).
+  simpl.
+  exploit Mem.different_pointers_inject; eauto. intros [[]|A]. easy.
   destruct cmp; simpl in H3; inv H3.
   simpl. unfold Int.eq. rewrite zeq_false; auto.
   simpl. unfold Int.eq. rewrite zeq_false; auto.
-  auto.
-  econstructor; eauto. econstructor; eauto. 
+  rewrite (Mem.valid_pointer_inject_val _ _ _ _ _ _ _ MEMINJ Heqb) by eauto.
+  rewrite (Mem.valid_pointer_inject_val _ _ _ _ _ _ _ MEMINJ Heqb0) by eauto.
+  simpl in H3 |- *. auto.
 Qed.
 
 Lemma sem_binary_operation_inject:
@@ -1509,7 +1518,7 @@ Proof.
 (* addrof *)
   exploit eval_simpl_lvalue; eauto. 
   destruct a; auto with compat.
-  destruct a; auto. destruct (VSet.mem i cenv) as []_eqn; auto. 
+  destruct a; auto. destruct (VSet.mem i cenv) eqn:?; auto. 
   elim (H0 i). apply VSet.singleton_2. auto. apply VSet.mem_2. auto.
   intros [b' [ofs' [A B]]]. 
   exists (Vptr b' ofs'); split; auto. constructor; auto. 
@@ -1529,7 +1538,7 @@ Proof.
 (* rval *)
   assert (EITHER: (exists id, exists ty, a = Evar id ty /\ VSet.mem id cenv = true)
                \/ (match a with Evar id _ => VSet.mem id cenv = false | _ => True end)).
-    destruct a; auto. destruct (VSet.mem i cenv) as []_eqn; auto. left; exists i; exists t; auto.  
+    destruct a; auto. destruct (VSet.mem i cenv) eqn:?; auto. left; exists i; exists t; auto.  
   destruct EITHER as [ [id [ty [EQ OPT]]] | NONOPT ].
   (* a variable pulled out of memory *)
   subst a. simpl. rewrite OPT.
@@ -1696,10 +1705,10 @@ Lemma match_cont_extcall:
 Proof.
   intros. eapply match_cont_invariant; eauto. 
   destruct H0. intros. eapply H5; eauto. 
-  red in H2. intros. destruct (f b) as [[b' delta] | ]_eqn. auto. 
-  destruct (f' b) as [[b' delta] | ]_eqn; auto. 
+  red in H2. intros. destruct (f b) as [[b' delta] | ] eqn:?. auto. 
+  destruct (f' b) as [[b' delta] | ] eqn:?; auto. 
   exploit H2; eauto. unfold Mem.valid_block. intros [A B]. omegaContradiction.
-  red in H2. intros. destruct (f b) as [[b'' delta''] | ]_eqn. auto. 
+  red in H2. intros. destruct (f b) as [[b'' delta''] | ] eqn:?. auto. 
   exploit H2; eauto. unfold Mem.valid_block. intros [A B]. omegaContradiction.
 Qed.
 
@@ -1752,7 +1761,7 @@ Remark free_list_nextblock:
 Proof.
   induction l; simpl; intros.
   congruence.
-  destruct a. destruct p. destruct (Mem.free m b z0 z) as [m1|]_eqn; try discriminate.
+  destruct a. destruct p. destruct (Mem.free m b z0 z) as [m1|] eqn:?; try discriminate.
   transitivity (Mem.nextblock m1). eauto. eapply Mem.nextblock_free; eauto. 
 Qed.
 
@@ -1764,7 +1773,7 @@ Remark free_list_load:
 Proof.
   induction l; simpl; intros.
   inv H; auto.
-  destruct a. destruct p. destruct (Mem.free m b z0 z) as [m1|]_eqn; try discriminate.
+  destruct a. destruct p. destruct (Mem.free m b z0 z) as [m1|] eqn:?; try discriminate.
   transitivity (Mem.load chunk m1 b' 0). eauto. 
   eapply Mem.load_free. eauto. left. assert (b' < b) by eauto. unfold block; omega.
 Qed.
@@ -1860,7 +1869,7 @@ Remark is_liftable_var_charact:
   end.
 Proof.
   intros. destruct a; simpl; auto.
-  destruct (VSet.mem i cenv) as []_eqn. 
+  destruct (VSet.mem i cenv) eqn:?. 
   exists t; auto. 
   auto.
 Qed.
@@ -2202,7 +2211,7 @@ Proof.
     apply val_list_inject_incr with j'; eauto. 
     eexact B. eexact C.
     intros. apply (create_undef_temps_lifted id f). auto.
-    intros. destruct (create_undef_temps (fn_temps f))!id as [v|]_eqn; auto.
+    intros. destruct (create_undef_temps (fn_temps f))!id as [v|] eqn:?; auto.
     exploit create_undef_temps_inv; eauto. intros [P Q]. elim (H3 id id); auto.
   intros [tel [tm1 [P [Q [R [S T]]]]]].
   change (cenv_for_gen (addr_taken_stmt (fn_body f)) (fn_params f ++ fn_vars f))

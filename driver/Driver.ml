@@ -11,6 +11,7 @@
 (* *********************************************************************)
 
 open Printf
+open Camlcoq
 open Clflags
 
 (* Location of the compatibility library *)
@@ -37,9 +38,9 @@ let safe_remove file =
 
 let print_error oc msg =
   let print_one_error = function
-  | Errors.MSG s -> output_string oc (Camlcoq.camlstring_of_coqstring s)
-  | Errors.CTX i -> output_string oc (Camlcoq.extern_atom i)
-  | Errors.POS i -> fprintf oc "%ld" (Camlcoq.camlint_of_positive i)
+  | Errors.MSG s -> output_string oc (camlstring_of_coqstring s)
+  | Errors.CTX i -> output_string oc (extern_atom i)
+  | Errors.POS i -> fprintf oc "%ld" (P.to_int32 i)
   in
     List.iter print_one_error msg;
     output_char oc '\n'
@@ -317,17 +318,15 @@ let rec find_action s = function
 
 let parse_cmdline spec usage =
   let acts = List.map (fun (pat, act) -> (Str.regexp pat, act)) spec in
-  let error () =
-    eprintf "%s" usage;
-    exit 2 in
   let rec parse i =
     if i < Array.length Sys.argv then begin
       let s = Sys.argv.(i) in
       match find_action s acts with
       | None ->
           if s <> "-help" && s <> "--help" 
-          then eprintf "Unknown argument `%s'\n" s;
-          error ()
+          then eprintf "Unknown argument `%s'\n" s
+          else printf "%s" usage;
+          exit 2
       | Some(Set r) ->
           r := true; parse (i+1)
       | Some(Unset r) ->
@@ -338,7 +337,7 @@ let parse_cmdline spec usage =
           if i + 1 < Array.length Sys.argv then begin
             fn Sys.argv.(i+1); parse (i+2)
           end else begin
-            eprintf "Option `%s' expects an argument\n" s; error()
+            eprintf "Option `%s' expects an argument\n" s; exit 2
           end
       | Some(Integer fn) ->
           if i + 1 < Array.length Sys.argv then begin
@@ -347,11 +346,11 @@ let parse_cmdline spec usage =
                 int_of_string Sys.argv.(i+1)
               with Failure _ ->
                 eprintf "Argument to option `%s' must be an integer\n" s;
-                error()
+                exit 2
             in
             fn n; parse (i+2)
           end else begin
-            eprintf "Option `%s' expects an argument\n" s; error()
+            eprintf "Option `%s' expects an argument\n" s; exit 2
           end
     end
   in parse 1
@@ -392,7 +391,9 @@ Code generation options: (use -fno-<opt> to turn off -f<opt>) :
   -fsmall-const <n>  Set maximal size <n> for allocation in small constant area
   -ffloat-const-prop <n>  Control constant propagation of floats
                    (<n>=0: none, <n>=1: limited, <n>=2: full; default is full)
-  -falign_functions <n>  Set alignment (in bytes) of function entry points
+  -falign-functions <n>  Set alignment (in bytes) of function entry points
+  -falign-branch-targets <n>  Set alignment (in bytes) of branch targets
+  -falign-cond-branches <n>  Set alignment (in bytes) of conditional branches
   -Wa,<opt>      Pass option <opt> to the assembler
 Tracing options:
   -dparse        Save C file after parsing and elaboration in <file>.parse.c
@@ -486,6 +487,8 @@ let cmdline_actions =
   "-fsmall-const$", Integer(fun n -> option_small_const := n);
   "-ffloat-const-prop$", Integer(fun n -> option_ffloatconstprop := n);
   "-falign-functions$", Integer(fun n -> option_falignfunctions := Some n);
+  "-falign-branch-targets", Integer(fun n -> option_falignbranchtargets := n);
+  "-falign-cond-branches", Integer(fun n -> option_faligncondbranchs := n);
   "-fall$", Self (fun _ ->
               List.iter (fun r -> r := true) language_support_options);
   "-fnone$", Self (fun _ ->

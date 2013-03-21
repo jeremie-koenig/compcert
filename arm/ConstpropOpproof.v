@@ -149,7 +149,7 @@ Proof.
   destruct (propagate_float_constants tt); simpl; auto.
   destruct (propagate_float_constants tt); simpl; auto.
   unfold eval_static_condition_val, Val.of_optbool.
-  destruct (eval_static_condition c vl0) as []_eqn.
+  destruct (eval_static_condition c vl0) eqn:?.
   rewrite (eval_static_condition_correct _ _ _ m _ H Heqo).
   destruct b; simpl; auto. 
   simpl; auto.
@@ -247,7 +247,7 @@ Proof.
   intros; unfold make_shlimm.
   predSpec Int.eq Int.eq_spec n Int.zero; intros. subst.
   exists (rs#r1); split; auto. destruct (rs#r1); simpl; auto. rewrite Int.shl_zero. auto.
-  destruct (Int.ltu n Int.iwordsize) as []_eqn; intros.
+  destruct (Int.ltu n Int.iwordsize) eqn:?; intros.
   econstructor; split. simpl; eauto.  rewrite mk_shift_amount_eq; auto. 
   econstructor; split; eauto. simpl. congruence.
 Qed.
@@ -261,7 +261,7 @@ Proof.
   intros; unfold make_shrimm.
   predSpec Int.eq Int.eq_spec n Int.zero; intros. subst.
   exists (rs#r1); split; auto. destruct (rs#r1); simpl; auto. rewrite Int.shr_zero. auto.
-  destruct (Int.ltu n Int.iwordsize) as []_eqn; intros.
+  destruct (Int.ltu n Int.iwordsize) eqn:?; intros.
   econstructor; split. simpl; eauto.  rewrite mk_shift_amount_eq; auto. 
   econstructor; split; eauto. simpl. congruence.
 Qed.
@@ -275,7 +275,7 @@ Proof.
   intros; unfold make_shruimm.
   predSpec Int.eq Int.eq_spec n Int.zero; intros. subst.
   exists (rs#r1); split; auto. destruct (rs#r1); simpl; auto. rewrite Int.shru_zero. auto.
-  destruct (Int.ltu n Int.iwordsize) as []_eqn; intros.
+  destruct (Int.ltu n Int.iwordsize) eqn:?; intros.
   econstructor; split. simpl; eauto.  rewrite mk_shift_amount_eq; auto. 
   econstructor; split; eauto. simpl. congruence.
 Qed.
@@ -291,7 +291,7 @@ Proof.
   exists (Vint Int.zero); split; auto. destruct (rs#r1); simpl; auto. rewrite Int.mul_zero; auto.
   predSpec Int.eq Int.eq_spec n Int.one; intros. subst.
   exists (rs#r1); split; auto. destruct (rs#r1); simpl; auto. rewrite Int.mul_one; auto.
-  destruct (Int.is_power2 n) as []_eqn; intros.
+  destruct (Int.is_power2 n) eqn:?; intros.
   exploit Int.is_power2_range; eauto. intros R.
   econstructor; split. simpl; eauto. rewrite mk_shift_amount_eq; auto.  
   rewrite (Val.mul_pow2 rs#r1 _ _ Heqo). auto.
@@ -306,8 +306,8 @@ Lemma make_divimm_correct:
   exists w, eval_operation ge sp op rs##args m = Some w /\ Val.lessdef v w.
 Proof.
   intros; unfold make_divimm.
-  destruct (Int.is_power2 n) as []_eqn.
-  destruct (Int.ltu i (Int.repr 31)) as []_eqn.
+  destruct (Int.is_power2 n) eqn:?.
+  destruct (Int.ltu i (Int.repr 31)) eqn:?.
   exists v; split; auto. simpl. eapply Val.divs_pow2; eauto. congruence. 
   exists v; auto.
   exists v; auto.
@@ -321,7 +321,7 @@ Lemma make_divuimm_correct:
   exists w, eval_operation ge sp op rs##args m = Some w /\ Val.lessdef v w.
 Proof.
   intros; unfold make_divuimm.
-  destruct (Int.is_power2 n) as []_eqn.
+  destruct (Int.is_power2 n) eqn:?.
   replace v with (Val.shru rs#r1 (Vint i)). 
   econstructor; split. simpl. rewrite mk_shift_amount_eq. eauto. 
   eapply Int.is_power2_range; eauto. auto.
@@ -448,19 +448,6 @@ Proof.
   rewrite H. rewrite eval_static_shift_correct. auto.
   rewrite H. rewrite Val.add_assoc. auto.
   auto.
-Qed.
-
-Lemma builtin_strength_reduction_correct:
-  forall ef args vl m t vres m',
-  vl = approx_regs app args ->
-  external_call ef ge rs##args m t vres m' ->
-  let (ef', args') := builtin_strength_reduction ef args vl in
-  external_call ef' ge rs##args' m t vres m'.
-Proof.
-  (* force MATCH to be used *)
-  assert (val_match_approx (approx_reg app 1%positive) rs#(1%positive))
-    by (apply MATCH).
-  unfold builtin_strength_reduction; intros; simpl; auto.
 Qed.
 
 End STRENGTH_REDUCTION.

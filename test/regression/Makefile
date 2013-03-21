@@ -12,7 +12,7 @@ TESTS=attribs1 bitfields1 bitfields2 bitfields3 bitfields4 \
   expr1 expr6 funptr2 initializers volatile1 volatile2 volatile3 \
   funct3 expr5 struct7 struct8 struct11 casts1 casts2 char1 \
   sizeof1 sizeof2 packedstruct1 packedstruct2 \
-  instrsel bool compar
+  instrsel bool compar switch
 
 # Other tests: should compile to .s without errors (but expect warnings)
 EXTRAS=annot1 commaprec expr2 expr3 expr4 extern1 funct2 funptr1 init1 \
@@ -22,9 +22,9 @@ EXTRAS=annot1 commaprec expr2 expr3 expr4 extern1 funct2 funptr1 init1 \
 # Test known to fail
 FAILURES=funct1 varargs1
 
-all_s: $(TESTS:%=%.s) $(EXTRAS:%=%.s)
-
 all: $(TESTS:%=%.compcert) $(EXTRAS:%=%.s)
+
+all_s: $(TESTS:%=%.s) $(EXTRAS:%=%.s)
 
 %.compcert: %.c $(CCOMP)
 	$(CCOMP) $(CCOMPFLAGS) -o $*.compcert $*.c $(LIBS)
@@ -46,7 +46,7 @@ test:
 
 interp:
 	@for i in $(TESTS); do \
-           if $(CCOMP) -fall -interp 2>/dev/null $$i.c > _cinterp.log; then \
+           if $(CCOMP) -fall -interp -quiet $$i.c > _cinterp.log; then \
              if cmp -s _cinterp.log Results/$$i; \
              then echo "$$i: interpreter passed"; \
              else echo "$$i: interpreter FAILED"; \

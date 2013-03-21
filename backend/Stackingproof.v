@@ -29,7 +29,6 @@ Require LTL.
 Require Import Linear.
 Require Import Lineartyping.
 Require Import Mach.
-Require Import Machsem.
 Require Import Bounds.
 Require Import Conventions.
 Require Import Stacklayout.
@@ -50,6 +49,15 @@ Proof.
 Qed.
 
 Section PRESERVATION.
+
+Variable return_address_offset: Mach.function -> Mach.code -> int -> Prop.
+
+Hypothesis return_address_offset_exists:
+  forall f sg ros c,
+  is_tail (Mcall sg ros :: c) (fn_code f) ->
+  exists ofs, return_address_offset f c ofs.
+
+Let step := Mach.step return_address_offset.
 
 Variable prog: Linear.program.
 Variable tprog: Mach.program.
@@ -771,9 +779,6 @@ Lemma agree_frame_set_reg:
 Proof.
   intros. inv H; constructor; auto; intros.
   rewrite Locmap.gso. auto. red. intuition congruence.
-  rewrite Locmap.gso; auto. red; auto.
-  rewrite Locmap.gso; auto. red; auto.
-  rewrite Locmap.gso; auto. red; auto.
   apply wt_setloc; auto.
 Qed.
 
@@ -849,8 +854,6 @@ Proof.
   intros. inv H. 
   change (chunk_of_type ty) with (chunk_of_type (type_of_index (FI_local ofs ty))) in H3.
   constructor; auto; intros.
-(* unused *)
-  rewrite Locmap.gso; auto. red; auto.
 (* local *)
   unfold Locmap.set. simpl. destruct (Loc.eq (S (Local ofs ty)) (S (Local ofs0 ty0))).
   inv e. eapply gss_index_contains_inj; eauto. 
@@ -859,8 +862,6 @@ Proof.
 (* outgoing *)
   rewrite Locmap.gso. eapply gso_index_contains_inj; eauto with stacking.
   simpl; auto. red; auto.
-(* incoming *)
-  rewrite Locmap.gso; auto. red; auto.
 (* parent *)
   eapply gso_index_contains; eauto. red; auto.
 (* retaddr *)
@@ -891,8 +892,6 @@ Proof.
   intros. inv H. 
   change (chunk_of_type ty) with (chunk_of_type (type_of_index (FI_arg ofs ty))) in H3.
   constructor; auto; intros.
-(* unused *)
-  rewrite Locmap.gso; auto. red; auto.
 (* local *)
   rewrite Locmap.gso. eapply gso_index_contains_inj; eauto. simpl; auto. red; auto.
 (* outgoing *)
@@ -903,8 +902,6 @@ Proof.
   red; intros. eapply Mem.perm_store_1; eauto.
   eapply gso_index_contains_inj; eauto.
   red. eapply Loc.overlap_aux_false_1; eauto.
-(* incoming *)
-  rewrite Locmap.gso; auto. red; auto.
 (* parent *)
   eapply gso_index_contains; eauto with stacking. red; auto.
 (* retaddr *)
@@ -2171,7 +2168,7 @@ Proof.
   exists b; exists tf; split; auto. simpl.
   generalize (AG m0). rewrite EQ. intro INJ. inv INJ.
   inv MG. rewrite DOMAIN in H2. inv H2. simpl. auto. eapply FUNCTIONS; eauto. 
-  destruct (Genv.find_symbol ge i) as [b|]_eqn; try discriminate. 
+  destruct (Genv.find_symbol ge i) as [b|] eqn:?; try discriminate. 
   exploit function_ptr_translated; eauto. intros [tf [A B]].
   exists b; exists tf; split; auto. simpl. 
   rewrite symbols_preserved. auto.
@@ -2327,7 +2324,7 @@ End ANNOT_ARGUMENTS.
 - Well-typedness of [f].
 *)
 
-Inductive match_states: Linear.state -> Machsem.state -> Prop :=
+Inductive match_states: Linear.state -> Mach.state -> Prop :=
   | match_states_intro:
       forall cs f sp c ls m cs' fb sp' rs m' j tf
         (MINJ: Mem.inject j m m')
@@ -2339,7 +2336,7 @@ Inductive match_states: Linear.state -> Machsem.state -> Prop :=
         (AGFRAME: agree_frame f j ls (parent_locset cs) m sp m' sp' (parent_sp cs') (parent_ra cs'))
         (TAIL: is_tail c (Linear.fn_code f)),
       match_states (Linear.State cs f (Vptr sp Int.zero) c ls m)
-                  (Machsem.State cs' fb (Vptr sp' Int.zero) (transl_code (make_env (function_bounds f)) c) rs m')
+                  (Mach.State cs' fb (Vptr sp' Int.zero) (transl_code (make_env (function_bounds f)) c) rs m')
   | match_states_call:
       forall cs f ls m cs' fb rs m' j tf
         (MINJ: Mem.inject j m m')
@@ -2351,7 +2348,7 @@ Inductive match_states: Linear.state -> Machsem.state -> Prop :=
         (AGREGS: agree_regs j ls rs)
         (AGLOCS: agree_callee_save ls (parent_locset cs)),
       match_states (Linear.Callstate cs f ls m)
-                  (Machsem.Callstate cs' fb rs m')
+                  (Mach.Callstate cs' fb rs m')
   | match_states_return:
       forall cs ls m cs' rs m' j sg 
         (MINJ: Mem.inject j m m')
@@ -2360,12 +2357,12 @@ Inductive match_states: Linear.state -> Machsem.state -> Prop :=
         (AGREGS: agree_regs j ls rs)
         (AGLOCS: agree_callee_save ls (parent_locset cs)),
       match_states (Linear.Returnstate cs ls m)
-                  (Machsem.Returnstate cs' rs m').
+                  (Mach.Returnstate cs' rs m').
 
 Theorem transf_step_correct:
   forall s1 t s2, Linear.step ge s1 t s2 ->
   forall s1' (MS: match_states s1 s1'),
-  exists s2', plus Machsem.step tge s1' t s2' /\ match_states s2 s2'.
+  exists s2', plus step tge s1' t s2' /\ match_states s2 s2'.
 Proof.
   assert (RED: forall f i c,
           transl_code (make_env (function_bounds f)) (i :: c) = 
@@ -2398,7 +2395,7 @@ Proof.
   econstructor; split.
   apply plus_one. eapply exec_Mgetparam; eauto. 
   rewrite (unfold_transf_function _ _ TRANSL). unfold fn_link_ofs. 
-  eapply index_contains_load_stack with (idx := FI_link). eauto. eapply agree_link; eauto. 
+  eapply index_contains_load_stack with (idx := FI_link). eapply TRANSL. eapply agree_link; eauto.
   simpl parent_sp.
   change (offset_of_index (make_env (function_bounds f)) (FI_arg z t))
     with (offset_of_index (make_env (function_bounds f0)) (FI_arg z t)).
@@ -2516,7 +2513,7 @@ Proof.
   (* Lcall *)
   exploit find_function_translated; eauto. intros [bf [tf' [A [B C]]]].
   exploit is_tail_transf_function; eauto. intros IST. simpl in IST.
-  exploit Asmgenretaddr.return_address_exists. eexact IST.
+  exploit return_address_offset_exists. eexact IST.
   intros [ra D].
   econstructor; split.
   apply plus_one. econstructor; eauto.
@@ -2724,7 +2721,7 @@ Qed.
 
 Lemma transf_initial_states:
   forall st1, Linear.initial_state prog st1 ->
-  exists st2, Machsem.initial_state tprog st2 /\ match_states st1 st2.
+  exists st2, Mach.initial_state tprog st2 /\ match_states st1 st2.
 Proof.
   intros. inv H.
   exploit function_ptr_translated; eauto. intros [tf [FIND TR]].
@@ -2753,7 +2750,7 @@ Qed.
 
 Lemma transf_final_states:
   forall st1 st2 r, 
-  match_states st1 st2 -> Linear.final_state st1 r -> Machsem.final_state st2 r.
+  match_states st1 st2 -> Linear.final_state st1 r -> Mach.final_state st2 r.
 Proof.
   intros. inv H0. inv H. inv STACKS.
   constructor.
@@ -2762,7 +2759,7 @@ Proof.
 Qed.
 
 Theorem transf_program_correct:
-  forward_simulation (Linear.semantics prog) (Machsem.semantics tprog).
+  forward_simulation (Linear.semantics prog) (Mach.semantics return_address_offset tprog).
 Proof.
   eapply forward_simulation_plus.
   eexact symbols_preserved.

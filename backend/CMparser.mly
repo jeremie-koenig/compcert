@@ -19,8 +19,7 @@
 %{
 open Datatypes
 open Camlcoq
-open BinPos
-open BinInt
+open BinNums
 open Integers
 open AST
 open Cminor
@@ -45,18 +44,19 @@ let mkef sg toks =
       EF_vstore c
   | [EFT_tok "volatile"; EFT_tok "load"; EFT_chunk c; 
      EFT_tok "global"; EFT_string s; EFT_int n] ->
-      EF_vload_global(c, intern_string s, z_of_camlint n)
+      EF_vload_global(c, intern_string s, coqint_of_camlint n)
   | [EFT_tok "volatile"; EFT_tok "store"; EFT_chunk c; 
      EFT_tok "global"; EFT_string s; EFT_int n] ->
-      EF_vstore_global(c, intern_string s, z_of_camlint n)
+      EF_vstore_global(c, intern_string s, coqint_of_camlint n)
   | [EFT_tok "malloc"] ->
       EF_malloc
   | [EFT_tok "free"] ->
       EF_free
   | [EFT_tok "memcpy"; EFT_tok "size"; EFT_int sz; EFT_tok "align"; EFT_int al] ->
-      EF_memcpy(z_of_camlint sz, z_of_camlint al)
+      EF_memcpy(Z.of_sint32 sz, Z.of_sint32 al)
   | [EFT_tok "annot"; EFT_string txt] ->
-      EF_annot(intern_string txt, sg.sig_args)
+      EF_annot(intern_string txt,
+               List.map (fun t -> AA_arg t) sg.sig_args)
   | [EFT_tok "annot_val"; EFT_string txt] ->
       if sg.sig_args = [] then raise Parsing.Parse_error;
       EF_annot_val(intern_string txt, List.hd sg.sig_args)
@@ -183,7 +183,7 @@ let mkwhile expr body =
 let intconst n =
   Rconst(Ointconst(coqint_of_camlint n))
 
-let exitnum n = nat_of_camlint n
+let exitnum n = Nat.of_int32 n
 
 let mkswitch expr (cases, dfl) =
   convert_accu := [];
@@ -211,25 +211,25 @@ let mkswitch expr (cases, dfl) =
 ***)
 
 let mkmatch_aux expr cases =
-  let ncases = Int32.of_int (List.length cases) in
+  let ncases = List.length cases in
   let rec mktable n = function
     | [] -> assert false
     | [key, action] -> []
     | (key, action) :: rem ->
-        (coqint_of_camlint key, nat_of_camlint n)
-        :: mktable (Int32.succ n) rem in
+        (coqint_of_camlint key, Nat.of_int n)
+        :: mktable (n + 1) rem in
   let sw =
-    Sswitch(expr, mktable 0l cases, nat_of_camlint (Int32.pred ncases)) in
+    Sswitch(expr, mktable 0 cases, Nat.of_int (ncases - 1)) in
   let rec mkblocks body n = function
     | [] -> assert false
     | [key, action] ->
         Sblock(Sseq(body, action))
     | (key, action) :: rem ->
         mkblocks
-          (Sblock(Sseq(body, Sseq(action, Sexit (nat_of_camlint n)))))
-          (Int32.pred n)
+          (Sblock(Sseq(body, Sseq(action, Sexit (Nat.of_int n)))))
+          (n - 1)
           rem in
-  mkblocks (Sblock sw) (Int32.pred ncases) cases
+  mkblocks (Sblock sw) (ncases - 1) cases
 
 let mkmatch expr cases =
   convert_accu := [];
@@ -377,7 +377,7 @@ global_declaration:
       { $1 }
   | VAR STRINGLIT LBRACKET INTLIT RBRACKET  /* old style */
       { (intern_string $2,
-         Gvar{gvar_info = (); gvar_init = [Init_space(z_of_camlint $4)];
+         Gvar{gvar_info = (); gvar_init = [Init_space(Z.of_sint32 $4)];
               gvar_readonly = false; gvar_volatile = false}) }
   | VAR STRINGLIT is_readonly is_volatile LBRACE init_data_list RBRACE
        { (intern_string $2,
@@ -413,7 +413,7 @@ init_data:
    | FLOAT64 FLOATLIT                            { Init_float64 (coqfloat_of_camlfloat $2) }
    | FLOAT FLOATLIT                              { Init_float64 (coqfloat_of_camlfloat $2) }
    | FLOATLIT                                    { Init_float64 (coqfloat_of_camlfloat $1) }
-   | LBRACKET INTLIT RBRACKET                    { Init_space (z_of_camlint $2) }
+   | LBRACKET INTLIT RBRACKET                    { Init_space (Z.of_sint32 $2) }
    | INTLIT LPAREN STRINGLIT RPAREN              { Init_addrof (intern_string $3, coqint_of_camlint $1) }
  ;
  
@@ -462,7 +462,7 @@ parameter_list:
 
 stack_declaration:
     /* empty */                                 { Z0 }
-  | STACK INTLIT SEMICOLON                      { z_of_camlint $2 }
+  | STACK INTLIT SEMICOLON                      { Z.of_sint32 $2 }
 ;
 
 var_declarations:
