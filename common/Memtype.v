@@ -209,11 +209,9 @@ perm_max m b ofs k p:
 perm_valid_block m b ofs k p:
   perm m b ofs k p -> valid_block m b;
 
-(* Unused?
 (** The [Mem.perm] predicate is decidable. *)
 perm_dec m b ofs k p:
   {perm m b ofs k p} + {~ perm m b ofs k p};
-*)
 
 (** [range_perm m b lo hi p] holds iff the addresses [b, lo] to [b, hi-1]
   all have permission [p] of kind [k]. *)
@@ -222,6 +220,12 @@ range_perm (m: mem) (b: block) (lo hi: Z) (k: perm_kind) (p: permission) : Prop 
 
 range_perm_implies m b lo hi k p1 p2:
   range_perm m b lo hi k p1 -> perm_order p1 p2 -> range_perm m b lo hi k p2;
+range_perm_cur:
+  forall m b lo hi k p,
+  range_perm m b lo hi Cur p -> range_perm m b lo hi k p;
+range_perm_max:
+  forall m b lo hi k p,
+  range_perm m b lo hi k p -> range_perm m b lo hi Max p;
 
 (** An access to a memory quantity [chunk] at address [b, ofs] with
   permission [p] is valid in [m] if the accessed addresses all have
@@ -312,6 +316,14 @@ load_int8_signed_unsigned m b ofs:
 
 load_int16_signed_unsigned m b ofs:
   load Mint16signed m b ofs = option_map (Val.sign_ext 16) (load Mint16unsigned m b ofs);
+
+load_float64al32:
+  forall m b ofs v,
+  load Mfloat64 m b ofs = Some v -> load Mfloat64al32 m b ofs = Some v;
+
+loadv_float64al32:
+  forall m a v,
+  loadv Mfloat64 m a = Some v -> loadv Mfloat64al32 m a = Some v;
 
 
 (** ** Properties of [loadbytes]. *)
@@ -477,6 +489,12 @@ store_int16_sign_ext m b ofs n:
 store_float32_truncate m b ofs n:
   store Mfloat32 m b ofs (Vfloat (Float.singleoffloat n)) =
   store Mfloat32 m b ofs (Vfloat n);
+store_float64al32:
+  forall m b ofs v m',
+  store Mfloat64 m b ofs v = Some m' -> store Mfloat64al32 m b ofs v = Some m';
+storev_float64al32:
+  forall m a v m',
+  storev Mfloat64 m a v = Some m' -> storev Mfloat64al32 m a v = Some m';
 
 (** ** Properties of [storebytes]. *)
 
@@ -883,6 +901,10 @@ that we now axiomatize. *)
 
 inject: meminj -> mem -> mem -> Prop;
 
+mi_freeblocks f m1 m2:
+  inject f m1 m2 ->
+  forall b, ~(valid_block m1 b) -> f b = None;
+
 valid_block_inject_1 f m1 m2 b1 b2 delta:
   f b1 = Some(b2, delta) ->
   inject f m1 m2 ->
@@ -897,6 +919,12 @@ perm_inject f m1 m2 b1 b2 delta ofs k p:
   f b1 = Some(b2, delta) ->
   inject f m1 m2 ->
   perm m1 b1 ofs k p -> perm m2 b2 (ofs + delta) k p;
+
+range_perm_inject:
+  forall f m1 m2 b1 b2 delta lo hi k p,
+  f b1 = Some(b2, delta) ->
+  inject f m1 m2 ->
+  range_perm m1 b1 lo hi k p -> range_perm m2 b2 (lo + delta) (hi + delta) k p;
 
 valid_access_inject f m1 m2 chunk b1 ofs b2 delta p:
   f b1 = Some(b2, delta) ->
@@ -965,6 +993,29 @@ different_pointers_inject f m m' b1 ofs1 b2 ofs2 b1' delta1 b2' delta2:
   b1' <> b2' \/
   Int.unsigned (Int.add ofs1 (Int.repr delta1)) <>
   Int.unsigned (Int.add ofs2 (Int.repr delta2));
+
+disjoint_or_equal_inject:
+  forall f m m' b1 b1' delta1 b2 b2' delta2 ofs1 ofs2 sz,
+  inject f m m' ->
+  f b1 = Some(b1', delta1) ->
+  f b2 = Some(b2', delta2) ->
+  range_perm m b1 ofs1 (ofs1 + sz) Max Nonempty ->
+  range_perm m b2 ofs2 (ofs2 + sz) Max Nonempty ->
+  sz > 0 ->
+  b1 <> b2 \/ ofs1 = ofs2 \/ ofs1 + sz <= ofs2 \/ ofs2 + sz <= ofs1 ->
+  b1' <> b2' \/ ofs1 + delta1 = ofs2 + delta2
+             \/ ofs1 + delta1 + sz <= ofs2 + delta2 
+             \/ ofs2 + delta2 + sz <= ofs1 + delta1;
+
+aligned_area_inject:
+  forall f m m' b ofs al sz b' delta,
+  inject f m m' ->
+  al = 1 \/ al = 2 \/ al = 4 \/ al = 8 -> sz > 0 ->
+  (al | sz) ->
+  range_perm m b ofs (ofs + sz) Cur Nonempty ->
+  (al | ofs) ->
+  f b = Some(b', delta) ->
+  (al | ofs + delta);
 
 load_inject f m1 m2 chunk b1 ofs b2 delta v1:
   inject f m1 m2 ->
@@ -1086,6 +1137,34 @@ alloc_parallel_inject f m1 m2 lo1 hi1 m1' b1 lo2 hi2:
   /\ inject_incr f f'
   /\ f' b1 = Some(b2, 0)
   /\ (forall b, b <> b1 -> f' b = f b);
+
+free_left_inject:
+  forall f m1 m2 b lo hi m1',
+  inject f m1 m2 ->
+  free m1 b lo hi = Some m1' ->
+  inject f m1' m2;
+
+free_list_left_inject:
+  forall f m2 l m1 m1',
+  inject f m1 m2 ->
+  free_list m1 l = Some m1' ->
+  inject f m1' m2;
+
+free_right_inject:
+  forall f m1 m2 b lo hi m2',
+  inject f m1 m2 ->
+  free m2 b lo hi = Some m2' ->
+  (forall b1 delta ofs k p,
+    f b1 = Some(b, delta) -> perm m1 b1 ofs k p ->
+    lo <= ofs + delta < hi -> False) ->
+  inject f m1 m2';
+
+perm_free_list:
+  forall l m m' b ofs k p,
+  free_list m l = Some m' ->
+  perm m' b ofs k p ->
+  perm m b ofs k p /\ 
+  (forall lo hi, In (b, lo, hi) l -> lo <= ofs < hi -> False);
 
 free_inject f m1 l m1' m2 b lo hi m2':
   inject f m1 m2 ->
