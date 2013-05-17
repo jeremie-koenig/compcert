@@ -21,7 +21,7 @@ open AST
 open Integers
 open Floats
 open Values
-open Memory
+open Memtype
 open Globalenvs
 open Events
 open Ctypes
@@ -147,7 +147,7 @@ let compare_mem m1 m2 =
 
 (* Comparing continuations *)
 
-let some_expr = Eval(Vptr(Memimpl.nullptr, Int.zero), Tvoid)
+let some_expr = Eval(Vptr(Mem.nullptr Memimpl.mem_MEM, Int.zero), Tvoid)
 
 let rank_cont = function
   | Kstop -> 0
