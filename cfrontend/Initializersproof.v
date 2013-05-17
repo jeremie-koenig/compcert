@@ -376,8 +376,12 @@ Qed.
 Lemma mem_empty_not_valid_pointer:
   forall b ofs, Mem.valid_pointer Mem.empty b ofs = false.
 Proof.
-  intros. unfold Mem.valid_pointer. destruct (Mem.perm_dec Mem.empty b ofs Cur Nonempty); auto.
-  eelim Mem.perm_empty; eauto. 
+  intros b ofs. case_eq (Mem.valid_pointer Mem.empty b ofs).
+  - intro H.
+    apply Mem.valid_pointer_valid_access in H.
+    eelim Mem.valid_access_empty.
+    apply H.
+  - tauto.
 Qed.
 
 Lemma mem_empty_not_weak_valid_pointer:
@@ -401,7 +405,9 @@ Opaque zeq.
   unfold Val.cmp_different_blocks in *. destruct c; inv H3; inv H2; constructor.
 - destruct (Int.eq n Int.zero); try discriminate. 
   unfold Val.cmp_different_blocks in *. destruct c; inv H2; inv H1; constructor.
-- destruct (zeq (Z.pos id) (Z.pos id0)); discriminate.
+- destruct (zeq (Z.pos id) (Z.pos id0)).
+  rewrite mem_empty_not_weak_valid_pointer in *; now discriminate.
+  rewrite mem_empty_not_valid_pointer in *; now discriminate.
 Qed.
 
 Lemma sem_binary_match:
@@ -711,6 +717,7 @@ Proof.
   (* compound *)
   simpl in H. destruct ty; try discriminate.
   (* compound array *)
+  unfold transl_init in H.
   destruct (zle z 0). 
   monadInv H. simpl. repeat rewrite Zmax_spec. rewrite zlt_true. rewrite zlt_true. ring.
   omega. generalize (sizeof_pos ty); omega.
@@ -735,6 +742,7 @@ Proof.
   (* base cases *)
   simpl. intuition. 
   (* arrays *)
+  unfold transl_init_array in H.
   destruct (zeq sz 0); inv H. simpl. ring. 
   (* structs *)
   destruct fl; inv H.
@@ -861,6 +869,7 @@ Proof.
   exploit transl_init_single_steps; eauto. intros. 
   simpl. rewrite H3. auto.
   (* array *)
+  unfold transl_init in H1.
   destruct (zle sz 0).
   exploit exec_init_array_length; eauto. destruct il; intros.
   subst. inv H. inv H1. auto. omegaContradiction.

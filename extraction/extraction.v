@@ -31,9 +31,6 @@ Extraction Inline Wfsimpl.Fix Wfsimpl.Fixm.
 (* Memdata *)
 Extract Constant Memdata.big_endian => "Memdataaux.big_endian".
 
-(* Memory - work around an extraction bug. *)
-Extraction NoInline Memory.Mem.valid_pointer.
-
 (* Errors *)
 Extraction Inline Errors.bind Errors.bind2.
 

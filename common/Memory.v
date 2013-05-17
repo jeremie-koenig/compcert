@@ -37,13 +37,74 @@ Require Import Values.
 Require Export Memdata.
 Require Export Memtype.
 
+(* It's important that no instance of Mem.MEM be in scope when we define
+  these hints, otherwise they would use that specific instance. *)
+Hint Resolve
+  Mem.valid_not_valid_diff
+  Mem.perm_implies
+  Mem.perm_cur
+  Mem.perm_max
+  Mem.perm_valid_block
+  Mem.range_perm_implies
+  Mem.range_perm_cur
+  Mem.range_perm_max
+  Mem.valid_access_implies
+  Mem.valid_access_valid_block
+  Mem.valid_access_perm
+  Mem.valid_access_load
+  Mem.load_valid_access
+  Mem.loadbytes_range_perm
+  Mem.valid_access_store
+  Mem.perm_store_1
+  Mem.perm_store_2
+  Mem.nextblock_store
+  Mem.store_valid_block_1
+  Mem.store_valid_block_2
+  Mem.store_valid_access_1
+  Mem.store_valid_access_2
+  Mem.store_valid_access_3
+  Mem.storebytes_range_perm
+  Mem.perm_storebytes_1
+  Mem.perm_storebytes_2
+  Mem.storebytes_valid_access_1
+  Mem.storebytes_valid_access_2
+  Mem.nextblock_storebytes
+  Mem.storebytes_valid_block_1
+  Mem.storebytes_valid_block_2
+  Mem.nextblock_alloc
+  Mem.alloc_result
+  Mem.valid_block_alloc
+  Mem.fresh_block_alloc
+  Mem.valid_new_block
+  Mem.perm_alloc_1
+  Mem.perm_alloc_2
+  Mem.perm_alloc_3
+  Mem.perm_alloc_4
+  Mem.perm_alloc_inv
+  Mem.valid_access_alloc_other
+  Mem.valid_access_alloc_same
+  Mem.valid_access_alloc_inv
+  Mem.range_perm_free
+  Mem.free_range_perm
+  Mem.nextblock_free
+  Mem.valid_block_free_1
+  Mem.valid_block_free_2
+  Mem.perm_free_1
+  Mem.perm_free_2
+  Mem.perm_free_3
+  Mem.valid_access_free_1
+  Mem.valid_access_free_2
+  Mem.valid_access_free_inv_1
+  Mem.valid_access_free_inv_2
+: mem.
+
 (* To avoid useless definitions of inductors in extracted code. *)
 Local Unset Elimination Schemes.
 Local Unset Case Analysis Schemes.
 
 Local Notation "a # b" := (ZMap.get b a) (at level 1).
 
-Module Mem.
+Module Memimpl.
 
 Definition perm_order' (po: option permission) (p: permission) := 
   match po with
@@ -4147,67 +4208,8 @@ Instance mem_MEM: Mem.MEM mem := {
   drop_inject_neutral := drop_inject_neutral
 }.
 
-End Mem.
+End Memimpl.
 
-Notation mem := Mem.mem.
+Notation mem := Memimpl.mem.
 
-Global Opaque Mem.alloc Mem.free Mem.store Mem.load Mem.storebytes Mem.loadbytes.
-
-Hint Resolve
-  Mem.valid_not_valid_diff
-  Mem.perm_implies
-  Mem.perm_cur
-  Mem.perm_max
-  Mem.perm_valid_block
-  Mem.range_perm_implies
-  Mem.range_perm_cur
-  Mem.range_perm_max
-  Mem.valid_access_implies
-  Mem.valid_access_valid_block
-  Mem.valid_access_perm
-  Mem.valid_access_load
-  Mem.load_valid_access
-  Mem.loadbytes_range_perm
-  Mem.valid_access_store
-  Mem.perm_store_1
-  Mem.perm_store_2
-  Mem.nextblock_store
-  Mem.store_valid_block_1
-  Mem.store_valid_block_2
-  Mem.store_valid_access_1
-  Mem.store_valid_access_2
-  Mem.store_valid_access_3
-  Mem.storebytes_range_perm
-  Mem.perm_storebytes_1
-  Mem.perm_storebytes_2
-  Mem.storebytes_valid_access_1
-  Mem.storebytes_valid_access_2
-  Mem.nextblock_storebytes
-  Mem.storebytes_valid_block_1
-  Mem.storebytes_valid_block_2
-  Mem.nextblock_alloc
-  Mem.alloc_result
-  Mem.valid_block_alloc
-  Mem.fresh_block_alloc
-  Mem.valid_new_block
-  Mem.perm_alloc_1
-  Mem.perm_alloc_2
-  Mem.perm_alloc_3
-  Mem.perm_alloc_4
-  Mem.perm_alloc_inv
-  Mem.valid_access_alloc_other
-  Mem.valid_access_alloc_same
-  Mem.valid_access_alloc_inv
-  Mem.range_perm_free
-  Mem.free_range_perm
-  Mem.nextblock_free
-  Mem.valid_block_free_1
-  Mem.valid_block_free_2
-  Mem.perm_free_1
-  Mem.perm_free_2
-  Mem.perm_free_3
-  Mem.valid_access_free_1
-  Mem.valid_access_free_2
-  Mem.valid_access_free_inv_1
-  Mem.valid_access_free_inv_2
-: mem.
+Global Opaque Memimpl.mem Memimpl.mem_MEM.

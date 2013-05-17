@@ -634,7 +634,7 @@ Proof.
   exists j; exists te; exists tm. simpl.
   split. constructor.
   split. auto. split. auto. split. auto.  split. auto. 
-  split. intros. elim H2. eapply Mem.mi_mappedblocks; eauto.
+  split. intros. elim H2. eapply Mem.valid_block_inject_2; eauto.
   split. tauto. auto. 
   
   (* inductive case *)
@@ -692,7 +692,7 @@ Proof.
     destruct (zeq b b1). subst b. rewrite D in H1; inv H1. 
     exploit (P id); auto. intros [X Y]. exists id; exists ty.
     rewrite X; rewrite Y. repeat rewrite PTree.gss. auto.
-    rewrite E in H1; auto. elim H3. eapply Mem.mi_mappedblocks; eauto. 
+    rewrite E in H1; auto. elim H3. eapply Mem.valid_block_inject_2; eauto. 
     eapply Mem.valid_new_block; eauto.
     eapply Q; eauto. unfold Mem.valid_block in *.
     exploit Mem.nextblock_alloc. eexact A. exploit Mem.alloc_result. eexact A. 
@@ -1012,11 +1012,11 @@ Proof.
   exploit Mem.storebytes_mapped_inject; eauto. intros [tm' [C D]].
   exists tm'. 
   split. eapply assign_loc_copy; try rewrite EQ1; try rewrite EQ2; eauto. 
-  eapply Mem.aligned_area_inject with (m := m); eauto. apply alignof_1248.
+  eapply @Mem.aligned_area_inject with (m := m); eauto. apply alignof_1248.
   apply sizeof_alignof_compat.
-  eapply Mem.aligned_area_inject with (m := m); eauto. apply alignof_1248.
+  eapply @Mem.aligned_area_inject with (m := m); eauto. apply alignof_1248.
   apply sizeof_alignof_compat.
-  eapply Mem.disjoint_or_equal_inject with (m := m); eauto.
+  eapply @Mem.disjoint_or_equal_inject with (m := m); eauto.
   apply Mem.range_perm_max with Cur; auto.
   apply Mem.range_perm_max with Cur; auto.
   split. auto.
@@ -1248,7 +1248,7 @@ Proof.
     exploit me_mapped. eauto. eexact H5. intros [b1 [P1 Q1]].
     exploit me_mapped. eauto. eexact H6. intros [b2 [P2 Q2]].
     assert (b1 <> b2) by (eapply me_inj; eauto). 
-    exploit Mem.mi_no_overlap; eauto. 
+    exploit Mem.inject_no_overlap; eauto. 
     instantiate (1 := 0). apply Mem.perm_cur_max. apply Mem.perm_implies with Freeable; auto with mem.
     eapply free_blocks_of_env_perm_2; eauto. generalize (sizeof_pos ty1); omega.
     instantiate (1 := 0). apply Mem.perm_cur_max. apply Mem.perm_implies with Freeable; auto with mem.

@@ -143,11 +143,11 @@ let print_state p (prog, ge, s) =
 let compare_mem m1 m2 =
   (* assumes nextblocks were already compared equal *)
   (* should permissions be taken into account? *)
-  Pervasives.compare m1.Mem.mem_contents m2.Mem.mem_contents
+  Pervasives.compare m1.Memimpl.mem_contents m2.Memimpl.mem_contents
 
 (* Comparing continuations *)
 
-let some_expr = Eval(Vptr(Mem.nullptr, Int.zero), Tvoid)
+let some_expr = Eval(Vptr(Memimpl.nullptr, Int.zero), Tvoid)
 
 let rank_cont = function
   | Kstop -> 0
@@ -226,7 +226,7 @@ let mem_state = function
 
 let compare_state s1 s2 =
   if s1 == s2 then 0 else
-  let c = Z.compare (mem_state s1).Mem.nextblock (mem_state s2).Mem.nextblock in
+  let c = Z.compare (mem_state s1).Memimpl.nextblock (mem_state s2).Memimpl.nextblock in
   if c <> 0 then c else begin
   match s1, s2 with
   | State(f1,s1,k1,e1,m1), State(f2,s2,k2,e2,m2) ->
@@ -267,7 +267,7 @@ let rec purge_seen nextblock seen =
   match min with
   | None -> seen
   | Some((s, w) as sw) ->
-      if Z.le (mem_state s).Mem.nextblock nextblock
+      if Z.le (mem_state s).Memimpl.nextblock nextblock
       then purge_seen nextblock (StateSet.remove sw seen)
       else seen
 
@@ -276,7 +276,7 @@ let rec purge_seen nextblock seen =
 let extract_string ge m id ofs =
   let b = Buffer.create 80 in
   let rec extract blk ofs =
-    match Memory.Mem.load Mint8unsigned m blk ofs with
+    match Memimpl.load Mint8unsigned m blk ofs with
     | Some(Vint n) ->
         let c = Char.chr (Int32.to_int (camlint_of_coqint n)) in
         if c = '\000' then begin
@@ -377,14 +377,14 @@ and world_io ge m id args =
 
 and world_vload ge m chunk id ofs =
   Genv.find_symbol ge id >>= fun b ->
-  Mem.load chunk m b ofs >>= fun v ->
+  Memimpl.load chunk m b ofs >>= fun v ->
   Cexec.eventval_of_val ge v (type_of_chunk chunk) >>= fun ev ->
   Some(ev, world ge m)
 
 and world_vstore ge m chunk id ofs ev =
   Genv.find_symbol ge id >>= fun b ->
   Cexec.val_of_eventval ge ev (type_of_chunk chunk) >>= fun v ->
-  Mem.store chunk m b ofs v >>= fun m' ->
+  Memimpl.store chunk m b ofs v >>= fun m' ->
   Some(world ge m')
 
 let do_event p ge time w ev =
@@ -501,7 +501,7 @@ module PrioQueue = struct
   let singleton elt = Node(elt, Empty, Empty)
 
   let higher_prio (time1, (s1, w1)) (time2, (s2, w2)) =
-    Z.lt (mem_state s1).Mem.nextblock (mem_state s2).Mem.nextblock
+    Z.lt (mem_state s1).Memimpl.nextblock (mem_state s2).Memimpl.nextblock
 
   let rec insert queue elt =
     match queue with
@@ -546,7 +546,7 @@ let rec explore_all p prog ge seen queue =
         let seen' = StateSet.add sw seen in
         let seen'' = 
           if PrioQueue.dominate tsw queue''
-          then purge_seen (mem_state (fst sw)).Mem.nextblock seen'
+          then purge_seen (mem_state (fst sw)).Memimpl.nextblock seen'
           else seen' in
         explore_all p prog ge seen'' queue''
 

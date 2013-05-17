@@ -315,7 +315,7 @@ Proof.
   intros; red; intros. destruct (eq_block b b0).
   subst b0. rewrite H1 in H4; inv H4.
   eelim Mem.perm_free_2; eauto. rewrite Zmax_spec in z. destruct (zlt 0 sz); omega.
-  exploit Mem.mi_no_overlap; eauto. 
+  exploit Mem.inject_no_overlap; eauto. 
   apply Mem.perm_cur_max. apply Mem.perm_implies with Freeable; auto with mem.
   eapply Mem.free_range_perm. eauto. 
   instantiate (1 := ofs - base). rewrite Zmax_spec in z. destruct (zlt 0 sz); omega.
@@ -1101,7 +1101,7 @@ Proof.
   intros; red; intros. exploit Mem.perm_alloc_inv. eexact H. eauto.
   destruct (zeq b stk); intros. 
   subst. rewrite D in H8; inv H8. inv H0; xomega.
-  rewrite E in H8; auto. eelim Mem.fresh_block_alloc. eexact A. eapply Mem.mi_mappedblocks; eauto.
+  rewrite E in H8; auto. eelim Mem.fresh_block_alloc. eexact A. eapply Mem.valid_block_inject_2; eauto.
   auto.
   intros. exploit Mem.perm_alloc_inv; eauto. rewrite zeq_true. omega. 
 
