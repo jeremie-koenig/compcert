@@ -231,6 +231,7 @@ Qed.
 
 Section PRESERVATION.
 
+Context `{M: Mem.MEM}.
 Variable prog: program.
 Let tprog := transf_program prog.
 Let ge := Genv.globalenv prog.
@@ -452,7 +453,7 @@ Proof.
   exploit Mem.loadv_extends; eauto. 
   intros [v' [LOAD' VLD]].
   left. exists (State s' (transf_function f) (Vptr sp0 Int.zero) pc' (rs'#dst <- v') m'); split.
-  eapply exec_Iload with (a := a'). eauto.  rewrite <- ADDR'.
+  eapply @exec_Iload with (a := a'). eauto.  rewrite <- ADDR'.
   apply eval_addressing_preserved. exact symbols_preserved. eauto.
   econstructor; eauto. apply regset_set; auto.
 
@@ -464,7 +465,7 @@ Proof.
   exploit Mem.storev_extends. 2: eexact H1. eauto. eauto. apply RLD.  
   intros [m'1 [STORE' MLD']].
   left. exists (State s' (transf_function f) (Vptr sp0 Int.zero) pc' rs' m'1); split.
-  eapply exec_Istore with (a := a'). eauto.  rewrite <- ADDR'.
+  eapply @exec_Istore with (a := a'). eauto.  rewrite <- ADDR'.
   apply eval_addressing_preserved. exact symbols_preserved. eauto.
   destruct a; simpl in H1; try discriminate.
   econstructor; eauto.

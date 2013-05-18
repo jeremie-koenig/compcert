@@ -23,6 +23,9 @@ Require Import Values.
 Require Import Memory.
 Require Import Ctypes.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** * Syntax of operators. *)
 
 Inductive unary_operation : Type :=
@@ -821,3 +824,5 @@ Definition sem_incrdecr (id: incr_or_decr) (v: val) (ty: type) :=
   | Incr => sem_add v ty (Vint Int.one) type_int32s
   | Decr => sem_sub v ty (Vint Int.one) type_int32s
   end.
+
+End WITHMEM.

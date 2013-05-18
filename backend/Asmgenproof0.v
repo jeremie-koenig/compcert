@@ -137,6 +137,9 @@ Qed.
 
 (** * Agreement between Mach registers and processor registers *)
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 Record agree (ms: Mach.regset) (sp: val) (rs: Asm.regset) : Prop := mkagree {
   agree_sp: rs#SP = sp;
   agree_sp_def: sp <> Vundef;
@@ -350,6 +353,8 @@ Proof.
   destruct IHlist_forall2 as [vl' [C D]].
   exists (v1' :: vl'); split; constructor; auto.
 Qed.
+
+End WITHMEM.
 
 (** * Correspondence between Mach code and Asm code *)
 
@@ -656,6 +661,7 @@ Ltac TailNoLabel :=
 
 Section STRAIGHTLINE.
 
+Context `{M: Mem.MEM}.
 Variable ge: genv.
 Variable fn: function.
 
@@ -771,6 +777,7 @@ End STRAIGHTLINE.
 
 Section MATCH_STACK.
 
+Context `{M: Mem.MEM}.
 Variable ge: Mach.genv.
 
 Inductive match_stack: list Mach.stackframe -> Prop :=

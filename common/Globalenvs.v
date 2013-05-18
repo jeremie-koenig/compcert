@@ -55,6 +55,9 @@ Set Implicit Arguments.
 
 (** Auxiliary function for initialization of global variables. *)
 
+Section STORE_ZEROS.
+Context `{M: Mem.MEM}.
+
 Function store_zeros (m: mem) (b: block) (p: Z) (n: Z) {wf (Zwf 0) n}: option mem :=
   if zle n 0 then Some m else
     match Mem.store Mint8unsigned m b p Vzero with
@@ -66,6 +69,8 @@ Proof.
   apply Zwf_well_founded.
 Qed.
 
+End STORE_ZEROS.
+
 (* To avoid useless definitions of inductors in extracted code. *)
 Local Unset Elimination Schemes.
 Local Unset Case Analysis Schemes.
@@ -73,6 +78,9 @@ Local Unset Case Analysis Schemes.
 Module Genv.
 
 (** * Global environments *)
+
+Section WITHMEM.
+Context `{M: Mem.MEM}.
 
 Section GENV.
 
@@ -1943,5 +1951,7 @@ Proof.
 Qed.
 
 End TRANSF_PROGRAM.
+
+End WITHMEM.
 
 End Genv.

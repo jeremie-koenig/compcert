@@ -27,6 +27,9 @@ Require Import Globalenvs.
 Require Import Smallstep.
 Require Import Switch.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** * Abstract syntax *)
 
 (** Cminor is a low-level imperative language structured in expressions,
@@ -180,7 +183,7 @@ Inductive cont: Type :=
 
 (** States *)
 
-Inductive state: Type :=
+Inductive state `{M: Mem.MEM mem}: Type :=
   | State:                      (**r Execution within a function *)
       forall (f: function)              (**r currently executing function  *)
              (s: stmt)                  (**r statement under consideration *)
@@ -1087,3 +1090,5 @@ Proof.
 Qed.
 
 End BIGSTEP_TO_TRANSITION.
+
+End WITHMEM.

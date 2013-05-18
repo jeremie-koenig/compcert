@@ -30,6 +30,9 @@ Require Import Linear.
 Require Import Parallelmove.
 Require Import Reload.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** * Exploitation of the typing hypothesis *)
 
 Remark arity_ok_rec_incr_1:
@@ -1060,7 +1063,7 @@ Proof.
   intros [ls3 [D [E F]]].
   left; econstructor; split.
   eapply star_plus_trans. eexact A. 
-  eapply plus_left. eapply exec_Lop with (v := tv); eauto.
+  eapply plus_left. eapply @exec_Lop with (v := tv); eauto.
   eexact D. eauto. traceEq.
   econstructor; eauto with coqlib.
   apply agree_set2 with ls; auto.
@@ -1113,7 +1116,7 @@ Proof.
   intros [tm2 [Y Z]].
   left; econstructor; split. 
   eapply plus_right. eauto. 
-  eapply exec_Lstore with (a := ta); eauto.
+  eapply @exec_Lstore with (a := ta); eauto.
   traceEq.
   econstructor; eauto with coqlib.
   apply agree_undef_temps2. apply agree_exten with ls; auto.
@@ -1150,7 +1153,7 @@ Proof.
     rewrite B. eapply not_enough_temporaries_addr; eauto.
     rewrite <- B; auto.
   eapply star_right. eauto. 
-  eapply exec_Lstore with (a := ta); eauto.
+  eapply @exec_Lstore with (a := ta); eauto.
     simpl reglist. rewrite G. unfold ls3. rewrite Locmap.gss. simpl. 
     destruct ta; simpl in Y; try discriminate. simpl; rewrite Int.add_zero; auto.
   reflexivity. reflexivity. traceEq. 
@@ -1478,3 +1481,5 @@ Proof.
 Qed.
 
 End PRESERVATION.
+
+End WITHMEM.

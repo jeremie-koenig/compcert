@@ -17,6 +17,7 @@ Require Import Coqlib.
 Require Import AST.
 Require Import Integers.
 Require Import Values.
+Require Import Memory.
 Require Import Events.
 Require Import Globalenvs.
 Require Import Smallstep.
@@ -30,6 +31,9 @@ Require Import RTL.
 Require Import Asm.
 Require Import Compiler.
 Require Import Errors.
+
+Section WITHMEM.
+Context `{M: Mem.MEM}.
 
 (** * Preservation of whole-program behaviors *)
 
@@ -202,3 +206,4 @@ Qed.
 
 End LIVENESS_PRESERVED.
 
+End WITHMEM.

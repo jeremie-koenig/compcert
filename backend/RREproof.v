@@ -16,6 +16,7 @@ Require Import Axioms.
 Require Import Coqlib.
 Require Import AST.
 Require Import Values.
+Require Import Memory.
 Require Import Globalenvs.
 Require Import Events.
 Require Import Smallstep.
@@ -24,6 +25,9 @@ Require Import Locations.
 Require Import Conventions.
 Require Import Linear.
 Require Import RRE.
+
+Section WITHMEM.
+Context `{M: Mem.MEM}.
 
 (** * Operations over equations *)
 
@@ -626,3 +630,5 @@ Proof.
 Qed.
 
 End PRESERVATION.
+
+End WITHMEM.

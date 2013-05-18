@@ -36,6 +36,7 @@ Module VSP := FSetProperties.Properties(VSet).
 
 Section PRESERVATION.
 
+Context `{M0: Mem.MEM}.
 Variable prog: program.
 Variable tprog: program.
 Hypothesis TRANSF: transf_program prog = OK tprog.
@@ -2075,7 +2076,7 @@ Proof.
   exploit eval_simpl_exprlist; eauto with compat. intros [CASTED [tvargs [C D]]].
   exploit match_cont_find_funct; eauto. intros [tfd [P Q]].
   econstructor; split.
-  apply plus_one. eapply step_call with (fd := tfd).
+  apply plus_one. eapply @step_call with (fd := tfd).
   rewrite typeof_simpl_expr. eauto.
   eauto. eauto. eauto.  
   erewrite type_of_fundef_preserved; eauto.
@@ -2113,7 +2114,7 @@ Proof.
 (* ifthenelse *)
   exploit eval_simpl_expr; eauto with compat. intros [tv [A B]].
   econstructor; split.
-  apply plus_one. apply step_ifthenelse with (v1 := tv) (b := b). auto.
+  apply plus_one. apply @step_ifthenelse with (v1 := tv) (b := b). auto.
   rewrite typeof_simpl_expr. eapply bool_val_inject; eauto.
   destruct b; econstructor; eauto with compat.
 

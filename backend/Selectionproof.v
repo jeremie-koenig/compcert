@@ -30,6 +30,9 @@ Require Import SelectOpproof.
 
 Open Local Scope cminorsel_scope.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** * Correctness of the instruction selection functions for expressions *)
 
 Section CMCONSTR.
@@ -634,3 +637,5 @@ Proof.
 Qed.
 
 End PRESERVATION.
+
+End WITHMEM.

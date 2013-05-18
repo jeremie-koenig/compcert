@@ -29,6 +29,7 @@ Require Import Constprop.
 
 Section ANALYSIS.
 
+Context `{M: Mem.MEM}.
 Variable ge: genv.
 Variable sp: val.
 

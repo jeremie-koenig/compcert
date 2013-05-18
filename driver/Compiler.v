@@ -17,6 +17,7 @@ Require Import Coqlib.
 Require Import Errors.
 Require Import AST.
 Require Import Smallstep.
+Require Import Memory.
 (** Languages (syntax and semantics). *)
 Require Csyntax.
 Require Csem.
@@ -99,6 +100,9 @@ Parameter print_Mach: Mach.program -> unit.
 Open Local Scope string_scope.
 
 (** * Composing the translation passes *)
+
+Section WITHMEM.
+Context `{M: Mem.MEM}.
 
 (** We first define useful monadic composition operators,
     along with funny (but convenient) notations. *)
@@ -341,3 +345,5 @@ Proof.
   eapply ssr_well_behaved; eapply Cstrategy.semantics_strongly_receptive.
   exact (snd (transf_cstrategy_program_correct _ _ H)).
 Qed.
+
+End WITHMEM.

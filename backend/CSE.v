@@ -336,6 +336,9 @@ End REDUCE.
 
 (** * The static analysis *)
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** We now define a notion of satisfiability of a numbering.  This semantic
   notion plays a central role in the correctness proof (see [CSEproof]),
   but is defined here because we need it to define the ordering over
@@ -382,6 +385,8 @@ Proof.
   rewrite PTree.gempty in H. discriminate. 
 Qed. 
 
+End WITHMEM.
+
 (** We now equip the type [numbering] with a partial order and a greatest
   element.  The partial order is based on entailment: [n1] is greater
   than [n2] if [n1] is satisfiable whenever [n2] is.  The greatest element
@@ -390,7 +395,7 @@ Qed.
 Module Numbering.
   Definition t := numbering.
   Definition ge (n1 n2: numbering) : Prop :=
-    forall ge sp rs m, 
+    forall (mem: Type) (M: Mem.MEM mem) ge sp rs m, 
     numbering_satisfiable ge sp rs m n2 ->
     numbering_satisfiable ge sp rs m n1.
   Definition top := empty_numbering.

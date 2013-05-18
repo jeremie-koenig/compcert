@@ -30,6 +30,9 @@ Require Import RTL.
 Require Import RTLgen.
 Require Import RTLgenspec.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** * Correspondence between Cminor environments and RTL register sets *)
 
 (** A compilation environment (mapping) is well-formed if
@@ -592,7 +595,7 @@ Proof.
 (* Exec *)
   split. eapply star_right. eexact EX1.
   eapply exec_Iop; eauto.
-  rewrite (@eval_operation_preserved CminorSel.fundef _ _ _ ge tge). eauto.
+  rewrite (@eval_operation_preserved _ _ CminorSel.fundef _ _ _ ge tge). eauto.
   exact symbols_preserved. traceEq.
 (* Match-env *)
   split. eauto with rtlg.
@@ -1293,3 +1296,5 @@ Proof.
 Qed.
 
 End CORRECTNESS.
+
+End WITHMEM.

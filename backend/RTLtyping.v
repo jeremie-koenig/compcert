@@ -18,12 +18,16 @@ Require Import Maps.
 Require Import AST.
 Require Import Op.
 Require Import Registers.
+Require Import Memory.
 Require Import Globalenvs.
 Require Import Values.
 Require Import Integers.
 Require Import Events.
 Require Import RTL.
 Require Import Conventions.
+
+Section WITHMEM.
+Context `{M: Mem.MEM}.
 
 (** * The type system *)
 
@@ -584,3 +588,5 @@ Proof.
 Qed.
 
 End SUBJECT_REDUCTION.
+
+End WITHMEM.

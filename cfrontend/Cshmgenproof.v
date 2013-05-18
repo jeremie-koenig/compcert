@@ -30,6 +30,9 @@ Require Import Cminor.
 Require Import Csharpminor.
 Require Import Cshmgen.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** * Properties of operations over types *)
 
 Remark transl_params_types:
@@ -1266,7 +1269,7 @@ Proof.
   exploit transl_expr_correct; eauto.
   intros [v [A B]].
   econstructor; split.
-  apply plus_one. apply step_ifthenelse with (v := v) (b := b); auto.
+  apply plus_one. apply @step_ifthenelse with (v := v) (b := b); auto.
   destruct b; econstructor; eauto; constructor.
 
 (* loop *)
@@ -1455,3 +1458,5 @@ Proof.
 Qed.
 
 End CORRECTNESS.
+
+End WITHMEM.

@@ -34,6 +34,9 @@ Require Import Conventions.
 Require Import Stacklayout.
 Require Import Stacking.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** * Properties of frame offsets *)
 
 Lemma typesize_typesize:
@@ -2769,3 +2772,5 @@ Proof.
 Qed.
 
 End PRESERVATION.
+
+End WITHMEM.

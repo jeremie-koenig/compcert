@@ -141,6 +141,9 @@ Global Opaque eq_addressing eq_operation.
 
 (** * Evaluation functions *)
 
+Section EVAL.
+Context `{M: Mem.MEM}.
+
 Definition symbol_address (F V: Type) (genv: Genv.t F V) (id: ident) (ofs: int) : val :=
   match Genv.find_symbol genv id with
   | Some b => Vptr b ofs
@@ -236,6 +239,8 @@ Definition eval_operation
   | _, _ => None
   end.
 
+End EVAL.
+
 Ltac FuncInv :=
   match goal with
   | H: (match ?x with nil => _ | _ :: _ => _ end = Some _) |- _ =>
@@ -249,6 +254,9 @@ Ltac FuncInv :=
   end.
 
 (** * Static typing of conditions, operators and addressing modes. *)
+
+Section WITHMEM.
+Context `{M: Mem.MEM}.
 
 Definition type_of_condition (c: condition) : list typ :=
   match c with
@@ -1035,3 +1043,5 @@ Proof.
 Qed.
 
 End EVAL_INJECT.
+
+End WITHMEM.

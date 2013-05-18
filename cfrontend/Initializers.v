@@ -25,6 +25,9 @@ Require Import Csyntax.
 
 Open Scope error_monad_scope.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** * Evaluation of compile-time constant expressions *)
 
 (** To evaluate constant expressions at compile-time, we use the same [value]
@@ -50,7 +53,7 @@ Definition do_cast (v: val) (t1 t2: type) : res val :=
   | None => Error(msg "undefined cast")
   end.
 
-Fixpoint constval (a: expr) : res val :=
+Fixpoint constval `{M: Mem.MEM mem} (a: expr) : res val :=
   match a with
   | Eval v ty =>
       match v with
@@ -225,4 +228,5 @@ with transl_init_union (id: ident) (ty ty1: type) (il: initializer_list)
       OK (d ++ padding (sizeof ty1) (sizeof ty))
   end.
 
+End WITHMEM.
 

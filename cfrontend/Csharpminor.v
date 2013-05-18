@@ -24,6 +24,9 @@ Require Import Globalenvs.
 Require Cminor.
 Require Import Smallstep.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** Abstract syntax *)
 
 (** Csharpminor is a low-level imperative language structured in expressions,
@@ -143,7 +146,7 @@ Inductive cont: Type :=
 
 (** States *)
 
-Inductive state: Type :=
+Inductive state `{M: Mem.MEM mem}: Type :=
   | State:                      (**r Execution within a function *)
       forall (f: function)              (**r currently executing function  *)
              (s: stmt)                  (**r statement under consideration *)
@@ -472,3 +475,5 @@ Inductive final_state: state -> int -> Prop :=
 
 Definition semantics (p: program) :=
   Semantics step (initial_state p) final_state (Genv.globalenv p).
+
+End WITHMEM.

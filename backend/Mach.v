@@ -126,10 +126,10 @@ store in the reserved location.
 Definition chunk_of_type (ty: typ) :=
   match ty with Tint => Mint32 | Tfloat => Mfloat64al32 end.
 
-Definition load_stack (m: mem) (sp: val) (ty: typ) (ofs: int) :=
+Definition load_stack `{Mem.MEM} (m: mem) (sp: val) (ty: typ) (ofs: int) :=
   Mem.loadv (chunk_of_type ty) m (Val.add sp (Vint ofs)).
 
-Definition store_stack (m: mem) (sp: val) (ty: typ) (ofs: int) (v: val) :=
+Definition store_stack `{Mem.MEM} (m: mem) (sp: val) (ty: typ) (ofs: int) (v: val) :=
   Mem.storev (chunk_of_type ty) m (Val.add sp (Vint ofs)) v.
 
 Module RegEq.
@@ -206,6 +206,9 @@ Proof.
   destruct (is_label lbl a). inv H. auto with coqlib. eauto with coqlib. 
 Qed.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 Section RELSEM.
 
 Variable return_address_offset: function -> code -> int -> Prop.
@@ -262,7 +265,7 @@ Inductive stackframe: Type :=
              (c: code),       (**r program point in calling function *)
       stackframe.
 
-Inductive state: Type :=
+Inductive state `{M: Mem.MEM mem}: Type :=
   | State:
       forall (stack: list stackframe)  (**r call stack *)
              (f: block)                (**r pointer to current function *)
@@ -434,3 +437,5 @@ Inductive final_state: state -> int -> Prop :=
 
 Definition semantics (rao: function -> code -> int -> Prop) (p: program) :=
   Semantics (step rao) (initial_state p) final_state (Genv.globalenv p).
+
+End WITHMEM.

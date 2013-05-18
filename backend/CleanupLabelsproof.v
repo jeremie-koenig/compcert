@@ -31,6 +31,7 @@ Module LabelsetFacts := FSetFacts.Facts(Labelset).
 
 Section CLEANUP.
 
+Context `{M: Mem.MEM}.
 Variable prog: program.
 Let tprog := transf_program prog.
 Let ge := Genv.globalenv prog.
@@ -306,7 +307,7 @@ Lemma transf_initial_states:
 Proof.
   intros. inv H.
   econstructor; split.
-  eapply initial_state_intro with (f := transf_fundef f).
+  eapply @initial_state_intro with (f := transf_fundef f).
   eapply Genv.init_mem_transf; eauto. 
   rewrite symbols_preserved; eauto.
   apply function_ptr_translated; auto.

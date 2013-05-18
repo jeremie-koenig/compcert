@@ -31,6 +31,9 @@ Require Import Initializers.
 
 Open Scope error_monad_scope.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 Section SOUNDNESS.
 
 Variable ge: genv.
@@ -919,4 +922,5 @@ Qed.
 
 End SOUNDNESS.
 
+End WITHMEM.
 

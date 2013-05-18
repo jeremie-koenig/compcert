@@ -28,6 +28,9 @@ Require Import Smallstep.
 Require Import Op.
 Require Import Registers.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** * Abstract syntax *)
 
 (** RTL is organized as instructions, functions and programs.
@@ -167,7 +170,7 @@ Inductive stackframe : Type :=
              (rs: regset),         (**r register state in calling function *)
       stackframe.
 
-Inductive state : Type :=
+Inductive state `{M: Mem.MEM mem} : Type :=
   | State:
       forall (stack: list stackframe) (**r call stack *)
              (f: function)            (**r current function *)
@@ -439,3 +442,5 @@ Definition transf_function (f: function) : function :=
     f.(fn_entrypoint).
 
 End TRANSF.
+
+End WITHMEM.

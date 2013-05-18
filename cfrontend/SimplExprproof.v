@@ -33,6 +33,7 @@ Require Import SimplExprspec.
 
 Section PRESERVATION.
 
+Context `{M: Mem.MEM}.
 Variable prog: Csyntax.program.
 Variable tprog: Clight.program.
 Hypothesis TRANSL: transl_program prog = OK tprog.
@@ -1396,7 +1397,7 @@ Proof.
   apply push_seq. reflexivity. reflexivity.
   rewrite <- Kseqlist_app.
   eapply match_exprstates; eauto.
-  apply S. apply tr_paren_val with (a1 := dummy_expr); auto. econstructor; eauto. 
+  apply S. apply @tr_paren_val with (a1 := dummy_expr); auto. econstructor; eauto. 
   apply tr_expr_monotone with tmp2; eauto. auto. auto.
   (* for effects *)
   exploit tr_simple_rvalue; eauto. intros [SL [TY EV]].
@@ -1407,7 +1408,7 @@ Proof.
   apply push_seq. reflexivity. reflexivity.
   rewrite <- Kseqlist_app.
   eapply match_exprstates; eauto.
-  apply S. apply tr_paren_effects with (a1 := dummy_expr); auto. econstructor; eauto. 
+  apply S. apply @tr_paren_effects with (a1 := dummy_expr); auto. econstructor; eauto. 
   apply tr_expr_monotone with tmp2; eauto. auto. auto.
   (* for set *)
   exploit tr_simple_rvalue; eauto. intros [SL [TY EV]].
@@ -1418,7 +1419,7 @@ Proof.
   apply push_seq. reflexivity. reflexivity.
   rewrite <- Kseqlist_app.
   eapply match_exprstates; eauto.
-  apply S. apply tr_paren_set with (a1 := dummy_expr); auto. econstructor; eauto. 
+  apply S. apply @tr_paren_set with (a1 := dummy_expr); auto. econstructor; eauto. 
   apply tr_expr_monotone with tmp2; eauto. auto. auto.
 (* seqand false *)
   exploit tr_top_leftcontext; eauto. clear H9. 
@@ -1505,7 +1506,7 @@ Proof.
   apply push_seq. reflexivity. reflexivity.
   rewrite <- Kseqlist_app.
   eapply match_exprstates; eauto.
-  apply S. apply tr_paren_val with (a1 := dummy_expr); auto. econstructor; eauto. 
+  apply S. apply @tr_paren_val with (a1 := dummy_expr); auto. econstructor; eauto. 
   apply tr_expr_monotone with tmp2; eauto. auto. auto.
   (* for effects *)
   exploit tr_simple_rvalue; eauto. intros [SL [TY EV]].
@@ -1516,7 +1517,7 @@ Proof.
   apply push_seq. reflexivity. reflexivity.
   rewrite <- Kseqlist_app.
   eapply match_exprstates; eauto.
-  apply S. apply tr_paren_effects with (a1 := dummy_expr); auto. econstructor; eauto. 
+  apply S. apply @tr_paren_effects with (a1 := dummy_expr); auto. econstructor; eauto. 
   apply tr_expr_monotone with tmp2; eauto. auto. auto.
   (* for set *)
   exploit tr_simple_rvalue; eauto. intros [SL [TY EV]].
@@ -1527,7 +1528,7 @@ Proof.
   apply push_seq. reflexivity. reflexivity.
   rewrite <- Kseqlist_app.
   eapply match_exprstates; eauto.
-  apply S. apply tr_paren_set with (a1 := dummy_expr); auto. econstructor; eauto. 
+  apply S. apply @tr_paren_set with (a1 := dummy_expr); auto. econstructor; eauto. 
   apply tr_expr_monotone with tmp2; eauto. auto. auto.
 (* condition *)
   exploit tr_top_leftcontext; eauto. clear H9. 
@@ -1635,9 +1636,9 @@ Proof.
   (* for effects *)
   exploit tr_simple_lvalue; eauto. intros [SL1 [TY1 EV1]].
   exploit step_tr_rvalof; eauto. intros [le' [EXEC [EV3 [TY3 INV]]]].
-  exploit tr_simple_lvalue. eauto. eapply tr_expr_invariant with (le := le) (le' := le'). eauto. 
+  exploit tr_simple_lvalue. eauto. eapply @tr_expr_invariant with (le := le) (le' := le'). eauto. 
   intros. apply INV. NOTIN. intros [? [? EV1']].
-  exploit tr_simple_rvalue. eauto. eapply tr_expr_invariant with (le := le) (le' := le'). eauto. 
+  exploit tr_simple_rvalue. eauto. eapply @tr_expr_invariant with (le := le) (le' := le'). eauto. 
   intros. apply INV. NOTIN. simpl. intros [SL2 [TY2 EV2]].
   subst; simpl Kseqlist. 
   econstructor; split.
@@ -1651,12 +1652,12 @@ Proof.
   (* for value *)
   exploit tr_simple_lvalue; eauto. intros [SL1 [TY1 EV1]].
   exploit step_tr_rvalof; eauto. intros [le' [EXEC [EV3 [TY3 INV]]]].
-  exploit tr_simple_lvalue. eauto. eapply tr_expr_invariant with (le := le) (le' := le'). eauto. 
+  exploit tr_simple_lvalue. eauto. eapply @tr_expr_invariant with (le := le) (le' := le'). eauto. 
   intros. apply INV. NOTIN. intros [? [? EV1']].
-  exploit tr_simple_rvalue. eauto. eapply tr_expr_invariant with (le := le) (le' := le'). eauto. 
+  exploit tr_simple_rvalue. eauto. eapply @tr_expr_invariant with (le := le) (le' := le'). eauto. 
   intros. apply INV. NOTIN. simpl. intros [SL2 [TY2 EV2]].
   exploit tr_simple_lvalue. eauto. 
-    eapply tr_expr_invariant with (le := le) (le' := PTree.set t v3 le'). eauto. 
+    eapply @tr_expr_invariant with (le := le) (le' := PTree.set t v3 le'). eauto. 
     intros. rewrite PTree.gso. apply INV. NOTIN. intuition congruence.
   intros [? [? EV1'']].
   subst; simpl Kseqlist.
@@ -1705,7 +1706,7 @@ Proof.
   (* for effects *)
   exploit tr_simple_lvalue; eauto. intros [SL1 [TY1 EV1]].
   exploit step_tr_rvalof; eauto. intros [le' [EXEC [EV3 [TY3 INV]]]].
-  exploit tr_simple_lvalue. eauto. eapply tr_expr_invariant with (le := le) (le' := le'). eauto. 
+  exploit tr_simple_lvalue. eauto. eapply @tr_expr_invariant with (le := le) (le' := le'). eauto. 
   intros. apply INV. NOTIN. intros [? [? EV1']].
   subst; simpl Kseqlist.
   econstructor; split.
@@ -1951,7 +1952,7 @@ Proof.
   exploit tr_top_val_for_val_inv; eauto. intros [A [B C]]. subst. 
   econstructor; split.
   left. eapply plus_two. constructor.
-  apply step_ifthenelse with (v1 := v) (b := b); auto. traceEq.
+  apply @step_ifthenelse with (v1 := v) (b := b); auto. traceEq.
   destruct b; econstructor; eauto.
 
 (* while *)

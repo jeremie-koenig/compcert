@@ -30,6 +30,7 @@ Require Import RTL.
 
 Section INLINING.
 
+Context `{M: Mem.MEM}.
 Variable prog: program.
 Variable tprog: program.
 Hypothesis TRANSF: transf_program prog = OK tprog.

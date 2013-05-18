@@ -26,6 +26,9 @@ Require Import Conventions.
 Require Import Mach.
 Require Stacklayout.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** The semantics for Mach is close to that of [Linear]: they differ only
   on the interpretation of stack slot accesses.  In Mach, these
   accesses are interpreted as memory accesses relative to the
@@ -95,7 +98,7 @@ Inductive stackframe: Type :=
              (c: code),       (**r program point in calling function *)
       stackframe.
 
-Inductive state: Type :=
+Inductive state `{M: Mem.MEM mem}: Type :=
   | State:
       forall (stack: list stackframe)  (**r call stack *)
              (f: function)             (**r current function *)
@@ -257,3 +260,5 @@ Inductive final_state: state -> int -> Prop :=
 
 Definition semantics (p: program) :=
   Semantics step (initial_state p) final_state (Genv.globalenv p).
+
+End WITHMEM.

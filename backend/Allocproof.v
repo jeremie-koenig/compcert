@@ -112,6 +112,9 @@ End REGALLOC_PROPERTIES.
 Require Import LTL.
 Module RegsetP := Properties(Regset).
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 Section AGREE.
 
 Variable f: RTL.function.
@@ -797,3 +800,5 @@ Proof.
 Qed.
 
 End PRESERVATION.
+
+End WITHMEM.

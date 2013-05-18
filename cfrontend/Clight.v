@@ -31,6 +31,9 @@ Require Import Smallstep.
 Require Import Ctypes.
 Require Import Cop.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** * Abstract syntax *)
 
 (** ** Expressions *)
@@ -453,7 +456,7 @@ Definition is_call_cont (k: cont) : Prop :=
 
 (** States *)
 
-Inductive state: Type :=
+Inductive state `{M: Mem.MEM mem}: Type :=
   | State
       (f: function)
       (s: statement)
@@ -718,3 +721,4 @@ Proof.
   eapply external_call_trace_length; eauto.
 Qed.
 
+End WITHMEM.

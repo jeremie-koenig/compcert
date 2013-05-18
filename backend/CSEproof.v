@@ -331,6 +331,9 @@ End ValnumEq.
 
 Module VMap := EMap(ValnumEq).
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 Section SATISFIABILITY.
 
 Variable ge: genv.
@@ -1184,3 +1187,5 @@ Proof.
 Qed.
 
 End PRESERVATION.
+
+End WITHMEM.

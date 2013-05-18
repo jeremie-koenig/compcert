@@ -32,6 +32,7 @@ Require Import ConstpropOpproof.
 
 Section PRESERVATION.
 
+Context `{M: Mem.MEM}.
 Variable prog: program.
 Let tprog := transf_program prog.
 Let ge := Genv.globalenv prog.

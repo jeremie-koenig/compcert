@@ -28,6 +28,9 @@ Require Import Op.
 Require Import Locations.
 Require Import Conventions.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** * Abstract syntax *)
 
 (** LTL is close to RTL, but uses locations instead of pseudo-registers. *)
@@ -116,7 +119,7 @@ Inductive stackframe : Type :=
              (pc: node),        (**r program point in calling function *)
       stackframe.
 
-Inductive state : Type :=
+Inductive state `{M: Mem.MEM mem} : Type :=
   | State:
       forall (stack: list stackframe) (**r call stack *)
              (f: function)            (**r function currently executing *)
@@ -286,3 +289,5 @@ Definition successors_instr (i: instruction) : list node :=
 
 Definition successors (f: function): PTree.t (list node) :=
   PTree.map1 successors_instr f.(fn_code).
+
+End WITHMEM.

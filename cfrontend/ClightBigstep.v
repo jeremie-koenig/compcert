@@ -29,6 +29,9 @@ Require Import Ctypes.
 Require Import Cop.
 Require Import Clight.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 Section BIGSTEP.
 
 Variable ge: genv.
@@ -521,7 +524,7 @@ Proof.
 
 (* ifthenelse *)
   eapply forever_N_plus.
-  apply plus_one. eapply step_ifthenelse with (b := b); eauto. 
+  apply plus_one. eapply @step_ifthenelse with (b := b); eauto. 
   apply CIH_STMT; eauto. traceEq.
 
 (* loop body 1 *)
@@ -580,3 +583,5 @@ Proof.
 Qed.
 
 End BIGSTEP_TO_TRANSITIONS.
+
+End WITHMEM.

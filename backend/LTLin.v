@@ -28,6 +28,9 @@ Require Import Op.
 Require Import Locations.
 Require Import LTL.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** * Abstract syntax *)
 
 Definition label := positive.
@@ -118,7 +121,7 @@ Inductive stackframe : Type :=
              (c: code),       (**r program point in calling function *)
       stackframe.
 
-Inductive state : Type :=
+Inductive state `{M: Mem.MEM mem} : Type :=
   | State:
       forall (stack: list stackframe) (**r call stack *)
              (f: function)            (**r function currently executing *)
@@ -265,4 +268,5 @@ Proof.
   destruct (is_label lbl a). inv H. constructor. constructor.
   constructor. auto.
 Qed.
-  
+
+End WITHMEM.

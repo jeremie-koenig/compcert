@@ -30,6 +30,9 @@ Require Import Locations.
 Require Import LTL.
 Require Import Conventions.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** * Abstract syntax *)
 
 Definition label := positive.
@@ -191,7 +194,7 @@ Inductive stackframe: Type :=
              (c: code),            (**r program point in calling function *)
       stackframe.
 
-Inductive state: Type :=
+Inductive state `{M: Mem.MEM mem}: Type :=
   | State:
       forall (stack: list stackframe) (**r call stack *)
              (f: function)            (**r function currently executing *)
@@ -371,3 +374,5 @@ Inductive final_state: state -> int -> Prop :=
 
 Definition semantics (p: program) :=
   Semantics step (initial_state p) final_state (Genv.globalenv p).
+
+End WITHMEM.

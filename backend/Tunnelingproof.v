@@ -26,6 +26,9 @@ Require Import Locations.
 Require Import LTL.
 Require Import Tunneling.
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** * Properties of the branch map computed using union-find. *)
 
 (** A variant of [record_goto] that also incrementally computes a measure [f: node -> nat]
@@ -270,14 +273,14 @@ Proof.
   (* Lop *)
   generalize (record_gotos_correct f pc); rewrite H; intro A; rewrite A.
   left; econstructor; split.
-  eapply exec_Lop with (v := v); eauto.
+  eapply @exec_Lop with (v := v); eauto.
   rewrite (tunnel_function_lookup _ _ _ H); simpl; auto.  
   rewrite <- H0. apply eval_operation_preserved. exact symbols_preserved.
   econstructor; eauto.
   (* Lload *)
   generalize (record_gotos_correct f pc); rewrite H; intro A; rewrite A.
   left; econstructor; split.
-  eapply exec_Lload with (a := a). 
+  eapply @exec_Lload with (a := a). 
   rewrite (tunnel_function_lookup _ _ _ H); simpl; auto.  
   rewrite <- H0. apply eval_addressing_preserved. exact symbols_preserved.
   eauto.
@@ -285,7 +288,7 @@ Proof.
   (* Lstore *)
   generalize (record_gotos_correct f pc); rewrite H; intro A; rewrite A.
   left; econstructor; split.
-  eapply exec_Lstore with (a := a).
+  eapply @exec_Lstore with (a := a).
   rewrite (tunnel_function_lookup _ _ _ H); simpl; auto.  
   rewrite <- H0. apply eval_addressing_preserved. exact symbols_preserved.
   eauto.
@@ -293,7 +296,7 @@ Proof.
   (* Lcall *)
   generalize (record_gotos_correct f pc); rewrite H; intro A.
   left; econstructor; split. 
-  eapply exec_Lcall with (f' := tunnel_fundef f'); eauto.
+  eapply @exec_Lcall with (f' := tunnel_fundef f'); eauto.
   rewrite A. rewrite (tunnel_function_lookup _ _ _ H); simpl.
   rewrite sig_preserved. auto.
   apply find_function_translated; auto.
@@ -303,7 +306,7 @@ Proof.
   (* Ltailcall *)
   generalize (record_gotos_correct f pc); rewrite H; intro A.
   left; econstructor; split. 
-  eapply exec_Ltailcall with (f' := tunnel_fundef f'); eauto.
+  eapply @exec_Ltailcall with (f' := tunnel_fundef f'); eauto.
   rewrite A. rewrite (tunnel_function_lookup _ _ _ H); simpl.
   rewrite sig_preserved. auto.
   apply find_function_translated; auto.
@@ -385,3 +388,5 @@ Proof.
 Qed.
 
 End PRESERVATION.
+
+End WITHMEM.

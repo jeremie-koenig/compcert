@@ -4210,6 +4210,4 @@ Instance mem_MEM: Mem.MEM mem := {
 
 End Memimpl.
 
-Notation mem := Memimpl.mem.
-
 Global Opaque Memimpl.mem Memimpl.mem_MEM.

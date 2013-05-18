@@ -28,6 +28,7 @@ Require Import SimplExpr.
 Section SPEC.
 
 Local Open Scope gensym_monad_scope.
+Context `{M: Mem.MEM}.
 
 (** * Relational specification of the translation. *)
 

@@ -15,6 +15,7 @@
 Require Import Coqlib.
 Require Import Maps.
 Require Import Postorder.
+Require Import Memory.
 Require Import Events.
 Require Import Globalenvs.
 Require Import Smallstep.
@@ -25,6 +26,7 @@ Require Import Renumber.
 
 Section PRESERVATION.
 
+Context `{M: Mem.MEM}.
 Variable prog: program.
 Let tprog := transf_program prog.
 Let ge := Genv.globalenv prog.
@@ -180,13 +182,13 @@ Proof.
   constructor; auto. eapply reach_succ; eauto. simpl; auto.
 (* call *)
   econstructor; split.
-  eapply exec_Icall with (fd := transf_fundef fd); eauto.
+  eapply @exec_Icall with (fd := transf_fundef fd); eauto.
     eapply find_function_translated; eauto.
     apply sig_preserved.
   constructor. constructor; auto. constructor. eapply reach_succ; eauto. simpl; auto.
 (* tailcall *)
   econstructor; split.
-  eapply exec_Itailcall with (fd := transf_fundef fd); eauto.
+  eapply @exec_Itailcall with (fd := transf_fundef fd); eauto.
     eapply find_function_translated; eauto.
     apply sig_preserved.
   constructor. auto.

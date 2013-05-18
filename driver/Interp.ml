@@ -253,7 +253,7 @@ let compare_state s1 s2 =
 
 module StateSet =
   Set.Make(struct
-             type t = state * Determinism.world
+             type t = Memimpl.mem state * Determinism.world
              let compare (s1,w1) (s2,w2) = compare_state s1 s2
            end)
 
@@ -430,7 +430,7 @@ let diagnose_stuck_expr p ge w f a kont e m =
     | RV, Ecall(r1, rargs, ty) -> diagnose RV r1 ||| diagnose_list rargs
     | _, _ -> false in
   if found then true else begin
-    let l = Cexec.step_expr ge e w k a m in
+    let l = Cexec.step_expr Memimpl.mem_MEM ge e w k a m in
     if List.exists (fun (ctx,red) -> red = Cexec.Stuckred) l then begin
       PrintCsyntax.print_pointer_hook := print_pointer ge e;
       fprintf p "@[<hov 2>Stuck subexpression:@ %a@]@."
@@ -455,7 +455,7 @@ let diagnose_stuck_state p ge w = function
 let do_step p prog ge time (s, w) =
   if !trace >= 2 then
     fprintf p "@[<hov 2>Time %d: %a@]@." time print_state (prog, ge, s);
-  match Cexec.at_final_state s with
+  match Cexec.at_final_state Memimpl.mem_MEM s with
   | Some r ->
       if !trace >= 1 then
         fprintf p "Time %d: program terminated (exit code = %ld)@."
@@ -465,7 +465,7 @@ let do_step p prog ge time (s, w) =
       | First | Random -> exit (Int32.to_int (camlint_of_coqint r))
       end
   | None ->
-      let l = Cexec.do_step ge w s in
+      let l = Cexec.do_step Memimpl.mem_MEM ge w s in
       if l = [] || List.exists (fun (t,s) -> s = Stuckstate) l then begin
         pp_set_max_boxes p 1000;
         fprintf p "@[<hov 2>Stuck state: %a@]@." print_state (prog, ge, s);
@@ -622,11 +622,11 @@ let execute prog =
   | Some prog1 ->
       let wprog = world_program prog1 in
       let wge = Genv.globalenv wprog in
-      match Genv.init_mem wprog with
+      match Genv.init_mem Memimpl.mem_MEM wprog with
       | None ->
           fprintf p "ERROR: World memory state undefined@."
       | Some wm ->
-      match Cexec.do_initial_state prog1 with
+      match Cexec.do_initial_state Memimpl.mem_MEM prog1 with
       | None ->
           fprintf p "ERROR: Initial state undefined@."
       | Some(ge, s) ->

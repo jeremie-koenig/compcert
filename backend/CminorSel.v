@@ -91,6 +91,9 @@ Definition funsig (fd: fundef) :=
 
 (** * Operational semantics *)
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 (** Three kinds of evaluation environments are involved:
 - [genv]: global environments, define symbols and functions;
 - [env]: local environments, map local variables to values;
@@ -111,7 +114,7 @@ Inductive cont: Type :=
 
 (** States *)
 
-Inductive state: Type :=
+Inductive state `{M: Mem.MEM mem}: Type :=
   | State:                              (**r execution within a function *)
       forall (f: function)              (**r currently executing function  *)
              (s: stmt)                  (**r statement under consideration *)
@@ -470,5 +473,8 @@ Proof.
   eexact H. apply insert_lenv_0. 
 Qed.
 
+End WITHMEM.
+
+Hint Constructors eval_expr eval_exprlist: evalexpr.
 Hint Resolve eval_lift: evalexpr.
 

@@ -96,6 +96,9 @@ Defined.
 
 (** * Events, volatile memory accesses, and external functions. *)
 
+Section WITHMEM.
+Context `{M: Mem.MEM}.
+
 Section EXEC.
 
 Variable ge: genv.
@@ -1872,7 +1875,7 @@ Proof.
   exploit imm_safe_imm_safe_t; eauto. 
   intros [A | [C1 [a1 [t [a1' [m' [A [B [D E]]]]]]]]]. contradiction.
   right. red. exists t; econstructor; split; auto. 
-  left. rewrite B. eapply step_rred with (C := fun x => C(C1 x)). eauto. eauto. 
+  left. rewrite B. eapply @step_rred with (C := fun x => C(C1 x)). eauto. eauto. 
   left. left. eapply step_stuck; eauto.
 Qed.
 
@@ -2212,3 +2215,5 @@ Definition at_final_state (S: state): option int :=
   | Returnstate (Vint r) Kstop m => Some r
   | _ => None
   end.
+
+End WITHMEM.
