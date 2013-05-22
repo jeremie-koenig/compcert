@@ -3941,7 +3941,7 @@ Proof.
   repeat rewrite Zplus_0_r. intros [m'' [A B]]. congruence.
 Qed.
 
-Instance mem_MEM: Mem.MEM mem := {
+Instance mem_ops: Mem.MemOps mem := {
   empty := empty;
   alloc := alloc;
   free := free;
@@ -3951,9 +3951,16 @@ Instance mem_MEM: Mem.MEM mem := {
   storebytes := storebytes;
   drop_perm := drop_perm;
   nextblock := nextblock;
+  perm := perm;
+  valid_pointer := valid_pointer;
+  extends := extends;
+  inject := inject;
+  inject_neutral := inject_neutral
+}.
+
+Instance mem_spec: Mem.MemSpec mem := {
   nextblock_pos := nextblock_pos;
   valid_not_valid_diff := valid_not_valid_diff;
-  perm := perm;
   perm_implies := perm_implies;
   perm_cur_max := perm_cur_max;
   perm_cur := perm_cur;
@@ -3966,7 +3973,6 @@ Instance mem_MEM: Mem.MEM mem := {
   valid_access_implies := valid_access_implies;
   valid_access_valid_block := valid_access_valid_block;
   valid_access_perm := valid_access_perm;
-  valid_pointer := valid_pointer;
   valid_pointer_nonempty_perm := valid_pointer_nonempty_perm;
   valid_pointer_valid_access := valid_pointer_valid_access;
   weak_valid_pointer_spec := weak_valid_pointer_spec;
@@ -4073,7 +4079,6 @@ Instance mem_MEM: Mem.MEM mem := {
   perm_drop_3 := perm_drop_3;
   perm_drop_4 := perm_drop_4;
   load_drop := load_drop;
-  extends := extends;
   extends_refl := extends_refl;
   load_extends := load_extends;
   loadv_extends := loadv_extends;
@@ -4092,7 +4097,6 @@ Instance mem_MEM: Mem.MEM mem := {
   valid_access_extends := valid_access_extends;
   valid_pointer_extends := valid_pointer_extends;
   weak_valid_pointer_extends := weak_valid_pointer_extends;
-  inject := inject;
   mi_freeblocks := mi_freeblocks;
   valid_block_inject_1 := valid_block_inject_1;
   valid_block_inject_2 := valid_block_inject_2;
@@ -4130,7 +4134,6 @@ Instance mem_MEM: Mem.MEM mem := {
   perm_free_list := perm_free_list;
   free_inject := free_inject;
   drop_outside_inject := drop_outside_inject;
-  inject_neutral := inject_neutral;
   neutral_inject := neutral_inject;
   empty_inject_neutral := empty_inject_neutral;
   alloc_inject_neutral := alloc_inject_neutral;

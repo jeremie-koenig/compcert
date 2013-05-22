@@ -85,7 +85,7 @@ Inductive perm_kind: Type :=
 
 Module Mem.
 
-Class MEM (mem: Type) := {
+Class MemOps (mem: Type) := {
 
 nullptr: block := 0;
 
@@ -93,6 +93,10 @@ nullptr: block := 0;
 
 (** [empty] is the initial memory state. *)
 empty: mem;
+
+(** The next block of a memory state is the block identifier for the
+  next allocation.  It increases by one at each allocation. *)
+nextblock: mem -> block;
 
 (** [alloc m lo hi] allocates a fresh block of size [hi - lo] bytes.
   Valid offsets in this block are between [lo] included and [hi] excluded.
@@ -157,38 +161,97 @@ free_list := fix free_list (m: mem) (l: list (block * Z * Z)) {struct l}: option
       end
   end;
 
-(** [drop_perm m b lo hi p] sets the permissions of the byte range
-    [(b, lo) ... (b, hi - 1)] to [p].  These bytes must have [Freeable] permissions
-    in the initial memory state [m].
-    Returns updated memory state, or [None] if insufficient permissions. *)
-
-drop_perm: forall (m: mem) (b: block) (lo hi: Z) (p: permission), option mem;
-
-(** * Permissions, block validity, access validity, and bounds *)
-
-(** The next block of a memory state is the block identifier for the
-  next allocation.  It increases by one at each allocation.
-  Block identifiers below [nextblock] are said to be valid, meaning
-  that they have been allocated previously.  Block identifiers above
-  [nextblock] are fresh or invalid, i.e. not yet allocated.  Note that
-  a block identifier remains valid after a [free] operation over this
-  block. *)
-
-nextblock: mem -> block;
-nextblock_pos m:
-  nextblock m > 0;
-
-valid_block (m: mem) (b: block) :=
-  b < nextblock m;
-valid_not_valid_diff m b b':
-  valid_block m b -> ~(valid_block m b') -> b <> b';
-
 (** [perm m b ofs k p] holds if the address [b, ofs] in memory state [m]
   has permission [p]: one of freeable, writable, readable, and nonempty.
   If the address is empty, [perm m b ofs p] is false for all values of [p].
   [k] is the kind of permission we are interested in: either the current
   permissions or the maximal permissions. *)
 perm: forall (m: mem) (b: block) (ofs: Z) (k: perm_kind) (p: permission), Prop;
+
+(** [valid_pointer m b ofs] returns [true] if the address [b, ofs]
+  is nonempty in [m] and [false] if it is empty. *)
+valid_pointer: forall (m: mem) (b: block) (ofs: Z), bool;
+
+(** [drop_perm m b lo hi p] sets the permissions of the byte range
+    [(b, lo) ... (b, hi - 1)] to [p].  These bytes must have [Freeable] permissions
+    in the initial memory state [m].
+    Returns updated memory state, or [None] if insufficient permissions. *)
+drop_perm: forall (m: mem) (b: block) (lo hi: Z) (p: permission), option mem;
+
+(**  A store [m2] extends a store [m1] if [m2] can be obtained from [m1]
+  by relaxing the permissions of [m1] (for instance, allocating larger
+  blocks) and replacing some of the [Vundef] values stored in [m1] by
+  more defined values stored in [m2] at the same addresses. *)
+extends: mem -> mem -> Prop;
+
+(** A memory injection [f] is a function from addresses to either [None]
+  or [Some] of an address and an offset.  It defines a correspondence
+  between the blocks of two memory states [m1] and [m2]:
+  - if [f b = None], the block [b] of [m1] has no equivalent in [m2];
+  - if [f b = Some(b', ofs)], the block [b] of [m2] corresponds to
+    a sub-block at offset [ofs] of the block [b'] in [m2].
+
+  A memory injection [f] defines a relation [val_inject] between values
+  that is the identity for integer and float values, and relocates pointer 
+  values as prescribed by [f].  (See module [Values].)
+
+  Likewise, a memory injection [f] defines a relation between memory states 
+  that we axiomatize below. *)
+inject: meminj -> mem -> mem -> Prop;
+
+(** Memory states that inject into themselves. *)
+inject_neutral: forall (thr: block) (m: mem), Prop
+
+}.
+
+Section MEMOPS_DEFS.
+
+Context `{mem_ops: MemOps}.
+
+(** Block identifiers below [nextblock] are said to be valid, meaning
+  that they have been allocated previously.  Block identifiers above
+  [nextblock] are fresh or invalid, i.e. not yet allocated.  Note that
+  a block identifier remains valid after a [free] operation over this
+  block. *)
+Definition valid_block (m: mem) (b: block) :=
+  b < nextblock m.
+
+(** [range_perm m b lo hi p] holds iff the addresses [b, lo] to [b, hi-1]
+  all have permission [p] of kind [k]. *)
+Definition range_perm (m: mem) (b: block) (lo hi: Z) (k: perm_kind) (p: permission) : Prop :=
+  forall ofs, lo <= ofs < hi -> perm m b ofs k p.
+
+(** An access to a memory quantity [chunk] at address [b, ofs] with
+  permission [p] is valid in [m] if the accessed addresses all have
+  current permission [p] and moreover the offset is properly aligned. *)
+Definition valid_access (m: mem) (chunk: memory_chunk) (b: block) (ofs: Z) (p: permission): Prop :=
+  range_perm m b ofs (ofs + size_chunk chunk) Cur p
+  /\ (align_chunk chunk | ofs).
+
+(** C allows pointers one past the last element of an array.  These are not
+  valid according to the previously defined [valid_pointer]. The property
+  [weak_valid_pointer m b ofs] holds if address [b, ofs] is a valid pointer
+  in [m], or a pointer one past a valid block in [m].  *)
+Definition weak_valid_pointer (m: mem) (b: block) (ofs: Z) :=
+  valid_pointer m b ofs || valid_pointer m b (ofs - 1).
+
+End MEMOPS_DEFS.
+
+Definition inj_offset_aligned (delta: Z) (size: Z) : Prop :=
+  forall chunk, size_chunk chunk <= size -> (align_chunk chunk | delta).
+
+Definition flat_inj (thr: block) : meminj :=
+  fun (b: block) => if zlt b thr then Some(b, 0) else None.
+
+Class MemSpec (mem: Type) `{mem_ops: MemOps mem} := {
+
+(** * Permissions, block validity, access validity, and bounds *)
+
+nextblock_pos m:
+  nextblock m > 0;
+
+valid_not_valid_diff m b b':
+  valid_block m b -> ~(valid_block m b') -> b <> b';
 
 (** Logical implications between permissions *)
 
@@ -213,11 +276,6 @@ perm_valid_block m b ofs k p:
 perm_dec m b ofs k p:
   {perm m b ofs k p} + {~ perm m b ofs k p};
 
-(** [range_perm m b lo hi p] holds iff the addresses [b, lo] to [b, hi-1]
-  all have permission [p] of kind [k]. *)
-range_perm (m: mem) (b: block) (lo hi: Z) (k: perm_kind) (p: permission) : Prop :=
-  forall ofs, lo <= ofs < hi -> perm m b ofs k p;
-
 range_perm_implies m b lo hi k p1 p2:
   range_perm m b lo hi k p1 -> perm_order p1 p2 -> range_perm m b lo hi k p2;
 range_perm_cur:
@@ -226,13 +284,6 @@ range_perm_cur:
 range_perm_max:
   forall m b lo hi k p,
   range_perm m b lo hi k p -> range_perm m b lo hi Max p;
-
-(** An access to a memory quantity [chunk] at address [b, ofs] with
-  permission [p] is valid in [m] if the accessed addresses all have
-  current permission [p] and moreover the offset is properly aligned. *)
-valid_access (m: mem) (chunk: memory_chunk) (b: block) (ofs: Z) (p: permission): Prop :=
-  range_perm m b ofs (ofs + size_chunk chunk) Cur p
-  /\ (align_chunk chunk | ofs);
 
 valid_access_implies m chunk b ofs p1 p2:
   valid_access m chunk b ofs p1 -> perm_order p1 p2 ->
@@ -249,20 +300,10 @@ valid_access_perm m chunk b ofs k p:
 (** [valid_pointer m b ofs] returns [true] if the address [b, ofs]
   is nonempty in [m] and [false] if it is empty. *)
 
-valid_pointer: forall (m: mem) (b: block) (ofs: Z), bool;
-
 valid_pointer_nonempty_perm m b ofs:
   valid_pointer m b ofs = true <-> perm m b ofs Cur Nonempty;
 valid_pointer_valid_access m b ofs:
   valid_pointer m b ofs = true <-> valid_access m Mint8unsigned b ofs Nonempty;
-
-(** C allows pointers one past the last element of an array.  These are not
-  valid according to the previously defined [valid_pointer]. The property
-  [weak_valid_pointer m b ofs] holds if address [b, ofs] is a valid pointer
-  in [m], or a pointer one past a valid block in [m].  *)
-
-weak_valid_pointer (m: mem) (b: block) (ofs: Z) :=
-  valid_pointer m b ofs || valid_pointer m b (ofs - 1);
 
 weak_valid_pointer_spec m b ofs:
   weak_valid_pointer m b ofs = true <->
@@ -780,13 +821,6 @@ load_drop m b lo hi p m':
 
 (** ** Memory extensions *)
 
-(**  A store [m2] extends a store [m1] if [m2] can be obtained from [m1]
-  by relaxing the permissions of [m1] (for instance, allocating larger
-  blocks) and replacing some of the [Vundef] values stored in [m1] by
-  more defined values stored in [m2] at the same addresses. *)
-
-extends: mem -> mem -> Prop;
-
 extends_refl m:
   extends m m;
 
@@ -884,22 +918,6 @@ weak_valid_pointer_extends m1 m2 b ofs:
   weak_valid_pointer m1 b ofs = true -> weak_valid_pointer m2 b ofs = true;
 
 (** * Memory injections *)
-
-(** A memory injection [f] is a function from addresses to either [None]
-  or [Some] of an address and an offset.  It defines a correspondence
-  between the blocks of two memory states [m1] and [m2]:
-- if [f b = None], the block [b] of [m1] has no equivalent in [m2];
-- if [f b = Some(b', ofs)], the block [b] of [m2] corresponds to
-  a sub-block at offset [ofs] of the block [b'] in [m2].
-
-A memory injection [f] defines a relation [val_inject] between values
-that is the identity for integer and float values, and relocates pointer 
-values as prescribed by [f].  (See module [Values].)
-
-Likewise, a memory injection [f] defines a relation between memory states 
-that we now axiomatize. *)
-
-inject: meminj -> mem -> mem -> Prop;
 
 mi_freeblocks f m1 m2:
   inject f m1 m2 ->
@@ -1106,9 +1124,6 @@ alloc_left_unmapped_inject f m1 m2 lo hi m1' b1:
   /\ f' b1 = None
   /\ (forall b, b <> b1 -> f' b = f b);
 
-inj_offset_aligned (delta: Z) (size: Z) : Prop :=
-  forall chunk, size_chunk chunk <= size -> (align_chunk chunk | delta);
-
 alloc_left_mapped_inject f m1 m2 lo hi m1' b1 b2 delta:
   inject f m1 m2 ->
   alloc m1 lo hi = (m1', b1) ->
@@ -1184,11 +1199,6 @@ drop_outside_inject f m1 m2 b lo hi p m2':
   inject f m1 m2';
 
 (** Memory states that inject into themselves. *)
-
-flat_inj (thr: block) : meminj :=
-  fun (b: block) => if zlt b thr then Some(b, 0) else None;
-
-inject_neutral: forall (thr: block) (m: mem), Prop;
 
 neutral_inject m:
   inject_neutral (nextblock m) m ->
