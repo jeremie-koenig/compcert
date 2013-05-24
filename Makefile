@@ -107,7 +107,7 @@ DRIVER=Compiler.v Complements.v
 
 # Certikos
 
-CERTIKOS=
+CERTIKOS=Monad.v
 
 # All source files
 

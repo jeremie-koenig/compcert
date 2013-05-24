@@ -1,0 +1,208 @@
+Require Export Coq.Program.Basics.
+Require Import Coq.Setoids.Setoid.
+Require Import Coq.Classes.Morphisms.
+Require Import Axioms.
+
+Instance funext_subrel {X Y}:
+  subrelation
+    (Morphisms.pointwise_relation X eq)
+    (@eq (X -> Y)).
+Proof.
+  compute.
+  apply functional_extensionality.
+Qed.
+
+Instance funext_mor2 {X Y A B} (f: (X -> Y) -> A -> B):
+  Proper (pointwise_relation X eq ==> eq ==> eq) f.
+Proof.
+  intros.
+  intros x1 x2 Hx y1 y2 Hy.
+  apply funext_subrel in Hx.
+  apply f_equal2;
+  now assumption.
+Qed.
+
+Instance funext_mor4 {X Y A B C D} (f: (X -> Y) -> A -> B -> C -> D):
+  Proper (pointwise_relation X eq ==> eq ==> eq ==> eq ==> eq) f.
+Proof.
+  intros.
+  intros x1 x2 Hx y1 y2 Hy z1 z2 Hz t1 t2 Ht.
+  apply funext_subrel in Hx.
+  apply f_equal4;
+  now assumption.
+Qed.
+
+
+(** * Interface definitions *)
+
+(** As in Haskell, we defined monads in terms of [ret] and [bind], and
+  provide derived definitions for [fmap] and [join]. *)
+
+Class MonadOps (M: Type -> Type) := {
+  ret {A}: A -> M A;
+  bind {A B}: (A -> M B) -> M A -> M B
+}.
+
+Class Monad (M: Type -> Type) `{Mops: MonadOps M}: Prop := {
+  monad_ret_bind {A B} (f: A -> M B) (x: A):
+    bind f (ret x) = f x;
+  monad_bind_ret {A} (m: M A):
+    bind ret m = m;
+  monad_bind_bind {A B C} (f: B -> M C) (g: A -> M B) (m: M A):
+    bind f (bind g m) = bind (fun x => bind f (g x)) m
+}.
+
+Hint Rewrite
+    @monad_ret_bind
+    @monad_bind_ret
+    @monad_bind_bind
+  using typeclasses eauto : monad.
+
+Notation "'do' x <- M ; N" := (bind (fun x => N) M)
+  (at level 200, x ident, M at level 100, N at level 200).
+
+(** Likewise, comonads are defined in terms of [extract] and [extend]. *)
+
+Class ComonadOps (W: Type -> Type) := {
+  extract {A}: W A -> A;
+  extend {A B}: (W A -> B) -> W A -> W B
+}.
+
+Class Comonad (W: Type -> Type) `{Wops: ComonadOps W}: Prop := {
+  comonad_extract_extend {A B} (f: W A -> B) (w: W A):
+    extract (extend f w) = f w;
+  comonad_extend_extract {A} (w: W A):
+    extend extract w = w;
+  comonad_extend_extend {A B C} (f : W B -> C) (g: W A -> B) (w: W A):
+    extend f (extend g w) = extend (fun w => f (extend g w)) w
+}.
+
+Hint Rewrite
+    @comonad_extract_extend
+    @comonad_extend_extract
+    @comonad_extend_extend
+  using typeclasses eauto : comonad.
+
+(** Both monads and comonads are special cases of functors in Type. *)
+
+Class FunctorOp (F: Type -> Type) := {
+  fmap: forall {A B: Type}, (A -> B) -> F A -> F B
+}.
+
+Class Functor (F: Type -> Type) `{Fmap: FunctorOp F} := {
+  functor_id {A} (x: F A):
+    fmap (@id A) x = x;
+  functor_compose {A B C} (f: B -> C) (g: A -> B) (x: F A):
+    fmap (fun y => f (g y)) x = fmap f (fmap g x)
+}.
+
+(** * Monads *)
+
+Section MONADS.
+  Context `{HM: Monad}.
+
+  (** A monad is a functor. *)
+
+  Global Instance monad_fmap: FunctorOp M := {
+    fmap A B f :=
+      bind (fun x => ret (f x))
+  }.
+
+  Global Instance monad_functor: Functor M.
+  Proof.
+    split; intros; simpl; autorewrite with monad.
+    - reflexivity.
+    - setoid_rewrite monad_ret_bind.
+      reflexivity.
+  Qed.
+
+  Theorem monad_return_fmap {A B} (f: A -> B) (x: A):
+    fmap f (ret x) = ret (f x).
+  Proof.
+    simpl.
+    autorewrite with monad.
+    reflexivity.
+  Qed.
+End MONADS.
+
+(** * Comonads *)
+
+Section COMONADS.
+  Context `{HW: Comonad}.
+
+  Global Instance comonad_fmap: FunctorOp W := {
+    fmap A B f :=
+      extend (fun w => f (extract w))
+  }.
+
+  Global Instance comonad_functor: Functor W.
+  Proof.
+    split; intros; simpl; autorewrite with comonad.
+    - reflexivity.
+    - setoid_rewrite comonad_extract_extend.
+      reflexivity.
+  Qed.
+End COMONADS.
+
+Section COMMUTE_WM.
+  Context {M W} `{HM: Monad M} `{HW: Comonad W}.
+
+  Definition comm_wm {X} (x: W (M X)): M (W X) :=
+    do x' <- extract x; ret (extend (const x') x).
+End COMMUTE_WM.
+
+Section COMMUTE_WW.
+  Context {W1 W2} `{Comonad W1} `{Comonad W2}.
+  Definition comm_ww {X} (x12: W1 (W2 X)): W2 (W1 X) :=
+    let x2 := extract x12 in
+    let x := extract x2 in
+    let x1 := extend (const x) x12 in
+    let x21 := extend (const x1) x2 in
+    x21.
+End COMMUTE_WW.
+
+(** * Well-known instances *)
+
+Section INSTANCES.
+  Open Scope type_scope.
+
+  (** ** [option] is a monad *)
+
+  Global Instance option_monad_ops: MonadOps option := {
+    bind A B f mx :=
+      match mx with
+        | Some a => f a
+        | None => None
+      end;
+    ret := Some
+  }.
+
+  Global Instance option_monad: Monad option.
+  Proof.
+    split; intros; try destruct m; now reflexivity.
+  Qed.
+
+  (** ** [A * -] is a comonad. *)
+
+  Global Instance prod_comonad_ops {A}: ComonadOps (prod A) := {
+    extract := @snd A;
+    extend X Y f x := (fst x, f x)
+  }.
+
+  Global Instance prod_comonad {A}: Comonad (prod A).
+  Proof.
+    split; simpl; try destruct w; now reflexivity.
+  Qed.
+
+  (** ** [- * A] is a comonad *)
+
+  Global Instance prod_l_comonad_ops {A}: ComonadOps (fun X => X * A) := {
+    extract X := @fst X A;
+    extend X Y f x := (f x, snd x)
+  }.
+
+  Global Instance prod_l_comonad {A}: Comonad (fun X => X * A).
+  Proof.
+    split; intros; try destruct w; now reflexivity.
+  Qed.
+End INSTANCES.
