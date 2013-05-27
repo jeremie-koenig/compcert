@@ -55,7 +55,7 @@ Section LIFTOPS.
   (** We can now use [lift] to define the operations of the comonadic
     memory states. *)
 
-  Global Instance wmem_ops: Mem.MemOps (W mem) := {
+  Global Instance liftmem_ops: Mem.MemOps (W mem) := {
     empty :=
       lift_empty Mem.empty;
     nextblock wm :=
@@ -392,7 +392,7 @@ Section LIFTMEM.
   Ltac lift f :=
     now lift_partial f.
 
-  Instance: Mem.MemSpec (W mem).
+  Global Instance liftmem_spec: Mem.MemSpec (W mem).
   Proof.
     esplit.
     lift Mem.nextblock_pos.
