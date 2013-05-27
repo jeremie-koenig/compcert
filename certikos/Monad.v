@@ -96,6 +96,30 @@ Class Functor (F: Type -> Type) `{Fmap: FunctorOp F} := {
     fmap (fun y => f (g y)) x = fmap f (fmap g x)
 }.
 
+(** * Functors *)
+
+Section FUNCTORS.
+  (** The constant functor [A] maps everything to [@id A]. *)
+  Global Instance const_fmap A: FunctorOp (fun X => A) := {
+    fmap X Y f a := a
+  }.
+
+  Global Instance const_functor A: Functor (fun X => A).
+  Proof.
+    tauto.
+  Qed.
+
+  (** The identity functor maps [f] to itself. *)
+  Global Instance id_fmap: FunctorOp (fun X => X) := {
+    fmap X Y f := f
+  }.
+
+  Global Instance id_functor: Functor (fun X => X).
+  Proof.
+    tauto.
+  Qed.
+End FUNCTORS.
+
 (** * Monads *)
 
 Section MONADS.
@@ -142,7 +166,52 @@ Section COMONADS.
     - setoid_rewrite comonad_extract_extend.
       reflexivity.
   Qed.
+
+  Theorem comonad_extend_eq {A B} (f g: W A -> B) (w: W A):
+    extend f w = extend g w -> f w = g w.
+  Proof.
+    intros.
+    apply (f_equal extract) in H.
+    rewrite !comonad_extract_extend in H.
+    assumption.
+  Qed.
+
+  Definition set {A B} (x: B): W A -> W B :=
+    extend (const x).
+
+  Theorem comonad_set_eq {A B} (x y: B) (w: W A):
+    set x w = set y w -> x = y.
+  Proof.
+    apply comonad_extend_eq.
+  Qed.
+
+  Theorem comonad_extract_set {A B} (x: A) (w: W B):
+    extract (set x w) = x.
+  Proof.
+    unfold set.
+    apply comonad_extract_extend.
+  Qed.
+
+  Theorem comonad_set_set {A B C} (x: A) (y: B) (w: W C):
+    set x (set y w) = set x w.
+  Proof.
+    unfold set, const.
+    rewrite comonad_extend_extend.
+    reflexivity.
+  Qed.
+
+  (* This would be useful but proving might require more premises?
+  Theorem comonad_set_extract {A} (w: W A):
+    set (extract w) w = w.
+  Proof.
+  Qed.
+  *)
 End COMONADS.
+
+Hint Rewrite
+    @comonad_extract_set
+    @comonad_set_set
+  using typeclasses eauto: comonad.
 
 Section COMMUTE_WM.
   Context {M W} `{HM: Monad M} `{HW: Comonad W}.
