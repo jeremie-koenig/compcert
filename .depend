@@ -146,4 +146,5 @@ flocq/Calc/Fcalc_digits.vo flocq/Calc/Fcalc_digits.glob flocq/Calc/Fcalc_digits.
 flocq/Appli/Fappli_IEEE_bits.vo flocq/Appli/Fappli_IEEE_bits.glob flocq/Appli/Fappli_IEEE_bits.v.beautified: flocq/Appli/Fappli_IEEE_bits.v flocq/Core/Fcore.vo flocq/Core/Fcore_digits.vo flocq/Calc/Fcalc_digits.vo flocq/Appli/Fappli_IEEE.vo
 flocq/Appli/Fappli_IEEE.vo flocq/Appli/Fappli_IEEE.glob flocq/Appli/Fappli_IEEE.v.beautified: flocq/Appli/Fappli_IEEE.v flocq/Core/Fcore.vo flocq/Core/Fcore_digits.vo flocq/Calc/Fcalc_digits.vo flocq/Calc/Fcalc_round.vo flocq/Calc/Fcalc_bracket.vo flocq/Calc/Fcalc_ops.vo flocq/Calc/Fcalc_div.vo flocq/Calc/Fcalc_sqrt.vo flocq/Prop/Fprop_relative.vo
 certikos/Monad.vo certikos/Monad.glob certikos/Monad.v.beautified: certikos/Monad.v lib/Axioms.vo
+certikos/LiftMem.vo certikos/LiftMem.glob certikos/LiftMem.v.beautified: certikos/LiftMem.v lib/Coqlib.vo common/Values.vo common/Memory.vo certikos/Monad.vo
 exportclight/Clightdefs.vo exportclight/Clightdefs.glob exportclight/Clightdefs.v.beautified: exportclight/Clightdefs.v lib/Integers.vo lib/Floats.vo common/AST.vo cfrontend/Ctypes.vo cfrontend/Cop.vo cfrontend/Clight.vo
