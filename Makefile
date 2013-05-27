@@ -107,7 +107,9 @@ DRIVER=Compiler.v Complements.v
 
 # Certikos
 
-CERTIKOS=Monad.v LiftMem.v
+CERTIKOS=\
+  Monad.v \
+  LiftMem.v \
 
 # All source files
 
