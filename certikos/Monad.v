@@ -213,23 +213,6 @@ Hint Rewrite
     @comonad_set_set
   using typeclasses eauto: comonad.
 
-Section COMMUTE_WM.
-  Context {M W} `{HM: Monad M} `{HW: Comonad W}.
-
-  Definition comm_wm {X} (x: W (M X)): M (W X) :=
-    do x' <- extract x; ret (extend (const x') x).
-End COMMUTE_WM.
-
-Section COMMUTE_WW.
-  Context {W1 W2} `{Comonad W1} `{Comonad W2}.
-  Definition comm_ww {X} (x12: W1 (W2 X)): W2 (W1 X) :=
-    let x2 := extract x12 in
-    let x := extract x2 in
-    let x1 := extend (const x) x12 in
-    let x21 := extend (const x1) x2 in
-    x21.
-End COMMUTE_WW.
-
 (** * Well-known instances *)
 
 Section INSTANCES.
