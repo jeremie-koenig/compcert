@@ -355,7 +355,7 @@ Section LIFTMEM.
   Ltac lift_premise :=
     match goal with
       | [ H: Mem.free_list _ _ = _ |- _ ] =>
-        eapply lift_free_list
+        eapply lift_free_list in H
       | [ H: lift ?f ?wm = Some ?b |- _ ] =>
         eapply lift_option_eq in H
       | [ H: lift ?f ?wm = Some (set ?m' ?wm) |- _ ] =>
