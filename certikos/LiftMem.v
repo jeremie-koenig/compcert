@@ -180,70 +180,8 @@ End LIFTPROD.
 
 (** ** Lifting [Mem.MemSpec] *)
 
-Section LIFTMEM.
+Section LIFTDERIVED.
   Context `{HW: LiftMem} `{Hmem: Mem.MemSpec}.
-
-  (** This is the main tactic we use: it lifts a theorem [Hf] of
-    the underlying memory model by "peeling off" its structure
-    recursively to prove the lifted goal. The leaf goals are
-    handled with the caller-provided tactic [leaftac]. *)
-
-  (* Premises are "translated" and used to specialize Hf *)
-  Ltac peel_intro recurse Hf x :=
-    intro x;
-    let T := type of x in
-    lazymatch type of Hf with
-      (* No transformation required, just pass it along. *)
-      | forall (y: T), _ =>
-	specialize (Hf x)
-
-      (* [mem] argument, use [extract] *)
-      | forall (m: mem), _ =>
-	specialize (Hf (extract x))
-
-      (* Otherwise, recurse. *)
-      | forall (H: ?T'), _ =>
-	let H' := fresh H in
-	assert (H': T') by recurse x;
-	specialize (Hf H');
-	clear H'
-    end;
-    (*try clear x;*)
-    recurse Hf.
-
-  (* Existential: we must use [set] to augment any memory state
-    provided by Hf, but we can otherwise just pass everything along *)
-  Ltac peel_exists recurse Hf x :=
-    let Hf' := fresh Hf in
-    destruct Hf as [x Hf'];
-    let T := type of x in
-    match T with
-      | mem => eexists (set x _)
-      | _ => exists x
-    end;
-    recurse Hf'.
-
-  (* Conjunction: split and peel each side independently *)
-  Ltac peel_conj recurse Hf :=
-    let Hl := fresh Hf "l" in
-    let Hr := fresh Hf "r" in
-    destruct Hf as [Hl Hr];
-    try (split; [recurse Hl | recurse Hr]).
-
-  Ltac peel Hf leaftac :=
-    let recurse Hf := peel Hf leaftac in
-    try lazymatch goal with
-      | |- forall (x: _), _ =>
-        let x := fresh x in peel_intro recurse Hf x
-      | |- exists (x: _), _ =>
-        let x := fresh x in peel_exists recurse Hf x
-      | |- { x: _ | _ } =>
-        let x := fresh x in peel_exists recurse Hf x
-      | |- _ /\ _ =>
-        peel_conj recurse Hf
-      | |- ?T =>
-        leaftac tt
-    end.
 
   (** Now we must come up with a suitable leaf tactic.
     The first step for proving a lifted theorem involving an
@@ -311,15 +249,16 @@ Section LIFTMEM.
   Proof.
     reflexivity.
   Qed.
+End LIFTDERIVED.
 
   Hint Rewrite
-    lift_loadv
-    lift_storev
-    lift_valid_block
-    lift_range_perm
-    lift_valid_access
-    lift_weak_valid_pointer
-    : lift.
+    @lift_loadv
+    @lift_storev
+    @lift_valid_block
+    @lift_range_perm
+    @lift_valid_access
+    @lift_weak_valid_pointer
+    using typeclasses eauto : lift.
 
   Hint Resolve
     lift_free_list
@@ -341,10 +280,6 @@ Section LIFTMEM.
     @lift_option_eq_set
     @lift_prod_eq
     @lift_prod_eq_set
-    : lift.
-
-  Hint Immediate
-    (lift_option_eq_preserves_context (W:=W))
     : lift.
 
   (* Post-process lift_?_eq_set *)
@@ -378,6 +313,72 @@ Section LIFTMEM.
   (** Replace [(extract Mem.empty)] by the underlying [Mem.empty]. *)
   Hint Extern 10 => rewrite !lift_empty_extract in *: lift.
 
+
+Section LIFTMEM.
+  Context `{HW: LiftMem} `{Hmem: Mem.MemSpec}.
+
+  (** This is the main tactic we use: it lifts a theorem [Hf] of
+    the underlying memory model by "peeling off" its structure
+    recursively to prove the lifted goal. The leaf goals are
+    handled with the caller-provided tactic [leaftac]. *)
+
+  (* Premises are "translated" and used to specialize Hf *)
+  Ltac peel_intro recurse Hf x :=
+    intro x;
+    let T := type of x in
+    lazymatch type of Hf with
+      (* No transformation required, just pass it along. *)
+      | forall (y: T), _ =>
+	specialize (Hf x)
+
+      (* [mem] argument, use [extract] *)
+      | forall (m: mem), _ =>
+	specialize (Hf (extract x))
+
+      (* Otherwise, recurse. *)
+      | forall (H: ?T'), _ =>
+	let H' := fresh H in
+	assert (H': T') by recurse x;
+	specialize (Hf H');
+	clear H'
+    end;
+    (*try clear x;*)
+    recurse Hf.
+
+  (* Existential: we must use [set] to augment any memory state
+    provided by Hf, but we can otherwise just pass everything along *)
+  Ltac peel_exists recurse Hf x :=
+    let Hf' := fresh Hf in
+    destruct Hf as [x Hf'];
+    let T := type of x in
+    match T with
+      | mem => eexists (set x _)
+      | _ => exists x
+    end;
+    recurse Hf'.
+
+  (* Conjunction: split and peel each side independently *)
+  Ltac peel_conj recurse Hf :=
+    let Hl := fresh Hf "l" in
+    let Hr := fresh Hf "r" in
+    destruct Hf as [Hl Hr];
+    try (split; [recurse Hl | recurse Hr]).
+
+  Ltac peel Hf leaftac :=
+    let recurse Hf := peel Hf leaftac in
+    try lazymatch goal with
+      | |- forall (x: _), _ =>
+        let x := fresh x in peel_intro recurse Hf x
+      | |- exists (x: _), _ =>
+        let x := fresh x in peel_exists recurse Hf x
+      | |- { x: _ | _ } =>
+        let x := fresh x in peel_exists recurse Hf x
+      | |- _ /\ _ =>
+        peel_conj recurse Hf
+      | |- ?T =>
+        leaftac tt
+    end.
+
   (** We're now ready to define our leaf tactic, and use it in
     conjunction with [peel] to solve the goals automatically. *)
 
@@ -391,6 +392,10 @@ Section LIFTMEM.
 
   Ltac lift f :=
     now lift_partial f.
+
+  Hint Immediate
+    (lift_option_eq_preserves_context (W:=W))
+    : lift.
 
   Global Instance liftmem_spec: Mem.MemSpec (W mem).
   Proof.
