@@ -315,7 +315,7 @@ End LIFTDERIVED.
 
 
 Section LIFTMEM.
-  Context `{HW: LiftMem} `{Hmem: Mem.MemSpec}.
+  Context W `{HW: LiftMem W} `{Hmem: Mem.MemSpec}.
 
   (** This is the main tactic we use: it lifts a theorem [Hf] of
     the underlying memory model by "peeling off" its structure
