@@ -317,7 +317,7 @@ Hint Rewrite @lift_empty_extract using typeclasses eauto: lift.
 Hint Extern 10 => progress (autorewrite with lift in *): lift.
 
 Section LIFTMEM.
-  Context W `{HW: LiftMem W} `{Hmem: Mem.MemSpec}.
+  Context W `{HW: LiftMem W} mem `{Hmem: Mem.MemSpec mem}.
 
   (** This is the main tactic we use: it lifts a theorem [Hf] of
     the underlying memory model by "peeling off" its structure
