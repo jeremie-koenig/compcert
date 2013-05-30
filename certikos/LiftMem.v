@@ -311,8 +311,10 @@ Hint Extern 10 => progress (repeat lift_premise): lift.
 Hint Extern 10 => progress (unfold lift in *; simpl in * ): lift. 
 
 (** Replace [(extract Mem.empty)] by the underlying [Mem.empty]. *)
-Hint Extern 10 => rewrite !lift_empty_extract in *: lift.
+Hint Rewrite @lift_empty_extract using typeclasses eauto: lift.
 
+(** Hook the rewrite rules into the lift database. *)
+Hint Extern 10 => progress (autorewrite with lift in *): lift.
 
 Section LIFTMEM.
   Context W `{HW: LiftMem W} `{Hmem: Mem.MemSpec}.
@@ -383,7 +385,6 @@ Section LIFTMEM.
     conjunction with [peel] to solve the goals automatically. *)
 
   Ltac lift_leaf f :=
-    autorewrite with lift in *; simpl in *;
     eauto 10 using f with lift typeclass_instances.
 
   Ltac lift_partial f :=
@@ -478,7 +479,7 @@ Section LIFTMEM.
     lift Mem.loadbytes_storebytes_other.
     lift Mem.load_storebytes_other.
     lift_partial Mem.storebytes_concat.
-      unfold lift in *; simpl in *.
+      simpl in *; unfold lift in *; simpl in *.
       destruct (Mem.storebytes (extract m) b ofs (bytes1 ++ bytes2));
       destruct (Mem.storebytes (extract m) b ofs bytes1);
       destruct (Mem.storebytes (extract m1) b (ofs + Z.of_nat (length bytes1)));
