@@ -251,67 +251,67 @@ Section LIFTDERIVED.
   Qed.
 End LIFTDERIVED.
 
-  Hint Rewrite
-    @lift_loadv
-    @lift_storev
-    @lift_valid_block
-    @lift_range_perm
-    @lift_valid_access
-    @lift_weak_valid_pointer
-    using typeclasses eauto : lift.
+Hint Rewrite
+  @lift_loadv
+  @lift_storev
+  @lift_valid_block
+  @lift_range_perm
+  @lift_valid_access
+  @lift_weak_valid_pointer
+  using typeclasses eauto : lift.
 
-  Hint Resolve
-    lift_free_list
-    : lift.
+Hint Resolve
+  lift_free_list
+  : lift.
 
-  (** For the fields of [Mem.MemOps], which are defined in terms
-    of [lift] to begin with, we can use [simpl], making sure that
-    we stop once we reach [lift]: *)
+(** For the fields of [Mem.MemOps], which are defined in terms
+  of [lift] to begin with, we can use [simpl], making sure that
+  we stop once we reach [lift]: *)
 
-  Arguments lift _ _ _ _ _ _ _ : simpl never.
+Arguments lift _ _ _ _ _ _ _ : simpl never.
 
-  (** Once we've rewritten everything in terms of [lift], we can apply
-    some of the generic theorems we proved earlier. For the goal we
-    just add them as hints to the lift database. *)
+(** Once we've rewritten everything in terms of [lift], we can apply
+  some of the generic theorems we proved earlier. For the goal we
+  just add them as hints to the lift database. *)
 
-  Hint Resolve
-    @lift_mor
-    @lift_option_eq
-    @lift_option_eq_set
-    @lift_prod_eq
-    @lift_prod_eq_set
-    : lift.
+Hint Resolve
+  @lift_mor
+  @lift_option_eq
+  @lift_option_eq_set
+  @lift_prod_eq
+  @lift_prod_eq_set
+  : lift.
 
-  (* Post-process lift_?_eq_set *)
-  Hint Extern 10 => rewrite !comonad_extract_set in *: lift.
+(* Post-process lift_?_eq_set *)
+Hint Extern 10 => rewrite !comonad_extract_set in *: lift.
 
-  (** For the premises we need to apply them explicitely. *)
+(** For the premises we need to apply them explicitely. *)
 
-  Ltac lift_premise :=
-    match goal with
-      | [ H: Mem.free_list _ _ = _ |- _ ] =>
-        eapply lift_free_list in H
-      | [ H: lift ?f ?wm = Some ?b |- _ ] =>
-        eapply lift_option_eq in H
-      | [ H: lift ?f ?wm = Some (set ?m' ?wm) |- _ ] =>
-        eapply lift_option_eq_set in H
-      | [ H: lift ?f ?wm = (?m, ?x) |- _ ] =>
-        eapply lift_prod_eq in H
-      | [ H: lift ?f ?wm = (set ?m' ?wm, ?a) |- _ ] =>
-        eapply lift_prod_eq_set in H
-    end.
+Ltac lift_premise :=
+  match goal with
+    | [ H: Mem.free_list _ _ = _ |- _ ] =>
+      eapply lift_free_list in H
+    | [ H: lift ?f ?wm = Some ?b |- _ ] =>
+      eapply lift_option_eq in H
+    | [ H: lift ?f ?wm = Some (set ?m' ?wm) |- _ ] =>
+      eapply lift_option_eq_set in H
+    | [ H: lift ?f ?wm = (?m, ?x) |- _ ] =>
+      eapply lift_prod_eq in H
+    | [ H: lift ?f ?wm = (set ?m' ?wm, ?a) |- _ ] =>
+      eapply lift_prod_eq_set in H
+  end.
 
-  Hint Extern 10 => progress (repeat lift_premise): lift.
+Hint Extern 10 => progress (repeat lift_premise): lift.
 
-  (** Next, we need to use the original theorem in order to prove the
-    lifted one. To do this we must reduce [lift] to obtain a goal
-    which is stated in terms of the original operations applied to
-    [(extract wm)]. This hint makes sure [eauto] can do that. *)
+(** Next, we need to use the original theorem in order to prove the
+  lifted one. To do this we must reduce [lift] to obtain a goal
+  which is stated in terms of the original operations applied to
+  [(extract wm)]. This hint makes sure [eauto] can do that. *)
 
-  Hint Extern 10 => progress (unfold lift in *; simpl in * ): lift. 
+Hint Extern 10 => progress (unfold lift in *; simpl in * ): lift. 
 
-  (** Replace [(extract Mem.empty)] by the underlying [Mem.empty]. *)
-  Hint Extern 10 => rewrite !lift_empty_extract in *: lift.
+(** Replace [(extract Mem.empty)] by the underlying [Mem.empty]. *)
+Hint Extern 10 => rewrite !lift_empty_extract in *: lift.
 
 
 Section LIFTMEM.
