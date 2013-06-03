@@ -180,9 +180,11 @@ Section COMONADS.
     extend (const x).
 
   Theorem comonad_set_eq {A B} (x y: B) (w: W A):
-    set x w = set y w -> x = y.
+    set x w = set y w <-> x = y.
   Proof.
-    apply comonad_extend_eq.
+    split.
+    - apply comonad_extend_eq.
+    - intro; apply f_equal2; trivial.
   Qed.
 
   Theorem comonad_extract_set {A B} (x: A) (w: W B):
@@ -209,6 +211,7 @@ Section COMONADS.
 End COMONADS.
 
 Hint Rewrite
+    @comonad_set_eq
     @comonad_extract_set
     @comonad_set_set
   using typeclasses eauto: comonad.
