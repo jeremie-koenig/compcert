@@ -1224,7 +1224,13 @@ drop_inject_neutral m b lo hi p m' thr:
   drop_perm m b lo hi p = Some m' ->
   inject_neutral thr m ->
   b < thr ->
-  inject_neutral thr m'
+  inject_neutral thr m';
+
+(** This ugly workaround is to prevent the [intuition] tactic from
+  destructing instances of MEM which are in the context. *)
+ugly_workaround_dependee: Type;
+ugly_workaround_depender: ugly_workaround_dependee
+
 }.
 
 End Mem.

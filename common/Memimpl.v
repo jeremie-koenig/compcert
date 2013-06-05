@@ -4138,5 +4138,7 @@ Instance mem_spec: Mem.MemSpec mem := {
   empty_inject_neutral := empty_inject_neutral;
   alloc_inject_neutral := alloc_inject_neutral;
   store_inject_neutral := store_inject_neutral;
-  drop_inject_neutral := drop_inject_neutral
+  drop_inject_neutral := drop_inject_neutral;
+  ugly_workaround_dependee := unit;
+  ugly_workaround_depender := tt
 }.
