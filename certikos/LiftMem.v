@@ -594,5 +594,6 @@ Section LIFTMEM.
     lift Mem.alloc_inject_neutral.
     lift Mem.store_inject_neutral.
     lift Mem.drop_inject_neutral.
+    exact tt.
   Defined.
 End LIFTMEM.
