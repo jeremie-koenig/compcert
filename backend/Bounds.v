@@ -20,6 +20,9 @@ Require Import Linear.
 Require Import Lineartyping.
 Require Import Conventions.
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 (** * Resource bounds for a function *)
 
 (** The [bounds] record capture how many local and outgoing stack slots
@@ -394,3 +397,4 @@ Qed.
 
 End BOUNDS.
 
+End WITHEF.

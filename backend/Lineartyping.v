@@ -29,6 +29,9 @@ Require Import Conventions.
   enforces some correctness conditions on the offsets of stack slots
   accessed through [Lgetstack] and [Lsetstack] Linear instructions. *)
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 Section WT_INSTR.
 
 Variable funct: function.
@@ -208,3 +211,5 @@ Lemma wt_init:
 Proof.
   red; intros. unfold Locmap.init. red; auto.
 Qed.
+
+End WITHEF.

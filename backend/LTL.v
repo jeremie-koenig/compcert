@@ -29,7 +29,7 @@ Require Import Locations.
 Require Import Conventions.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 
 (** * Abstract syntax *)
 
@@ -37,7 +37,7 @@ Context `{Hmem: Mem.MemSpec}.
 
 Definition node := positive.
 
-Inductive instruction: Type :=
+Inductive instruction `{ef_ops: ExtFunOps external_function}: Type :=
   | Lnop: node -> instruction
   | Lop: operation -> list loc -> loc -> node -> instruction
   | Lload: memory_chunk -> addressing -> list loc -> loc -> node -> instruction

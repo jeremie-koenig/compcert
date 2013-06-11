@@ -31,6 +31,8 @@ Require Import Parallelmove.
 Require Import Reload.
 
 Section WITHMEM.
+Import EFImpl ECImpl.
+Existing Instances ef_ops ec_ops ec_spec.
 Context `{Hmem: Mem.MemSpec}.
 
 (** * Exploitation of the typing hypothesis *)
@@ -206,6 +208,7 @@ Lemma reg_for_spec:
   forall l,
   R(reg_for l) = l \/ In (R (reg_for l)) temporaries.
 Proof.
+  clear f. (* For some reason the proof term depends on f otherwise. *)
   intros. unfold reg_for. destruct l. tauto.
   case (slot_type s); simpl; tauto.
 Qed.
@@ -338,7 +341,7 @@ Opaque destroyed_at_move_regs.
   assert (ACC2: locs_acceptable srcs) by (red; auto with coqlib).
   destruct a as [r | s].
   (* a is a register *)
-  simpl add_reload. rewrite dec_eq_true. 
+  simpl. rewrite dec_eq_true. 
   exploit IHsrcs; eauto.
   intros [rs' [EX [RES [OTH1 OTH2]]]].
   exists rs'. split. eauto.
@@ -1294,7 +1297,7 @@ Proof.
   (* Lbuiltin *)
   ExploitWT; inv WTI.
   case_eq (ef_reloads ef); intro RELOADS.
-  exploit add_reloads_correct.
+  exploit add_reloads_correct; simpl in *.
     instantiate (1 := args). apply arity_ok_enough. rewrite H3. destruct H5. auto. congruence. auto.
   intros [ls2 [A [B C]]].
   exploit external_call_mem_extends; eauto. 

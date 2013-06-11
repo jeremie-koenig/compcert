@@ -22,6 +22,7 @@ open Camlcoq
 open BinNums
 open Integers
 open AST
+open AST.EFImpl
 open Cminor
 
 (** Parsing external functions *)
@@ -355,7 +356,7 @@ let mkmatch expr cases =
 /* Entry point */
 
 %start prog
-%type <Cminor.program> prog
+%type <AST.EFImpl.external_function Cminor.program> prog
 
 %%
 

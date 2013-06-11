@@ -13,6 +13,7 @@
 open Camlcoq
 open Datatypes
 open AST
+open AST.EFImpl
 open Maps
 open Registers
 open Machregs
@@ -849,7 +850,7 @@ let spill_costs f =
 
 (* This is the entry point for graph coloring. *)
 
-let graph_coloring (f: coq_function) (g: graph) (env: regenv) (regs: Regset.t)
+let graph_coloring (f: external_function coq_function) (g: graph) (env: regenv) (regs: Regset.t)
                    : (reg -> loc) =
   init_regs();
   init_graph();

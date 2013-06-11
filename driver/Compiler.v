@@ -86,6 +86,9 @@ Require RREtyping.
 Require Stackingproof.
 Require Asmgenproof.
 
+Import EFImpl Events.ECImpl.
+Local Existing Instances ef_ops ec_ops ec_spec.
+
 (** Pretty-printers (defined in Caml). *)
 Parameter print_Clight: Clight.program -> unit.
 Parameter print_Cminor: Cminor.program -> unit.

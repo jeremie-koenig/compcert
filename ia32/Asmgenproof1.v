@@ -137,7 +137,7 @@ Ltac Simplifs := repeat Simplif.
 
 Section CONSTRUCTORS.
 
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: Events.ExtCallSpec}.
 Variable ge: genv.
 Variable fn: code.
 

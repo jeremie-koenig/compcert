@@ -32,7 +32,7 @@ Require Import Ctypes.
 Require Import Cop.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 
 (** * Abstract syntax *)
 
@@ -92,7 +92,7 @@ Definition typeof (e: expr) : type :=
 
 Definition label := ident.
 
-Inductive statement : Type :=
+Inductive statement `{ef_ops: ExtFunOps external_function} : Type :=
   | Sskip : statement                   (**r do nothing *)
   | Sassign : expr -> expr -> statement (**r assignment [lvalue = rvalue] *)
   | Sset : ident -> expr -> statement   (**r assignment [tempvar = rvalue] *)
@@ -108,7 +108,7 @@ Inductive statement : Type :=
   | Slabel : label -> statement -> statement
   | Sgoto : label -> statement
 
-with labeled_statements : Type :=            (**r cases of a [switch] *)
+with labeled_statements `{ef_ops: ExtFunOps external_function} : Type := (**r cases of a [switch] *)
   | LSdefault: statement -> labeled_statements
   | LScase: int -> statement -> labeled_statements -> labeled_statements.
 
@@ -316,8 +316,11 @@ Fixpoint seq_of_labeled_statement (sl: labeled_statements) : statement :=
   | LScase c s sl' => Ssequence s (seq_of_labeled_statement sl')
   end.
 
+End WITHMEM.
+
 Section SEMANTICS.
 
+Context `{Hec: ExtCallSpec}.
 Variable ge: genv.
 
 (** [type_of_global b] returns the type of the global variable or function
@@ -424,7 +427,7 @@ End EXPR.
 
 (** Continuations *)
 
-Inductive cont: Type :=
+Inductive cont {external_function} `{ef_ops: ExtFunOps external_function}: Type :=
   | Kstop: cont
   | Kseq: statement -> cont -> cont       (**r [Kseq s2 k] = after [s1] in [s1;s2] *)
   | Kloop1: statement -> statement -> cont -> cont (**r [Kloop1 s1 s2 k] = after [s1] in [Sloop s1 s2] *)
@@ -477,7 +480,8 @@ Inductive state `{mem_ops: Mem.MemOps mem}: Type :=
 (** Find the statement and manufacture the continuation 
   corresponding to a label *)
 
-Fixpoint find_label (lbl: label) (s: statement) (k: cont) 
+Fixpoint find_label {external_function} `{ef_ops: ExtFunOps external_function}
+                    (lbl: label) (s: statement) (k: cont)
                     {struct s}: option (statement * cont) :=
   match s with
   | Ssequence s1 s2 =>
@@ -502,7 +506,8 @@ Fixpoint find_label (lbl: label) (s: statement) (k: cont)
   | _ => None
   end
 
-with find_label_ls (lbl: label) (sl: labeled_statements) (k: cont) 
+with find_label_ls {external_function} `{ef_ops: ExtFunOps external_function}
+                    (lbl: label) (sl: labeled_statements) (k: cont)
                     {struct sl}: option (statement * cont) :=
   match sl with
   | LSdefault s => find_label lbl s k
@@ -666,6 +671,9 @@ Inductive final_state: state -> int -> Prop :=
 
 End SEMANTICS.
 
+Section WITHMEM'.
+Context `{Hec: ExtCallSpec}.
+
 (** The two semantics for function parameters.  First, parameters as local variables. *)
 
 Inductive function_entry1 (f: function) (vargs: list val) (m: mem) (e: env) (le: temp_env) (m': mem) : Prop :=
@@ -721,4 +729,4 @@ Proof.
   eapply external_call_trace_length; eauto.
 Qed.
 
-End WITHMEM.
+End WITHMEM'.

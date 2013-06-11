@@ -57,6 +57,10 @@ Notation " 'check' A ; B" := (if A then B else nil)
   (at level 200, A at level 100, B at level 200)
   : list_monad_scope.
 
+Section WITHEF.
+Import EFImpl ECImpl.
+Existing Instances ef_ops ec_ops ec_spec.
+
 Definition is_val (a: expr) : option (val * type) :=
   match a with
   | Eval v ty => Some(v, ty)
@@ -1625,6 +1629,7 @@ Proof.
 (* paren *)
   inv H0. rewrite H; auto.
 (* builtin *)
+  simpl in *.
   exploit sem_cast_arguments_complete; eauto. intros [vtl [A B]].
   exploit do_ef_external_complete; eauto. intros C. 
   rewrite A. rewrite B. rewrite C. auto.
@@ -2195,6 +2200,7 @@ Proof with (unfold ret; auto with coqlib).
   (* Call step *)
   rewrite pred_dec_true; auto. rewrite (do_alloc_variables_complete _ _ _ _ _ H1).
   rewrite (sem_bind_parameters_complete _ _ _ _ _ _ H2)...
+  simpl in *.
   exploit do_ef_external_complete; eauto. intro EQ; rewrite EQ. auto with coqlib.
 Qed.
 
@@ -2217,3 +2223,5 @@ Definition at_final_state (S: state): option int :=
   end.
 
 End WITHMEM.
+
+End WITHEF.

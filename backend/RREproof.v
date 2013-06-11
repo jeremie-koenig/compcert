@@ -27,7 +27,7 @@ Require Import Linear.
 Require Import RRE.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 
 (** * Operations over equations *)
 

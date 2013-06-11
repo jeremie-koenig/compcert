@@ -24,6 +24,9 @@ Require Import Mach.
 Require Import Conventions.
 Require Import Stacklayout.
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 (** * Layout of activation records *)
 
 (** The machine- and ABI-dependent aspects of the layout are defined
@@ -231,3 +234,5 @@ Definition transf_fundef (f: Linear.fundef) : res Mach.fundef :=
 
 Definition transf_program (p: Linear.program) : res Mach.program :=
   transform_partial_program transf_fundef p.
+
+End WITHEF.

@@ -29,7 +29,7 @@ Require Import Constprop.
 
 Section ANALYSIS.
 
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallOps}.
 Variable ge: genv.
 Variable sp: val.
 

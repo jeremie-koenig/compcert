@@ -33,6 +33,8 @@ Require Import Csyntax.
 Require Import Csem.
 
 Section WITHMEM.
+Import EFImpl ECImpl.
+Existing Instances ef_ops ec_ops ec_spec.
 Context `{Hmem: Mem.MemSpec}.
 
 Section STRATEGY.
@@ -2220,44 +2222,44 @@ Proof.
 (* var *)
   simpl; intuition. apply star_refl.
 (* field *)
-  exploit (H0 (fun x => C(Efield x f ty))).
+  exploit (H0 (fun x => C(Efield x f ty)) f0).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
-  simpl; intuition; eauto. 
+  simpl; intuition; eauto.
 (* valof *)
-  exploit (H1 (fun x => C(Evalof x ty))).
+  exploit (H1 (fun x => C(Evalof x ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   simpl; intuition; eauto. rewrite A; rewrite B; rewrite H; auto.
 (* valof volatile *)
-  exploit (H1 (fun x => C(Evalof x ty))).
+  exploit (H1 (fun x => C(Evalof x ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   simpl; intuition.
   eapply star_right. eexact D. 
   left. eapply step_rvalof_volatile; eauto. rewrite H4; eauto. congruence. congruence. 
   traceEq.
 (* deref *)
-  exploit (H0 (fun x => C(Ederef x ty))).
+  exploit (H0 (fun x => C(Ederef x ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   simpl; intuition; eauto.
 (* addrof *)
-  exploit (H0 (fun x => C(Eaddrof x ty))).
+  exploit (H0 (fun x => C(Eaddrof x ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   simpl; intuition; eauto.
 (* unop *)
-  exploit (H0 (fun x => C(Eunop op x ty))).
+  exploit (H0 (fun x => C(Eunop op x ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   simpl; intuition; eauto.
 (* binop *)
-  exploit (H0 (fun x => C(Ebinop op x a2 ty))).
+  exploit (H0 (fun x => C(Ebinop op x a2 ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
-  exploit (H2 (fun x => C(Ebinop op a1' x ty))).
+  exploit (H2 (fun x => C(Ebinop op a1' x ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. auto. intros [E [F G]].
   simpl; intuition. eapply star_trans; eauto. 
 (* cast *)
-  exploit (H0 (fun x => C(Ecast x ty))).
+  exploit (H0 (fun x => C(Ecast x ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   simpl; intuition; eauto.
 (* seqand true *)
-  exploit (H0 (fun x => C(Eseqand x a2 ty))).
+  exploit (H0 (fun x => C(Eseqand x a2 ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   exploit (H4 (fun x => C(Eparen (Eparen x type_bool) ty))).
     eapply leftcontext_compose; eauto. repeat constructor. intros [E [F G]].
@@ -2272,13 +2274,13 @@ Proof.
   unfold C'. left; eapply step_paren; eauto. constructor. 
   eauto. eauto. eauto. traceEq. 
 (* seqand false *)
-  exploit (H0 (fun x => C(Eseqand x a2 ty))).
+  exploit (H0 (fun x => C(Eseqand x a2 ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   simpl; intuition. eapply star_right. eexact D. 
   left; eapply step_seqand_false; eauto. rewrite B; auto.
   traceEq.
 (* seqor false *)
-  exploit (H0 (fun x => C(Eseqor x a2 ty))).
+  exploit (H0 (fun x => C(Eseqor x a2 ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   exploit (H4 (fun x => C(Eparen (Eparen x type_bool) ty))).
     eapply leftcontext_compose; eauto. repeat constructor. intros [E [F G]].
@@ -2293,13 +2295,13 @@ Proof.
   unfold C'. left; eapply step_paren; eauto. constructor. 
   eauto. eauto. eauto. traceEq. 
 (* seqor true *)
-  exploit (H0 (fun x => C(Eseqor x a2 ty))).
+  exploit (H0 (fun x => C(Eseqor x a2 ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   simpl; intuition. eapply star_right. eexact D. 
   left; eapply step_seqor_true; eauto. rewrite B; auto.
   traceEq.
 (* condition *)
-  exploit (H0 (fun x => C(Econdition x a2 a3 ty))).
+  exploit (H0 (fun x => C(Econdition x a2 a3 ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   exploit (H4 (fun x => C(Eparen x ty))).
     eapply leftcontext_compose; eauto. repeat constructor. intros [E [F G]].
@@ -2313,7 +2315,7 @@ Proof.
 (* alignof *)
   simpl; intuition. apply star_refl.
 (* assign *)
-  exploit (H0 (fun x => C(Eassign x r ty))).
+  exploit (H0 (fun x => C(Eassign x r ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   exploit (H2 (fun x => C(Eassign l' x ty))).
     eapply leftcontext_compose; eauto. repeat constructor. auto. intros [E [F G]].
@@ -2323,7 +2325,7 @@ Proof.
   left. eapply step_assign; eauto. congruence. rewrite B; eauto. congruence.
   reflexivity. traceEq.
 (* assignop *)
-  exploit (H0 (fun x => C(Eassignop op x r tyres ty))).
+  exploit (H0 (fun x => C(Eassignop op x r tyres ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   exploit (H2 (fun x => C(Eassignop op l' x tyres ty))).
     eapply leftcontext_compose; eauto. repeat constructor. auto. intros [E [F G]].
@@ -2334,14 +2336,14 @@ Proof.
   rewrite B; eauto. rewrite B; rewrite F; eauto. congruence. rewrite B; eauto. congruence.
   reflexivity. traceEq.
 (* postincr *)
-  exploit (H0 (fun x => C(Epostincr id x ty))).
+  exploit (H0 (fun x => C(Epostincr id x ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   simpl; intuition.
   eapply star_right. eexact D. 
   left. eapply step_postincr; eauto. congruence. 
   traceEq.
 (* comma *)
-  exploit (H0 (fun x => C(Ecomma x r2 ty))).
+  exploit (H0 (fun x => C(Ecomma x r2 ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   exploit (H3 C). auto. intros [E [F G]].
   simpl; intuition. congruence.
@@ -2350,7 +2352,7 @@ Proof.
   eexact G.
   reflexivity. traceEq.
 (* call *)
-  exploit (H0 (fun x => C(Ecall x rargs ty))).
+  exploit (H0 (fun x => C(Ecall x rargs ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   exploit (H2 rf' Enil ty C); eauto. intros [E F].
   simpl; intuition. 
@@ -2363,7 +2365,7 @@ Proof.
 (* nil *)
   simpl; intuition. apply star_refl.
 (* cons *)
-  exploit (H0 (fun x => C(Ecall a0 (exprlist_app al2 (Econs x al)) ty))).
+  exploit (H0 (fun x => C(Ecall a0 (exprlist_app al2 (Econs x al)) ty)) f).
     eapply leftcontext_compose; eauto. repeat constructor. auto.
     apply exprlist_app_leftcontext; auto. intros [A [B D]].
   exploit (H2 a0 (exprlist_app al2 (Econs a1' Enil))); eauto.

@@ -68,7 +68,7 @@ let rec size_stmt = function
   | Slabel(lbl, s) -> size_stmt s
   | Sgoto lbl -> 1
 
-let more_likely (c: Op.condition) (ifso: stmt) (ifnot: stmt) = 
+let more_likely ef_ops (c: Op.condition) (ifso: 'a stmt) (ifnot: 'a stmt) = 
   size_stmt ifso > size_stmt ifnot
 
 (* Compiling a switch table into a decision tree *)

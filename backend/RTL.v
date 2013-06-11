@@ -29,7 +29,7 @@ Require Import Op.
 Require Import Registers.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 
 (** * Abstract syntax *)
 
@@ -47,7 +47,7 @@ Context `{Hmem: Mem.MemSpec}.
 
 Definition node := positive.
 
-Inductive instruction: Type :=
+Inductive instruction `{ef_ops: ExtFunOps external_function}: Type :=
   | Inop: node -> instruction
       (** No operation -- just branch to the successor. *)
   | Iop: operation -> list reg -> reg -> node -> instruction

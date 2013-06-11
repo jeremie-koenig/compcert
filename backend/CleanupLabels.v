@@ -28,6 +28,9 @@ Require Import LTLin.
 
 Module Labelset := FSetAVL.Make(OrderedPositive).
 
+Section WITHEF.
+Context `{ef_ops: AST.ExtFunOps}.
+
 (** Compute the set of labels that are mentioned in branch instructions. *)
 
 Definition add_label_branched_to (ls: Labelset.t) (i: instruction) :=
@@ -72,3 +75,5 @@ Definition transf_fundef (f: fundef) : fundef :=
 
 Definition transf_program (p: program) : program :=
   AST.transform_program transf_fundef p.
+
+End WITHEF.

@@ -27,6 +27,9 @@ Require Import RTL.
 Require Import Conventions.
 Require Import Tailcall.
 
+Section WITHEC.
+Context `{Hec: ExtCallSpec}.
+
 (** * Syntactic properties of the code transformation *)
 
 (** ** Measuring the number of instructions eliminated *)
@@ -231,7 +234,6 @@ Qed.
 
 Section PRESERVATION.
 
-Context `{Hmem: Mem.MemSpec}.
 Variable prog: program.
 Let tprog := transf_program prog.
 Let ge := Genv.globalenv prog.
@@ -624,4 +626,5 @@ Qed.
 
 End PRESERVATION.
 
+End WITHEC.
 

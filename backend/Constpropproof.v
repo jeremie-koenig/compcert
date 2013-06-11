@@ -32,6 +32,8 @@ Require Import ConstpropOpproof.
 
 Section PRESERVATION.
 
+Import EFImpl ECImpl.
+Existing Instances ef_ops ec_ops ec_spec.
 Context `{Hmem: Mem.MemSpec}.
 Variable prog: program.
 Let tprog := transf_program prog.
@@ -643,7 +645,8 @@ Lemma transf_step_correct:
   (exists n2, exists s2', step tge s1' t s2' /\ match_states n2 s2 s2')
   \/ (exists n2, n2 < n1 /\ t = E0 /\ match_states n2 s2 s1')%nat.
 Proof.
-  induction 1; intros; inv MS; try (inv PC; try congruence).
+  induction 1; intros; inv MS; try (inv PC; try congruence);
+  simpl in *.
 
   (* Inop, preserved *)
   rename pc'0 into pc. TransfInstr; intro.

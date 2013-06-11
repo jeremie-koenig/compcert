@@ -31,7 +31,7 @@ Require Import Csyntax.
 Require Import Smallstep.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 
 (** * Operational semantics *)
 
@@ -159,7 +159,9 @@ Fixpoint select_switch (n: int) (sl: labeled_statements)
 
 (** Turn a labeled statement into a sequence *)
 
-Fixpoint seq_of_labeled_statement (sl: labeled_statements) : statement :=
+Fixpoint seq_of_labeled_statement
+                 {external_function} `{ef_ops: ExtFunOps external_function}
+                 (sl: labeled_statements) : statement :=
   match sl with
   | LSdefault s => s
   | LScase c s sl' => Ssequence s (seq_of_labeled_statement sl')
@@ -442,7 +444,7 @@ End EXPR.
     after the statement or expression under consideration has
     evaluated completely. *)
 
-Inductive cont: Type :=
+Inductive cont {external_function} `{ef_ops: ExtFunOps external_function}: Type :=
   | Kstop: cont
   | Kdo: cont -> cont       (**r [Kdo k] = after [x] in [x;] *)
   | Kseq: statement -> cont -> cont    (**r [Kseq s2 k] = after [s1] in [s1;s2] *)
@@ -525,7 +527,8 @@ Inductive state `{mem_ops: Mem.MemOps mem}: Type :=
 (** Find the statement and manufacture the continuation 
   corresponding to a label. *)
 
-Fixpoint find_label (lbl: label) (s: statement) (k: cont) 
+Fixpoint find_label {external_function} `{ef_ops: ExtFunOps external_function}
+                    (lbl: label) (s: statement) (k: cont) 
                     {struct s}: option (statement * cont) :=
   match s with
   | Ssequence s1 s2 =>
@@ -558,7 +561,8 @@ Fixpoint find_label (lbl: label) (s: statement) (k: cont)
   | _ => None
   end
 
-with find_label_ls (lbl: label) (sl: labeled_statements) (k: cont) 
+with find_label_ls {external_function} `{ef_ops: ExtFunOps external_function}
+                    (lbl: label) (sl: labeled_statements) (k: cont) 
                     {struct sl}: option (statement * cont) :=
   match sl with
   | LSdefault s => find_label lbl s k

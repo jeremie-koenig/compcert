@@ -24,6 +24,9 @@ Require Import Registers.
 Require Import RTL.
 Require Import Inlining.
 
+Section WITHEF1.
+Context `{ef_ops: ExtFunOps}.
+
 (** ** Soundness of function environments. *)
 
 (** A (compile-time) function environment is compatible with a
@@ -127,9 +130,11 @@ Proof.
   eapply Ple_trans. 2: eapply Pmax_r. eauto. 
 Qed.
 
+End WITHEF1.
+
 (** ** Working with the state monad *)
 
-Remark bind_inversion:
+Remark bind_inversion `{ef_ops: ExtFunOps}:
   forall (A B: Type) (f: mon A) (g: A -> mon B) 
          (y: B) (s1 s3: state) (i: sincr s1 s3),
   bind f g s1 = R y s3 i ->
@@ -181,6 +186,9 @@ Ltac monadInv H :=
   end.
 
 (** ** Relational specification of the translation of moves *)
+
+Section WITHEF2.
+Context `{ef_ops: ExtFunOps}.
 
 Inductive tr_moves (c: code) : node -> list reg -> list reg -> node -> Prop :=
   | tr_moves_cons: forall pc1 src srcs dst dsts pc2 pc3,
@@ -505,7 +513,7 @@ Proof.
   eapply tr_tailcall; eauto. 
   (* inlined *)
   subst s1.
-  monadInv EXP. unfold inline_function in EQ; monadInv EQ.
+  monadInv EXP. unfold inline_tail_function in EQ; monadInv EQ.
   set (ctx' := tailcontext ctx x1 x2 (max_def_function f) (fn_stacksize f)) in *.
   inversion EQ0; inversion EQ1; inversion EQ. inv_incr. 
   apply tr_tailcall_inlined with (pc1 := x0) (ctx' := ctx') (f := f); auto.
@@ -690,3 +698,5 @@ Opaque initstate.
 Qed.
 
 End INLINING_SPEC.
+
+End WITHEF2.

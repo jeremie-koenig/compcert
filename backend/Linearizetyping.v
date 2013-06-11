@@ -27,6 +27,9 @@ Require Import Conventions.
 
 (** * Type preservation for the linearization pass *)
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 Lemma wt_add_instr:
   forall f i k, wt_instr f i -> wt_code f k -> wt_code f (i :: k).
 Proof.
@@ -110,3 +113,5 @@ Proof.
   intros [f0 [IN TR]].
   eapply wt_transf_fundef; eauto. 
 Qed.
+
+End WITHEF.

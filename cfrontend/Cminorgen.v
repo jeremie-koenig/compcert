@@ -99,7 +99,7 @@ Function store_arg (chunk: memory_chunk) (e: expr) : expr :=
   | _ => e
   end.
 
-Definition make_store (chunk: memory_chunk) (e1 e2: expr): stmt :=
+Definition make_store `{ef_ops: ExtFunOps} (chunk: memory_chunk) (e1 e2: expr): stmt :=
   Sstore chunk e1 (store_arg chunk e2).
 
 Definition make_stackaddr (ofs: Z): expr :=
@@ -307,13 +307,13 @@ Fixpoint shift_exit (e: exit_env) (n: nat) {struct e} : nat :=
   | true :: e', S m => S (shift_exit e' m)
   end.
 
-Fixpoint switch_table (ls: lbl_stmt) (k: nat) {struct ls} : list (int * nat) :=
+Fixpoint switch_table `{ef_ops: ExtFunOps} (ls: lbl_stmt) (k: nat) {struct ls} : list (int * nat) :=
   match ls with
   | LSdefault _ => nil
   | LScase ni _ rem => (ni, k) :: switch_table rem (S k)
   end.
 
-Fixpoint switch_env (ls: lbl_stmt) (e: exit_env) {struct ls}: exit_env :=
+Fixpoint switch_env `{ef_ops: ExtFunOps} (ls: lbl_stmt) (e: exit_env) {struct ls}: exit_env :=
   match ls with
   | LSdefault _ => e
   | LScase _ _ ls' => false :: switch_env ls' e
@@ -322,7 +322,8 @@ Fixpoint switch_env (ls: lbl_stmt) (e: exit_env) {struct ls}: exit_env :=
 (** Translation of statements.  The nonobvious part is
   the translation of [switch] statements, outlined above. *)
 
-Fixpoint transl_stmt (cenv: compilenv) (xenv: exit_env) (s: Csharpminor.stmt)
+Fixpoint transl_stmt `{ef_ops: ExtFunOps}
+                     (cenv: compilenv) (xenv: exit_env) (s: Csharpminor.stmt)
                      {struct s}: res stmt :=
   match s with
   | Csharpminor.Sskip =>
@@ -374,7 +375,8 @@ Fixpoint transl_stmt (cenv: compilenv) (xenv: exit_env) (s: Csharpminor.stmt)
       OK (Sgoto lbl)
   end
 
-with transl_lblstmt (cenv: compilenv) (xenv: exit_env) (ls: Csharpminor.lbl_stmt) (body: stmt)
+with transl_lblstmt `{ef_ops: ExtFunOps}
+                    (cenv: compilenv) (xenv: exit_env) (ls: Csharpminor.lbl_stmt) (body: stmt)
                     {struct ls}: res stmt :=
   match ls with
   | Csharpminor.LSdefault s =>
@@ -423,7 +425,7 @@ End VarOrder.
 
 Module VarSort := Mergesort.Sort(VarOrder).
 
-Definition build_compilenv (f: Csharpminor.function) : compilenv * Z :=
+Definition build_compilenv `{ef_ops: ExtFunOps} (f: Csharpminor.function) : compilenv * Z :=
   assign_variables (PTree.empty Z, 0) (VarSort.sort (Csharpminor.fn_vars f)).
 
 (** * Translation of functions *)
@@ -432,6 +434,9 @@ Definition build_compilenv (f: Csharpminor.function) : compilenv * Z :=
   required Cminor stack block is no bigger than [Int.max_signed],
   otherwise address computations within the stack block could
   overflow machine arithmetic and lead to incorrect code. *)
+
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
 
 Definition transl_funbody
       (cenv: compilenv) (stacksize: Z) (f: Csharpminor.function): res function :=
@@ -454,3 +459,5 @@ Definition transl_fundef (f: Csharpminor.fundef): res fundef :=
 
 Definition transl_program (p: Csharpminor.program) : res program :=
   transform_partial_program transl_fundef p.
+
+End WITHEF.

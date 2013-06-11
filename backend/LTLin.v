@@ -29,7 +29,7 @@ Require Import Locations.
 Require Import LTL.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 
 (** * Abstract syntax *)
 
@@ -42,7 +42,7 @@ Definition label := positive.
   transfer control to the given code label.  Labels are explicitly
   inserted in the instruction list as pseudo-instructions [Llabel]. *)
 
-Inductive instruction: Type :=
+Inductive instruction `{ef_ops: ExtFunOps external_function}: Type :=
   | Lop: operation -> list loc -> loc -> instruction
   | Lload: memory_chunk -> addressing -> list loc -> loc -> instruction
   | Lstore: memory_chunk -> addressing -> list loc -> loc -> instruction

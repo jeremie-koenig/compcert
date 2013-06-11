@@ -28,6 +28,9 @@ Require Import Conventions.
   guarantees that the locations of arguments and results are "acceptable",
   i.e. either non-temporary registers or [Local] stack locations. *)
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 Section WT_INSTR.
 
 Variable funct: function.
@@ -141,3 +144,5 @@ Inductive wt_fundef: fundef -> Prop :=
 
 Definition wt_program (p: program): Prop :=
   forall i f, In (i, Gfun f) (prog_defs p) -> wt_fundef f.
+
+End WITHEF.

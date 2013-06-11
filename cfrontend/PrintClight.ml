@@ -20,6 +20,7 @@ open Camlcoq
 open Datatypes
 open Values
 open AST
+open AST.EFImpl
 open PrintAST
 open Ctypes
 open Cop

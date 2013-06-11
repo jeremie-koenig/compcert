@@ -48,9 +48,9 @@ Definition load (chunk: memory_chunk) (e1: expr) :=
   | (mode, args) => Eload chunk mode args
   end.
 
-Definition store (chunk: memory_chunk) (e1 e2: expr) :=
+Definition store `{ef_ops: ExtFunOps} (chunk: memory_chunk) (e1 e2: expr) :=
   match addressing chunk e1 with
-  | (mode, args) => Sstore chunk mode args e2
+  | (mode, args) => Sstore (ef_ops := ef_ops) chunk mode args e2
   end.
 
 (** Instruction selection for operator applications.  Most of the work
@@ -126,7 +126,7 @@ Fixpoint sel_exprlist (al: list Cminor.expr) : exprlist :=
 (** Recognition of immediate calls and calls to built-in functions
     that should be inlined *)
 
-Inductive call_kind : Type :=
+Inductive call_kind `{ef_ops: ExtFunOps} : Type :=
   | Call_default
   | Call_imm (id: ident)
   | Call_builtin (ef: external_function).
@@ -137,6 +137,9 @@ Definition expr_is_addrof_ident (e: Cminor.expr) : option ident :=
       if Int.eq ofs Int.zero then Some id else None
   | _ => None
   end.
+
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
 
 Definition classify_call (ge: Cminor.genv) (e: Cminor.expr) : call_kind :=
   match expr_is_addrof_ident e with
@@ -203,5 +206,6 @@ Definition sel_program (p: Cminor.program) : program :=
   let ge := Genv.globalenv p in
   transform_program (sel_fundef ge) p.
 
+End WITHEF.
 
 

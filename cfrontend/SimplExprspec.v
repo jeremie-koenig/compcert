@@ -28,6 +28,8 @@ Require Import SimplExpr.
 Section SPEC.
 
 Local Open Scope gensym_monad_scope.
+Import EFImpl.
+Existing Instance ef_ops.
 Context `{Hmem: Mem.MemSpec}.
 
 (** * Relational specification of the translation. *)

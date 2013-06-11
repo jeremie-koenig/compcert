@@ -90,6 +90,10 @@ Definition gensym (ty: type): mon ident :=
         (mkgenerator (Psucc (gen_next g)) ((gen_next g, ty) :: gen_trail g))
         (Ple_succ (gen_next g)).
 
+Section WITHEF.
+Import EFImpl.
+Existing Instance ef_ops.
+
 (** Construct a sequence from a list of statements.  To facilitate the
    proof, the sequence is nested to the left and starts with a [Sskip]. *)
 
@@ -502,6 +506,7 @@ Definition transl_fundef (fd: Csyntax.fundef) : res fundef :=
 Definition transl_program (p: Csyntax.program) : res program :=
   transform_partial_program transl_fundef p.
 
+End WITHEF.
 
 
       

@@ -39,7 +39,7 @@ let rec set_types rl tyl =
 
 (* First pass: process constraints of the form typeof(r) = ty *)
 
-let type_instr retty (pc, i) =
+let type_instr ef_ops retty (pc, i) =
   match i with
   | Inop(_) ->
       ()
@@ -91,14 +91,16 @@ let type_instr retty (pc, i) =
       end
   | Ibuiltin(ef, args, res, _) ->
       begin try
-        let sg = ef_sig ef in
+        let sg = ef_sig ef_ops ef in
         set_types args sg.sig_args;
         set_type res (match sg.sig_res with None -> Tint | Some ty -> ty);
-        if ef_reloads ef && not (Conventions.arity_ok sg.sig_args) then
+        if ef_reloads ef_ops ef && not (Conventions.arity_ok sg.sig_args) then
           raise(Type_error "wrong arity")
       with Type_error msg ->
-        raise(Type_error (Printf.sprintf "type mismatch in Ibuiltin(%s): %s"
-                                         (name_of_external ef) msg))
+        (* FIXME: need to refactor name_of_external so that we can use a typeclass
+          field to obtain it. *)
+        raise(Type_error (Printf.sprintf "type mismatch in Ibuiltin(<cant say>): %s"
+                                         (* (name_of_external ef) *) msg))
       end
   | Icond(cond, args, _, _) ->
       set_types args (type_of_condition cond)
@@ -111,8 +113,8 @@ let type_instr retty (pc, i) =
       | _, _ -> raise (Type_error "type mismatch in Ireturn")
       end
 
-let type_pass1 retty instrs = 
-  List.iter (type_instr retty) instrs
+let type_pass1 ef_ops retty instrs = 
+  List.iter (type_instr ef_ops retty) instrs
 
 (* Second pass: extract move constraints typeof(r1) = typeof(r2)
    and solve them iteratively *)
@@ -156,11 +158,11 @@ let type_pass2 instrs =
 let typeof e r =
   match PTree.get r e with Some ty -> ty | None -> Tint
 
-let infer_type_environment f instrs =
+let infer_type_environment ef_ops f instrs =
   try
     env := PTree.empty;
     set_types f.fn_params f.fn_sig.sig_args;
-    type_pass1 f.fn_sig.sig_res instrs;
+    type_pass1 ef_ops f.fn_sig.sig_res instrs;
     type_pass2 instrs;
     let e = !env in
     env := PTree.empty;

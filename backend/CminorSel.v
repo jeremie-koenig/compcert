@@ -55,7 +55,7 @@ Infix ":::" := Econs (at level 60, right associativity) : cminorsel_scope.
   arguments), and the [Sstore] construct uses a machine-dependent
   addressing mode. *)
 
-Inductive stmt : Type :=
+Inductive stmt `{ef_ops: ExtFunOps} : Type :=
   | Sskip: stmt
   | Sassign : ident -> expr -> stmt
   | Sstore : memory_chunk -> addressing -> exprlist -> expr -> stmt
@@ -71,6 +71,9 @@ Inductive stmt : Type :=
   | Sreturn: option expr -> stmt
   | Slabel: label -> stmt -> stmt
   | Sgoto: label -> stmt.
+
+Section WITHMEM.
+Context `{Hec: ExtCallSpec}.
 
 Record function : Type := mkfunction {
   fn_sig: signature;
@@ -90,9 +93,6 @@ Definition funsig (fd: fundef) :=
   end.
 
 (** * Operational semantics *)
-
-Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
 
 (** Three kinds of evaluation environments are involved:
 - [genv]: global environments, define symbols and functions;

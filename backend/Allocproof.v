@@ -34,6 +34,10 @@ Require Import Coloring.
 Require Import Coloringproof.
 Require Import Allocation.
 
+Section WITHEF.
+Import EFImpl.
+Existing Instance ef_ops.
+
 (** * Properties of allocated locations *)
 
 (** We list here various properties of the locations [alloc r],
@@ -107,12 +111,16 @@ Qed.
 
 End REGALLOC_PROPERTIES. 
 
+End WITHEF.
+
 (** * Semantic agreement between RTL registers and LTL locations *)
 
 Require Import LTL.
 Module RegsetP := Properties(Regset).
 
 Section WITHMEM.
+Import EFImpl ECImpl.
+Existing Instances ef_ops ec_ops ec_spec.
 Context `{Hmem: Mem.MemSpec}.
 
 Section AGREE.

@@ -21,6 +21,9 @@ Require Import Conventions.
 Require Import RRE.
 Require Import RREproof.
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 Remark wt_cons:
   forall f c i, wt_instr f i -> wt_code f c -> wt_code f (i::c).
 Proof.
@@ -107,3 +110,5 @@ Proof.
   inv WTFD; simpl; constructor.  red; simpl. 
   apply wt_transf_code; auto with linearty.
 Qed.
+
+End WITHEF.

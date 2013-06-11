@@ -28,7 +28,7 @@ Open Local Scope cminorsel_scope.
 
 Section CMCONSTR.
 
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: Events.ExtCallSpec}.
 Variable ge: genv.
 Variable sp: val.
 Variable e: env.

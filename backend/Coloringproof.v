@@ -25,6 +25,10 @@ Require Import Conventions.
 Require Import InterfGraph.
 Require Import Coloring.
 
+Section WITHEF.
+Import EFImpl.
+Existing Instance ef_ops.
+
 (** * Correctness of the interference graph *)
 
 (** We show that the interference graph built by [interf_graph]
@@ -955,3 +959,5 @@ Proof.
 Qed.
 
 End REGALLOC_PROPERTIES.
+
+End WITHEF.

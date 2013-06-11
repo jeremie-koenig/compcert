@@ -49,9 +49,16 @@ Require Stacklayout.
   distinction between the caller's frame and the callee's frame is
   made explicit. *)
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 Definition label := positive.
 
-Inductive instruction: Type :=
+Inductive annot_param: Type :=
+  | APreg: mreg -> annot_param
+  | APstack: memory_chunk -> Z -> annot_param.
+
+Inductive instruction `{ef_ops: ExtFunOps external_function}: Type :=
   | Mgetstack: int -> typ -> mreg -> instruction
   | Msetstack: mreg -> int -> typ -> instruction
   | Mgetparam: int -> typ -> mreg -> instruction
@@ -66,11 +73,7 @@ Inductive instruction: Type :=
   | Mgoto: label -> instruction
   | Mcond: condition -> list mreg -> label -> instruction
   | Mjumptable: mreg -> list label -> instruction
-  | Mreturn: instruction
-
-with annot_param: Type :=
-  | APreg: mreg -> annot_param
-  | APstack: memory_chunk -> Z -> annot_param.
+  | Mreturn: instruction.
 
 Definition code := list instruction.
 
@@ -92,6 +95,8 @@ Definition funsig (fd: fundef) :=
   end.
 
 Definition genv := Genv.t fundef unit.
+
+End WITHEF.
 
 (** * Operational semantics *)
 
@@ -179,6 +184,9 @@ Definition undef_op (op: operation) (rs: regset) :=
 
 Definition undef_setstack (rs: regset) := undef_move rs.
 
+Section WITHMEM.
+Context `{Hec: ExtCallSpec}.
+
 Definition is_label (lbl: label) (instr: instruction) : bool :=
   match instr with
   | Mlabel lbl' => if peq lbl lbl' then true else false
@@ -205,9 +213,6 @@ Proof.
   induction c; simpl; intros. discriminate.
   destruct (is_label lbl a). inv H. auto with coqlib. eauto with coqlib. 
 Qed.
-
-Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
 
 Section RELSEM.
 

@@ -24,6 +24,9 @@ Require Import Linear.
 
 Open Local Scope error_monad_scope.
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 (** * Spilling and reloading *)
 
 (** Operations in the Linear language, like those of the target processor,
@@ -272,3 +275,4 @@ Definition transf_fundef (fd: LTLin.fundef) : Linear.fundef :=
 Definition transf_program (p: LTLin.program) : Linear.program :=
   transform_program transf_fundef p.
 
+End WITHEF.

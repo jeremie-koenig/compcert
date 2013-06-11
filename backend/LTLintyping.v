@@ -24,6 +24,9 @@ Require Import Conventions.
 (** The following predicates define a type system for LTLin similar to that
   of LTL. *)
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 Section WT_INSTR.
 
 Variable funsig: signature.
@@ -120,3 +123,5 @@ Inductive wt_fundef: fundef -> Prop :=
 
 Definition wt_program (p: program): Prop :=
   forall i f, In (i, Gfun f) (prog_defs p) -> wt_fundef f.
+
+End WITHEF.

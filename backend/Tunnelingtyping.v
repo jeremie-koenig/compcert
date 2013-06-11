@@ -20,6 +20,9 @@ Require Import LTLtyping.
 Require Import Tunneling.
 Require Import Tunnelingproof.
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 (** Tunneling preserves typing. *)
 
 Lemma branch_target_valid_1:
@@ -101,3 +104,5 @@ Proof.
   intros [f0 [IN TRANSF]].
   subst f. apply wt_tunnel_fundef. eauto.
 Qed.
+
+End WITHEF.

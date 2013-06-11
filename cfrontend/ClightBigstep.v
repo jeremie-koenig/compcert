@@ -30,7 +30,7 @@ Require Import Cop.
 Require Import Clight.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 
 Section BIGSTEP.
 

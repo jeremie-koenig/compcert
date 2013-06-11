@@ -36,7 +36,7 @@ Module VSP := FSetProperties.Properties(VSet).
 
 Section PRESERVATION.
 
-Context `{M0: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 Variable prog: program.
 Variable tprog: program.
 Hypothesis TRANSF: transf_program prog = OK tprog.
@@ -1013,11 +1013,11 @@ Proof.
   exploit Mem.storebytes_mapped_inject; eauto. intros [tm' [C D]].
   exists tm'. 
   split. eapply assign_loc_copy; try rewrite EQ1; try rewrite EQ2; eauto. 
-  eapply @Mem.aligned_area_inject with (m := m); eauto. apply alignof_1248.
+  eapply (Mem.aligned_area_inject f m); eauto. apply alignof_1248.
   apply sizeof_alignof_compat.
-  eapply @Mem.aligned_area_inject with (m := m); eauto. apply alignof_1248.
+  eapply (Mem.aligned_area_inject f m); eauto. apply alignof_1248.
   apply sizeof_alignof_compat.
-  eapply @Mem.disjoint_or_equal_inject with (m := m); eauto.
+  eapply (Mem.disjoint_or_equal_inject f m); eauto.
   apply Mem.range_perm_max with Cur; auto.
   apply Mem.range_perm_max with Cur; auto.
   split. auto.

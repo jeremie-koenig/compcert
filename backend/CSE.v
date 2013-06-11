@@ -337,7 +337,7 @@ End REDUCE.
 (** * The static analysis *)
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: Events.ExtCallSpec}.
 
 (** We now define a notion of satisfiability of a numbering.  This semantic
   notion plays a central role in the correctness proof (see [CSEproof]),
@@ -395,7 +395,7 @@ End WITHMEM.
 Module Numbering.
   Definition t := numbering.
   Definition ge (n1 n2: numbering) : Prop :=
-    forall `(Hmem: Mem.MemSpec) ge sp rs m, 
+    forall `(Hec: Events.ExtCallSpec) ge sp rs m, 
     numbering_satisfiable ge sp rs m n2 ->
     numbering_satisfiable ge sp rs m n1.
   Definition top := empty_numbering.
@@ -414,6 +414,9 @@ End Numbering.
 
 Module Solver := BBlock_solver(Numbering).
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 (** The transfer function for the dataflow analysis returns the numbering
   ``after'' execution of the instruction at [pc], as a function of the
   numbering ``before''.  For [Iop] and [Iload] instructions, we add
@@ -428,7 +431,7 @@ Module Solver := BBlock_solver(Numbering).
   Finally, the remaining instructions modify neither registers nor
   the memory, so we keep the numbering unchanged. *)
 
-Definition transfer (f: function) (pc: node) (before: numbering) :=
+Definition transfer `{ExtFunOps} (f: function) (pc: node) (before: numbering) :=
   match f.(fn_code)!pc with
   | None => before
   | Some i =>
@@ -461,7 +464,7 @@ Definition transfer (f: function) (pc: node) (before: numbering) :=
   which produces sub-optimal solutions quickly.  The result is
   a mapping from program points to numberings. *)
 
-Definition analyze (f: RTL.function): option (PMap.t numbering) :=
+Definition analyze `{ExtFunOps} (f: RTL.function): option (PMap.t numbering) :=
   Solver.fixpoint (successors f) (transfer f) f.(fn_entrypoint).
 
 (** * Code transformation *)
@@ -533,3 +536,4 @@ Definition transf_fundef (f: fundef) : res fundef :=
 Definition transf_program (p: program) : res program :=
   transform_partial_program transf_fundef p.
 
+End WITHEF.

@@ -24,7 +24,7 @@ Require Import CSE.
 
 Section COMBINE.
 
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: Events.ExtCallSpec}.
 Variable ge: genv.
 Variable sp: val.
 Variable m: mem.

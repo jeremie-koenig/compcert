@@ -31,7 +31,7 @@ Require Import RTLgen.
 Require Import RTLgenspec.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 
 (** * Correspondence between Cminor environments and RTL register sets *)
 

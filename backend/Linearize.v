@@ -90,13 +90,13 @@ Open Scope error_monad_scope.
 
 Module DS := Dataflow_Solver(LBoolean)(NodeSetForward).
 
-Definition reachable_aux (f: LTL.function) : option (PMap.t bool) :=
+Definition reachable_aux `{ExtFunOps} (f: LTL.function) : option (PMap.t bool) :=
   DS.fixpoint
     (successors f)
     (fun pc r => r)
     ((f.(fn_entrypoint), true) :: nil).
 
-Definition reachable (f: LTL.function) : PMap.t bool :=
+Definition reachable `{ExtFunOps} (f: LTL.function) : PMap.t bool :=
   match reachable_aux f with  
   | None => PMap.init true
   | Some rs => rs
@@ -105,11 +105,14 @@ Definition reachable (f: LTL.function) : PMap.t bool :=
 (** We then enumerate the nodes of reachable instructions.
   This task is performed by external, untrusted Caml code. *)
 
-Parameter enumerate_aux: LTL.function -> PMap.t bool -> list node.
+Parameter enumerate_aux: forall `{ExtFunOps}, LTL.function -> PMap.t bool -> list node.
 
 (** Now comes the a posteriori validation of a node enumeration. *)
 
 Module Nodeset := FSetAVL.Make(OrderedPositive).
+
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
 
 (** Build a [Nodeset.t] from a list of nodes, checking that the list
   contains no duplicates. *)
@@ -224,3 +227,5 @@ Definition transf_fundef (f: LTL.fundef) : res LTLin.fundef :=
 
 Definition transf_program (p: LTL.program) : res LTLin.program :=
   transform_partial_program transf_fundef p.
+
+End WITHEF.

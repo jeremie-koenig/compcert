@@ -190,7 +190,7 @@ Definition approx_reg (app: D.t) (r: reg) :=
 Definition approx_regs (app: D.t) (rl: list reg):=
   List.map (approx_reg app) rl.
 
-Definition transfer (gapp: global_approx) (f: function) (pc: node) (before: D.t) :=
+Definition transfer `{ef_ops: ExtFunOps} (gapp: global_approx) (f: function) (pc: node) (before: D.t) :=
   match f.(fn_code)!pc with
   | None => before
   | Some i =>
@@ -220,7 +220,7 @@ Definition transfer (gapp: global_approx) (f: function) (pc: node) (before: D.t)
 
 Module DS := Dataflow_Solver(D)(NodeSetForward).
 
-Definition analyze (gapp: global_approx) (f: RTL.function): PMap.t D.t :=
+Definition analyze `{ef_ops: ExtFunOps} (gapp: global_approx) (f: RTL.function): PMap.t D.t :=
   match DS.fixpoint (successors f) (transfer gapp f) 
                     ((f.(fn_entrypoint), D.top) :: nil) with
   | None => PMap.init D.top
@@ -265,6 +265,13 @@ Definition transf_ros (app: D.t) (ros: reg + ident) : reg + ident :=
   end.
 
 Parameter generate_float_constants : unit -> bool.
+
+Section WITHEF.
+
+(** For now, [builtin_strength_reduction] below uses the concrete
+  [external_function], therefore we cannot generalize it. *)
+Import EFImpl.
+Existing Instance ef_ops.
 
 Definition const_for_result (a: approx) : option operation :=
   match a with
@@ -421,3 +428,5 @@ Fixpoint make_global_approx (gapp: global_approx) (gdl: list (ident * globdef fu
 Definition transf_program (p: program) : program :=
   let gapp := make_global_approx (PTree.empty _) p.(prog_defs) in
   transform_program (transf_fundef gapp) p.
+
+End WITHEF.

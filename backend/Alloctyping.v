@@ -34,6 +34,9 @@ Require Import Conventions.
   given a well-typed RTL input, it produces LTL code that is
   well-typed. *)
 
+Import EFImpl.
+Local Existing Instance ef_ops.
+
 Section TYPING_FUNCTION.
 
 Variable f: RTL.function.

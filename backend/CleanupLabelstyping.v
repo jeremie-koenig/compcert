@@ -21,6 +21,9 @@ Require Import LTLin.
 Require Import CleanupLabels.
 Require Import LTLintyping.
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 Lemma in_remove_unused_labels:
   forall bto i c, In i (remove_unused_labels bto c) -> In i c.
 Proof.
@@ -57,3 +60,5 @@ Proof.
   exploit transform_program_function; eauto. intros [f1 [A B]]. subst f.
   apply wt_transf_fundef. eapply H; eauto.
 Qed.
+
+End WITHEF.

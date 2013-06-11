@@ -10,4 +10,5 @@
 (*                                                                     *)
 (* *********************************************************************)
 
-val print_program: out_channel -> Asm.program -> unit
+val print_program:
+  out_channel -> AST.EFImpl.external_function Asm.program -> unit

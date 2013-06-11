@@ -28,6 +28,9 @@ Open Scope string_scope.
 
 Module VSet := FSetAVL.Make(OrderedPositive).
 
+Section WITHEF1.
+Context `{ef_ops: ExtFunOps}.
+
 (** The set of local variables that can be lifted to temporaries,
   because they are scalar and their address is not taken. *)
 
@@ -54,7 +57,8 @@ Definition make_cast (a: expr) (tto: type) : expr :=
 
 (** Rewriting of expressions and statements. *)
 
-Fixpoint simpl_expr (cenv: compilenv) (a: expr) : expr :=
+Fixpoint simpl_expr {external_function} `{ef_ops: ExtFunOps external_function}
+                    (cenv: compilenv) (a: expr) : expr :=
   match a with
   | Econst_int _ _ => a
   | Econst_float _ _ => a
@@ -82,7 +86,10 @@ Definition check_opttemp (cenv: compilenv) (optid: option ident) : res unit :=
   | None => OK tt
   end.
 
-Fixpoint simpl_stmt (cenv: compilenv) (s: statement) : res statement :=
+End WITHEF1.
+
+Fixpoint simpl_stmt {external_function} `{ef_ops: ExtFunOps external_function}
+                    (cenv: compilenv) (s: statement) : res statement :=
   match s with
   | Sskip => OK Sskip
   | Sassign a1 a2 =>
@@ -125,7 +132,8 @@ Fixpoint simpl_stmt (cenv: compilenv) (s: statement) : res statement :=
   | Sgoto lbl => OK (Sgoto lbl)
   end
 
-with simpl_lblstmt (cenv: compilenv) (ls: labeled_statements) : res labeled_statements :=
+with simpl_lblstmt {external_function} `{ef_ops: ExtFunOps external_function}
+                   (cenv: compilenv) (ls: labeled_statements) : res labeled_statements :=
   match ls with
   | LSdefault s =>
       do s' <- simpl_stmt cenv s;
@@ -139,7 +147,8 @@ with simpl_lblstmt (cenv: compilenv) (ls: labeled_statements) : res labeled_stat
 (** Function parameters that are not lifted to temporaries must be
   stored in the corresponding local variable at function entry. *)
 
-Fixpoint store_params (cenv: compilenv) (params: list (ident * type))
+Fixpoint store_params {external_function} `{ef_ops: ExtFunOps external_function}
+                      (cenv: compilenv) (params: list (ident * type))
                       (s: statement): statement :=
   match params with
   | nil => s
@@ -173,7 +182,8 @@ Fixpoint addr_taken_exprlist (l: list expr) : VSet.t :=
   | a :: l' => VSet.union (addr_taken_expr a) (addr_taken_exprlist l')
   end.
 
-Fixpoint addr_taken_stmt (s: statement) : VSet.t :=
+Fixpoint addr_taken_stmt {external_function} `{ef_ops: ExtFunOps external_function}
+                         (s: statement) : VSet.t :=
   match s with
   | Sskip => VSet.empty
   | Sassign a b => VSet.union (addr_taken_expr a) (addr_taken_expr b)
@@ -193,11 +203,15 @@ Fixpoint addr_taken_stmt (s: statement) : VSet.t :=
   | Sgoto lbl => VSet.empty
   end
 
-with addr_taken_lblstmt (ls: labeled_statements) : VSet.t :=
+with addr_taken_lblstmt {external_function} `{ef_ops: ExtFunOps external_function}
+                        (ls: labeled_statements) : VSet.t :=
   match ls with
   | LSdefault s => addr_taken_stmt s
   | LScase n s ls' => VSet.union (addr_taken_stmt s) (addr_taken_lblstmt ls')
   end.
+
+Section WITHEF2.
+Context `{ef_ops: ExtFunOps}.
 
 (** The compilation environment for a function is the set of local variables
   that are scalars and whose addresses are not taken. *)
@@ -244,4 +258,5 @@ Definition transf_fundef (fd: fundef) : res fundef :=
 Definition transf_program (p: program) : res program :=
   AST.transform_partial_program transf_fundef p.
 
+End WITHEF2.
 

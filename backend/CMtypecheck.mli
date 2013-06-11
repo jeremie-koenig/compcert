@@ -15,5 +15,7 @@
 
 exception Error of string
 
-val type_program: Cminor.program -> Cminor.program
+val type_program:
+  AST.EFImpl.external_function Cminor.program ->
+  AST.EFImpl.external_function Cminor.program
 

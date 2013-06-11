@@ -24,6 +24,9 @@ Require Import RTL.
 
 Ltac xomega := unfold Plt, Ple in *; zify; omega.
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 (** ** Environment of inlinable functions *)
 
 (** We maintain a mapping from function names to their definitions.
@@ -339,7 +342,7 @@ Definition inline_tail_function (ctx: context) (id: ident) (f: function)
 
 Definition inline_return (ctx: context) (or: option reg) (retinfo: node * reg) :=
   match retinfo, or with
-  | (retpc, retreg), Some r => Iop Omove (sreg ctx r :: nil) retreg retpc
+  | (retpc, retreg), Some r => Iop (ef_ops := ef_ops) Omove (sreg ctx r :: nil) retreg retpc
   | (retpc, retreg), None   => Inop retpc
   end.
 
@@ -470,3 +473,4 @@ Definition transf_program (p: program): Errors.res program :=
   let fenv := funenv_program p in
   AST.transform_partial_program (transf_fundef fenv) p.
 
+End WITHEF.

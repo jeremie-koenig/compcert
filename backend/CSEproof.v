@@ -296,7 +296,7 @@ Proof.
   destruct chunk; auto; apply wf_add_rhs; auto.
 Qed.
 
-Lemma wf_transfer:
+Lemma wf_transfer `{ef_ops: ExtFunOps}:
   forall f pc n, wf_numbering n -> wf_numbering (transfer f pc n).
 Proof.
   intros. unfold transfer. 
@@ -313,7 +313,7 @@ Qed.
 (** As a consequence, the numberings computed by the static analysis
   are well formed. *)
 
-Theorem wf_analyze:
+Theorem wf_analyze `{ef_ops: ExtFunOps}:
   forall f approx pc, analyze f = Some approx -> wf_numbering approx!!pc.
 Proof.
   unfold analyze; intros.
@@ -332,7 +332,7 @@ End ValnumEq.
 Module VMap := EMap(ValnumEq).
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 
 Section SATISFIABILITY.
 
@@ -965,7 +965,7 @@ Lemma transf_step_correct:
   forall s1' (MS: match_states s1 s1'),
   exists s2', step tge s1' t s2' /\ match_states s2 s2'.
 Proof.
-  induction 1; intros; inv MS; try (TransfInstr; intro C).
+  induction 1; intros; inv MS; try (TransfInstr; intro C); simpl in *.
 
   (* Inop *)
   exists (State s' (transf_function' f approx) sp pc' rs m); split.

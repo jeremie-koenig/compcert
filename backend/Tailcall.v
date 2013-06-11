@@ -20,6 +20,9 @@ Require Import Op.
 Require Import RTL.
 Require Import Conventions.
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 (** An [Icall] instruction that stores its result in register [rreg]
   can be turned into a tail call if:
 - its successor is a [Ireturn None] or [Ireturn (Some rreg)] instruction;
@@ -107,3 +110,5 @@ Definition transf_fundef (fd: fundef) : fundef :=
 
 Definition transf_program (p: program) : program :=
   transform_program transf_fundef p.
+
+End WITHEF.

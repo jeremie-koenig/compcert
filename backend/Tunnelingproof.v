@@ -27,7 +27,7 @@ Require Import LTL.
 Require Import Tunneling.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 
 (** * Properties of the branch map computed using union-find. *)
 

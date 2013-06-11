@@ -26,6 +26,7 @@ Require Import Csyntax.
 Open Scope error_monad_scope.
 
 Section WITHMEM.
+Context `{ef_ops: ExtFunOps}.
 Context `{Hmem: Mem.MemSpec}.
 
 (** * Evaluation of compile-time constant expressions *)
@@ -169,7 +170,10 @@ Definition padding (frm to: Z) : list init_data :=
   let n := to - frm in
   if zle n 0 then nil else Init_space n :: nil.
 
-Fixpoint transl_init (ty: type) (i: initializer)
+End WITHMEM.
+
+Fixpoint transl_init `{ef_ops: ExtFunOps} `{mem_ops: Mem.MemOps}
+                     (ty: type) (i: initializer)
                      {struct i} : res (list init_data) :=
   match i, ty with
   | Init_single a, _ =>
@@ -190,7 +194,8 @@ Fixpoint transl_init (ty: type) (i: initializer)
       Error (msg "wrong type for compound initializer")
   end
 
-with transl_init_array (ty: type) (il: initializer_list) (sz: Z)
+with transl_init_array `{ef_ops: ExtFunOps} `{mem_ops: Mem.MemOps}
+                       (ty: type) (il: initializer_list) (sz: Z)
                        {struct il} : res (list init_data) :=
   match il with
   | Init_nil =>
@@ -203,7 +208,8 @@ with transl_init_array (ty: type) (il: initializer_list) (sz: Z)
       OK (d1 ++ d2)
   end
 
-with transl_init_struct (id: ident) (ty: type)
+with transl_init_struct `{ef_ops: ExtFunOps} `{mem_ops: Mem.MemOps}
+                        (id: ident) (ty: type)
                         (fl: fieldlist) (il: initializer_list) (pos: Z)
                         {struct il} : res (list init_data) :=
   match il, fl with
@@ -218,7 +224,8 @@ with transl_init_struct (id: ident) (ty: type)
       Error (msg "wrong number of elements in struct initializer")
   end
 
-with transl_init_union (id: ident) (ty ty1: type) (il: initializer_list)
+with transl_init_union `{ef_ops: ExtFunOps} `{mem_ops: Mem.MemOps}
+                       (id: ident) (ty ty1: type) (il: initializer_list)
                        {struct il} : res (list init_data) :=
   match il with
   | Init_nil =>
@@ -227,6 +234,4 @@ with transl_init_union (id: ident) (ty ty1: type) (il: initializer_list)
       do d <- transl_init (unroll_composite id ty ty1) i1;
       OK (d ++ padding (sizeof ty1) (sizeof ty))
   end.
-
-End WITHMEM.
 

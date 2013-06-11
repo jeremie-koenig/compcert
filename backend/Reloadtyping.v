@@ -26,6 +26,9 @@ Require Import Parallelmove.
 Require Import Reload.
 Require Import Reloadproof.
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 (** * Typing Linear constructors *)
 
 (** We show that the Linear constructor functions defined in [Reload]
@@ -350,3 +353,5 @@ Proof.
   destruct (transform_program_function _ _ _ _ H0) as [f0 [A B]].
   subst f; apply wt_transf_fundef. eauto.
 Qed.
+
+End WITHEF.

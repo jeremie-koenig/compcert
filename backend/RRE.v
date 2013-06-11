@@ -19,6 +19,9 @@ Require Import Locations.
 Require Import Conventions.
 Require Import Linear.
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 (** * Equations between slots and machine registers *)
 
 (** The RRE pass keeps track of which register holds the value of which
@@ -167,3 +170,4 @@ Definition transf_fundef (fd: fundef) : fundef :=
 Definition transf_program (p: program) : program :=
   transform_program transf_fundef p.
 
+End WITHEF.

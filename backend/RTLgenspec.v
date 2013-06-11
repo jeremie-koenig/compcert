@@ -42,7 +42,7 @@ Require Import RTLgen.
   both monadic computations [a] and [b] succeeded.
 *)
 
-Remark bind_inversion:
+Remark bind_inversion `{ef_ops: ExtFunOps}:
   forall (A B: Type) (f: mon A) (g: A -> mon B) 
          (y: B) (s1 s3: state) (i: state_incr s1 s3),
   bind f g s1 = OK y s3 i ->
@@ -56,7 +56,7 @@ Proof.
   exists s0; auto.
 Qed.
 
-Remark bind2_inversion:
+Remark bind2_inversion `{ef_ops: ExtFunOps}:
   forall (A B C: Type) (f: mon (A*B)) (g: A -> B -> mon C)
          (z: C) (s1 s3: state) (i: state_incr s1 s3),
   bind2 f g s1 = OK z s3 i ->
@@ -127,6 +127,9 @@ Ltac monadInv H :=
   end.
 
 (** * Monotonicity properties of the state *)
+
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
 
 Hint Resolve state_incr_refl: rtlg.
 
@@ -1336,3 +1339,33 @@ Proof.
   constructor. eauto with rtlg. eauto with rtlg.
   constructor.
 Qed.
+
+End WITHEF.
+
+Hint Resolve
+  state_incr_refl
+  instr_at_incr
+  valid_fresh_absurd
+  valid_fresh_different
+  reg_valid_incr
+  reg_fresh_decr
+  regs_valid_nil
+  regs_valid_incr
+  map_valid_incr
+  add_instr_at
+  update_instr_at
+  new_reg_valid
+  new_reg_fresh
+  new_reg_not_in_map
+  find_var_in_map
+  find_var_valid
+  find_letvar_in_map
+  find_letvar_valid
+  alloc_reg_valid
+  alloc_regs_valid
+  alloc_optreg_valid
+  alloc_regs_2addr_valid
+  new_reg_target_ok
+  return_reg_ok_incr
+  reg_map_ok_novar
+  : rtlg.

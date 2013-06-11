@@ -31,13 +31,13 @@ Require Import LTL.
 Require Import Conventions.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 
 (** * Abstract syntax *)
 
 Definition label := positive.
 
-Inductive instruction: Type :=
+Inductive instruction `{ef_ops: ExtFunOps external_function}: Type :=
   | Lgetstack: slot -> mreg -> instruction
   | Lsetstack: mreg -> slot -> instruction
   | Lop: operation -> list mreg -> mreg -> instruction

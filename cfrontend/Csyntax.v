@@ -23,6 +23,9 @@ Require Import AST.
 Require Import Ctypes.
 Require Import Cop.
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 (** ** Expressions *)
 
 (** Compcert C expressions are almost identical to those of C.
@@ -31,7 +34,7 @@ Require Import Cop.
   the [&&] and [||] operators.  All expressions are annotated with
   their types. *)
 
-Inductive expr : Type :=
+Inductive expr `{ef_ops: ExtFunOps external_function} : Type :=
   | Eval (v: val) (ty: type)                                  (**r constant *)
   | Evar (x: ident) (ty: type)                                (**r variable *)
   | Efield (l: expr) (f: ident) (ty: type)
@@ -63,7 +66,7 @@ Inductive expr : Type :=
                        (**r memory location, result of evaluating a l-value *)
   | Eparen (r: expr) (ty: type)                   (**r marked subexpression *)
 
-with exprlist : Type :=
+with exprlist `{ef_ops: ExtFunOps external_function} : Type :=
   | Enil
   | Econs (r1: expr) (rl: exprlist).
 
@@ -210,3 +213,5 @@ Definition type_of_fundef (f: fundef) : type :=
   data.  See module [AST] for more details. *)
 
 Definition program : Type := AST.program fundef type.
+
+End WITHEF.

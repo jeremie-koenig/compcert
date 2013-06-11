@@ -91,6 +91,10 @@ Require Import InterfGraph.
     of the result as dictated by the calling conventions.
 *)
 
+Section WITHEF.
+Import EFImpl.
+Existing Instance ef_ops.
+
 Definition add_interf_live
     (filter: reg -> bool) (res: reg) (live: Regset.t) (g: graph): graph :=
   Regset.fold 
@@ -307,3 +311,5 @@ Definition regalloc
   if check_coloring g env rs coloring
   then Some (alloc_of_coloring coloring env rs)
   else None.
+
+End WITHEF.

@@ -31,6 +31,8 @@ Require Import Csharpminor.
 Require Import Cshmgen.
 
 Section WITHMEM.
+Import EFImpl ECImpl.
+Existing Instances ef_ops ec_ops ec_spec.
 Context `{Hmem: Mem.MemSpec}.
 
 (** * Properties of operations over types *)

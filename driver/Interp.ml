@@ -253,7 +253,7 @@ let compare_state s1 s2 =
 
 module StateSet =
   Set.Make(struct
-             type t = Memimpl.mem state * Determinism.world
+             type t = (Memimpl.mem, EFImpl.external_function) state * Determinism.world
              let compare (s1,w1) (s2,w2) = compare_state s1 s2
            end)
 
@@ -600,7 +600,7 @@ let fixup_main p =
       fprintf err_formatter "ERROR: no main() function";
       None
   | Some main_fd ->
-      match type_of_fundef main_fd with
+      match type_of_fundef EFImpl.ef_ops main_fd with
       | Tfunction(Tnil, Tint(I32, Signed, _)) ->
           Some p
       | Tfunction(Tcons(Tint _, Tcons(Tpointer(Tpointer(Tint(I8,_,_),_),_), Tnil)),

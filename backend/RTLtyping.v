@@ -27,7 +27,7 @@ Require Import RTL.
 Require Import Conventions.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 
 (** * The type system *)
 

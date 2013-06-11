@@ -35,7 +35,7 @@ Require Import Stacklayout.
 Require Import Stacking.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 
 (** * Properties of frame offsets *)
 
@@ -1188,7 +1188,7 @@ Lemma save_callee_save_regs_correct:
   /\ frame_perm_freeable m' sp
   /\ agree_regs j ls rs'.
 Proof.
-  induction l; intros; simpl save_callee_save_regs.
+  induction l; intros; simpl.
   (* base case *)
   exists rs; exists m. split. apply star_refl. 
   split. intros. elim H3.
@@ -1201,6 +1201,7 @@ Proof.
   unfold save_callee_save_reg.
   destruct (zlt (number a) (bound fe)).
   (* a store takes place *)
+  simpl.
   exploit store_index_succeeds. apply (mkindex_valid a); auto with coqlib. 
   eauto. instantiate (1 := rs a). intros [m1 ST].
   exploit (IHl k (undef_setstack rs) m1).  auto with coqlib. auto. 
@@ -1236,9 +1237,8 @@ Proof.
   exploit (IHl k rs m); auto with coqlib. 
   intros [rs' [m' [A [B [C [D [E F]]]]]]].
   exists rs'; exists m'; intuition. 
-  simpl in H3. destruct H3. subst r. omegaContradiction. apply B; auto.
-  apply C; auto with coqlib.
-  intros. eapply H4; eauto. auto with coqlib.
+  subst r. omegaContradiction. apply C; auto.
+  intros. eapply H4; eauto.
 Qed.
 
 End SAVE_CALLEE_SAVE.
@@ -1565,7 +1565,7 @@ Lemma restore_callee_save_regs_correct:
   /\ (forall r, ~(In r l) -> rs' r = rs r)
   /\ agree_unused ls0 rs'.
 Proof.
-  induction l; intros; simpl restore_callee_save_regs.
+  induction l; intros; simpl.
   (* base case *)
   exists rs. intuition. apply star_refl.
   (* inductive case *)

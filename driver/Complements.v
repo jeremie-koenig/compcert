@@ -35,6 +35,9 @@ Require Import Errors.
 Section WITHMEM.
 Context `{Hmem: Mem.MemSpec}.
 
+Import EFImpl ECImpl.
+Local Existing Instances ef_ops ec_ops ec_spec.
+
 (** * Preservation of whole-program behaviors *)
 
 (** From the simulation diagrams proved in file [Compiler]. it follows that

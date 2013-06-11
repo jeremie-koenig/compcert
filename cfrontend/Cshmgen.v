@@ -34,6 +34,10 @@ Require Import Csharpminor.
 Open Local Scope string_scope.
 Open Local Scope error_monad_scope.
 
+Section WITHEF.
+Import EFImpl.
+Existing Instance ef_ops.
+
 (** * Csharpminor constructors *)
 
 (** The following functions build Csharpminor expressions that compute
@@ -506,3 +510,5 @@ Definition transl_globvar (ty: type) := OK tt.
 
 Definition transl_program (p: Clight.program) : res program :=
   transform_partial_program2 transl_fundef transl_globvar p.
+
+End WITHEF.

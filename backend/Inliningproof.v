@@ -30,7 +30,7 @@ Require Import RTL.
 
 Section INLINING.
 
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 Variable prog: program.
 Variable tprog: program.
 Hypothesis TRANSF: transf_program prog = OK tprog.

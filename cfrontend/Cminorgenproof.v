@@ -36,7 +36,10 @@ Open Local Scope error_monad_scope.
 
 Section TRANSLATION.
 
-Context `{M0: Mem.MemSpec}.
+Context `{Hmem: Mem.MemSpec}.
+Import EFImpl ECImpl.
+Existing Instances ef_ops ec_ops ec_spec.
+
 Variable prog: Csharpminor.program.
 Variable tprog: program.
 Hypothesis TRANSL: transl_program prog = OK tprog.

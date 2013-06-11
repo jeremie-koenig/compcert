@@ -358,6 +358,9 @@ End WITHMEM.
 
 (** * Correspondence between Mach code and Asm code *)
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 Lemma find_instr_in:
   forall c pos i,
   find_instr pos c = Some i -> In i c.
@@ -632,8 +635,6 @@ Qed.
 Definition nolabel (i: instruction) :=
   match i with Plabel _ => False | _ => True end.
 
-Hint Extern 1 (nolabel _) => exact I : labels.
-
 Lemma tail_nolabel_cons:
   forall i c k,
   nolabel i -> tail_nolabel k c -> tail_nolabel k (i :: c).
@@ -643,6 +644,9 @@ Proof.
   intros. simpl. rewrite <- H1. destruct i; reflexivity || contradiction.
 Qed.
 
+End WITHEF.
+
+Hint Extern 1 (nolabel _) => exact I : labels.
 Hint Resolve tail_nolabel_refl: labels.
 
 Ltac TailNoLabel :=
@@ -661,7 +665,7 @@ Ltac TailNoLabel :=
 
 Section STRAIGHTLINE.
 
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 Variable ge: genv.
 Variable fn: function.
 
@@ -777,7 +781,7 @@ End STRAIGHTLINE.
 
 Section MATCH_STACK.
 
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 Variable ge: Mach.genv.
 
 Inductive match_stack: list Mach.stackframe -> Prop :=

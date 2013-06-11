@@ -29,6 +29,9 @@ Require Import RTL.
   we also eliminate CFG nodes that are not reachable from the entry point:
   these nodes are dead code. *)
 
+Section WITHEF.
+Context `{ef_ops: AST.ExtFunOps}.
+
 Section RENUMBER.
 
 Variable pnum: PTree.t positive.   (**r a postorder numbering *)
@@ -78,3 +81,5 @@ Definition transf_fundef (fd: fundef) : fundef :=
 
 Definition transf_program (p: program) : program :=
   AST.transform_program transf_fundef p.
+
+End WITHEF.

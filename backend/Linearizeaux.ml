@@ -36,8 +36,8 @@ module IntSet = Set.Make(struct type t = int let compare = compare end)
 
 (* Determine join points: reachable nodes that have > 1 predecessor *)
 
-let join_points f =
-  let succs = LTL.successors f in
+let join_points ef_ops f =
+  let succs = LTL.successors ef_ops f in
   let reached = ref IntSet.empty in
   let reached_twice = ref IntSet.empty in
   let rec traverse pc =
@@ -110,5 +110,5 @@ let flatten_blocks blks =
 
 (* Build the enumeration *)
 
-let enumerate_aux f reach =
-  flatten_blocks (basic_blocks f (join_points f))
+let enumerate_aux ef_ops f reach =
+  flatten_blocks (basic_blocks f (join_points ef_ops f))

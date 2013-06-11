@@ -36,7 +36,7 @@ Module NodesetFacts := FSetFacts.Facts(Nodeset).
 
 Section LINEARIZATION.
 
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 Variable prog: LTL.program.
 Variable tprog: LTLin.program.
 
@@ -268,6 +268,7 @@ Proof.
   intros. 
   apply plus_left with E0 (State s f sp c1 ls m) E0.
   simpl. constructor. 
+  simpl in H1;
   destruct (peq lbl l).
   subst l. replace c3 with c1. constructor.
   apply find_label_unique with lbl c2; auto.

@@ -64,6 +64,9 @@ Require Import LTL.
 
 Module U := UnionFind.UF(PTree).
 
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
+
 Definition record_goto (uf: U.t) (pc: node) (i: instruction) : U.t :=
   match i with
   | Lnop s => U.union uf pc s
@@ -116,3 +119,4 @@ Definition tunnel_fundef (f: LTL.fundef) : LTL.fundef :=
 Definition tunnel_program (p: LTL.program) : LTL.program :=
   transform_program tunnel_fundef p.
 
+End WITHEF.

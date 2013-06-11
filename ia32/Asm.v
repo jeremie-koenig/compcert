@@ -108,7 +108,11 @@ Inductive testcond: Type :=
   (and first argument), the second suffix describes the second argument.
 *)
 
-Inductive instruction: Type :=
+Inductive annot_param : Type :=
+  | APreg: preg -> annot_param
+  | APstack: memory_chunk -> Z -> annot_param.
+
+Inductive instruction `{ef_ops: ExtFunOps}: Type :=
   (** Moves *)
   | Pmov_rr (rd: ireg) (r1: ireg)       (**r [mov] (32-bit int) *)
   | Pmov_ri (rd: ireg) (n: int)
@@ -194,17 +198,18 @@ Inductive instruction: Type :=
   | Pallocframe(sz: Z)(ofs_ra ofs_link: int)
   | Pfreeframe(sz: Z)(ofs_ra ofs_link: int)
   | Pbuiltin(ef: external_function)(args: list preg)(res: preg)
-  | Pannot(ef: external_function)(args: list annot_param)
+  | Pannot(ef: external_function)(args: list annot_param).
 
-with annot_param : Type :=
-  | APreg: preg -> annot_param
-  | APstack: memory_chunk -> Z -> annot_param.
+Section WITHEF.
+Context `{ef_ops: ExtFunOps}.
 
 Definition code := list instruction.
 Definition function := code.
 Definition fn_code (f: function) : code := f.
 Definition fundef := AST.fundef code.
 Definition program := AST.program fundef unit.
+
+End WITHEF.
 
 (** * Operational semantics *)
 
@@ -218,11 +223,14 @@ End PregEq.
 
 Module Pregmap := EMap(PregEq).
 
-Definition regset := Pregmap.t val.
-Definition genv := Genv.t fundef unit.
-
 Notation "a # b" := (a b) (at level 1, only parsing).
 Notation "a # b <- c" := (Pregmap.set b c a) (at level 1, b at next level).
+
+Section WITHMEM.
+Context `{Hec: ExtCallSpec}.
+
+Definition regset := Pregmap.t val.
+Definition genv := Genv.t fundef unit.
 
 (** Undefining some registers *)
 
@@ -231,9 +239,6 @@ Fixpoint undef_regs (l: list preg) (rs: regset) : regset :=
   | nil => rs
   | r :: l' => undef_regs l' (rs#r <- Vundef)
   end.
-
-Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
 
 Section RELSEM.
 

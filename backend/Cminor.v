@@ -28,7 +28,7 @@ Require Import Smallstep.
 Require Import Switch.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hec: ExtCallSpec}.
 
 (** * Abstract syntax *)
 
@@ -98,7 +98,7 @@ Inductive expr : Type :=
 
 Definition label := ident.
 
-Inductive stmt : Type :=
+Inductive stmt `{ef_ops: ExtFunOps external_function} : Type :=
   | Sskip: stmt
   | Sassign : ident -> expr -> stmt
   | Sstore : memory_chunk -> expr -> expr -> stmt
