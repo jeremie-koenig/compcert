@@ -680,6 +680,31 @@ Record extcall_properties (sem: extcall_sem)
     match_traces ge t1 t2 /\ (t1 = t2 -> vres1 = vres2 /\ m1 = m2)
 }.
 
+(** [extcall_sem] and [extcall_properties] are wrapped into type classes *)
+
+Class ExtCallOps `{ef_ops: ExtFunOps} := {
+  external_call (ef: external_function):
+    extcall_sem
+}.
+
+Class ExtCallSpec `{ec_ops: ExtCallOps} := {
+  ec_mem_spec :> Mem.MemSpec mem;
+  external_call_spec (ef: external_function):
+    extcall_properties (external_call ef) (ef_sig ef)
+}.
+
+End WITHMEM.
+
+Arguments ExtCallOps mem {mem_ops} external_function {ef_ops}.
+Arguments ExtCallSpec mem {mem_ops} external_function {ef_ops ec_ops}.
+
+(** Below, we define instances for the [ExtFunOps] instance in AST.v. *)
+
+Module ECImpl.
+
+Section WITHMEM.
+Context `{Hmem: Mem.MemSpec}.
+
 (** ** Semantics of volatile loads *)
 
 Inductive volatile_load_sem (chunk: memory_chunk) (F V: Type) (ge: Genv.t F V):
@@ -1581,6 +1606,8 @@ Qed.
 
 This predicate is used in the semantics of all CompCert languages. *)
 
+Export EFImpl.
+
 Definition external_call (ef: external_function): extcall_sem :=
   match ef with
   | EF_external name sg  => extcall_io_sem name sg
@@ -1615,6 +1642,24 @@ Proof.
   apply extcall_annot_val_ok.
   apply extcall_annot_ok.
 Qed.
+
+Local Existing Instance EFImpl.ef_ops.
+
+Local Instance ec_ops: ExtCallOps mem external_function := {
+  external_call := external_call
+}.
+
+Local Instance ec_spec: ExtCallSpec mem external_function := {
+  external_call_spec := external_call_spec
+}.
+
+End WITHMEM.
+
+End ECImpl.
+
+(** Some shorthand accessors for the properties of ExtCallSpec. *)
+Section WITHEC.
+Context `{Hef: ExtCallSpec}.
 
 Definition external_call_well_typed ef := ec_well_typed (external_call_spec ef).
 Definition external_call_arity ef := ec_arity (external_call_spec ef).
@@ -1696,4 +1741,4 @@ Proof.
   intros. exploit external_call_determ. eexact H. eexact H0. intuition.
 Qed.
 
-End WITHMEM.
+End WITHEC.

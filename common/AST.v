@@ -412,6 +412,26 @@ Qed.
   compiler built-in functions.  We define a type for external functions
   and associated operations. *)
 
+Class ExtFunOps (external_function: Type) := {
+  ef_sig: external_function -> signature;
+  ef_inline: external_function -> bool;
+  ef_reloads: external_function -> bool
+}.
+
+Inductive annot_arg : Type :=
+  | AA_arg (ty: typ)
+  | AA_int (n: int)
+  | AA_float (n: float).
+
+Fixpoint annot_args_typ (targs: list annot_arg) : list typ :=
+  match targs with
+  | nil => nil
+  | AA_arg ty :: targs' => ty :: annot_args_typ targs'
+  | _ :: targs' => annot_args_typ targs'
+  end.
+
+Module EFImpl.
+
 Inductive external_function : Type :=
   | EF_external (name: ident) (sg: signature)
      (** A system call or library function.  Produces an event
@@ -453,26 +473,14 @@ Inductive external_function : Type :=
      (** Another form of annotation that takes one argument, produces
          an event carrying the text and the value of this argument,
          and returns the value of the argument. *)
-  | EF_inline_asm (text: ident)
+  | EF_inline_asm (text: ident).
      (** Inline [asm] statements.  Semantically, treated like an
          annotation with no parameters ([EF_annot text nil]).  To be
          used with caution, as it can invalidate the semantic
          preservation theorem.  Generated only if [-finline-asm] is
          given. *)
 
-with annot_arg : Type :=
-  | AA_arg (ty: typ)
-  | AA_int (n: int)
-  | AA_float (n: float).
-
 (** The type signature of an external function. *)
-
-Fixpoint annot_args_typ (targs: list annot_arg) : list typ :=
-  match targs with
-  | nil => nil
-  | AA_arg ty :: targs' => ty :: annot_args_typ targs'
-  | _ :: targs' => annot_args_typ targs'
-  end.
 
 Definition ef_sig (ef: external_function): signature :=
   match ef with
@@ -516,16 +524,25 @@ Definition ef_reloads (ef: external_function) : bool :=
   | _ => true
   end.
 
+Local Instance ef_ops: ExtFunOps external_function := {
+  ef_sig := ef_sig;
+  ef_inline := ef_inline;
+  ef_reloads := ef_reloads
+}.
+
+End EFImpl.
+
 (** Function definitions are the union of internal and external functions. *)
 
-Inductive fundef (F: Type): Type :=
+Inductive fundef `{ef_ops: ExtFunOps} (F: Type): Type :=
   | Internal: F -> fundef F
   | External: external_function -> fundef F.
 
-Implicit Arguments External [F].
+Arguments External {external_function ef_ops} [F] _.
 
 Section TRANSF_FUNDEF.
 
+Context `{ef_ops: ExtFunOps}.
 Variable A B: Type.
 Variable transf: A -> B.
 
@@ -539,6 +556,7 @@ End TRANSF_FUNDEF.
 
 Section TRANSF_PARTIAL_FUNDEF.
 
+Context `{ef_ops: ExtFunOps}.
 Variable A B: Type.
 Variable transf_partial: A -> res B.
 
