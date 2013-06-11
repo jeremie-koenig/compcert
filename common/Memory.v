@@ -89,3 +89,8 @@ Hint Resolve
   Mem.valid_access_free_inv_1
   Mem.valid_access_free_inv_2
 : mem.
+
+(** When a [MEM] instance is not directly available in the context,
+  we need to make sure [eauto] can use typeclass instance resolution. *)
+
+Hint Extern 10 => typeclasses eauto : mem.
