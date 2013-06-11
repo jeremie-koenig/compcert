@@ -138,7 +138,7 @@ Qed.
 (** * Agreement between Mach registers and processor registers *)
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 Record agree (ms: Mach.regset) (sp: val) (rs: Asm.regset) : Prop := mkagree {
   agree_sp: rs#SP = sp;
@@ -661,7 +661,7 @@ Ltac TailNoLabel :=
 
 Section STRAIGHTLINE.
 
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 Variable ge: genv.
 Variable fn: function.
 
@@ -777,7 +777,7 @@ End STRAIGHTLINE.
 
 Section MATCH_STACK.
 
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 Variable ge: Mach.genv.
 
 Inductive match_stack: list Mach.stackframe -> Prop :=

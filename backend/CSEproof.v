@@ -332,7 +332,7 @@ End ValnumEq.
 Module VMap := EMap(ValnumEq).
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 Section SATISFIABILITY.
 
@@ -820,7 +820,7 @@ Proof.
     eapply Solver.fixpoint_solution; eauto.
     unfold successors_list, successors. rewrite PTree.gmap1.
     rewrite H0. auto.
-  apply H3. auto.
+  eapply H3; auto.
 Qed.
 
 Theorem analysis_correct_entry:

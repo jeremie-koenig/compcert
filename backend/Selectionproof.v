@@ -31,7 +31,7 @@ Require Import SelectOpproof.
 Open Local Scope cminorsel_scope.
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 (** * Correctness of the instruction selection functions for expressions *)
 

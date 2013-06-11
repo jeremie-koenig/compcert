@@ -32,7 +32,7 @@ Require Import Initializers.
 Open Scope error_monad_scope.
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 Section SOUNDNESS.
 

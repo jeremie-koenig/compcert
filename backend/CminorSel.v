@@ -92,7 +92,7 @@ Definition funsig (fd: fundef) :=
 (** * Operational semantics *)
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 (** Three kinds of evaluation environments are involved:
 - [genv]: global environments, define symbols and functions;
@@ -114,7 +114,7 @@ Inductive cont: Type :=
 
 (** States *)
 
-Inductive state `{M: Mem.MEM mem}: Type :=
+Inductive state `{mem_ops: Mem.MemOps mem}: Type :=
   | State:                              (**r execution within a function *)
       forall (f: function)              (**r currently executing function  *)
              (s: stmt)                  (**r statement under consideration *)

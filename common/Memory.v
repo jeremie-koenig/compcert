@@ -29,7 +29,7 @@
 Require Export Memdata.
 Require Export Memtype.
 
-(* It's important that no instance of Mem.MEM be in scope when we define
+(* It's important that no instance of Mem.MemSpec be in scope when we define
   these hints, otherwise they would use that specific instance. *)
 Hint Resolve
   Mem.valid_not_valid_diff

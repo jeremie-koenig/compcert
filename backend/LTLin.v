@@ -29,7 +29,7 @@ Require Import Locations.
 Require Import LTL.
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 (** * Abstract syntax *)
 
@@ -121,7 +121,7 @@ Inductive stackframe : Type :=
              (c: code),       (**r program point in calling function *)
       stackframe.
 
-Inductive state `{M: Mem.MEM mem} : Type :=
+Inductive state `{mem_ops: Mem.MemOps mem} : Type :=
   | State:
       forall (stack: list stackframe) (**r call stack *)
              (f: function)            (**r function currently executing *)

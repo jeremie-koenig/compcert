@@ -35,7 +35,7 @@ Require Import Stacklayout.
 Require Import Stacking.
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 (** * Properties of frame offsets *)
 
@@ -1687,7 +1687,7 @@ Proof.
   by omega.
   destruct EITHER.
   replace ofs with ((ofs - fe_stack_data fe) + fe_stack_data fe) by omega.
-  eapply @Mem.perm_inject with (f := j). eapply agree_inj; eauto. eauto. 
+  eapply (Mem.perm_inject j). eapply agree_inj; eauto. eauto. 
   eapply Mem.free_range_perm; eauto. omega.
   eapply agree_perm; eauto. 
   (* inject after free *)

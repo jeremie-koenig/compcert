@@ -28,7 +28,7 @@ Require Import Smallstep.
 Require Import Switch.
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 (** * Abstract syntax *)
 
@@ -183,7 +183,7 @@ Inductive cont: Type :=
 
 (** States *)
 
-Inductive state `{M: Mem.MEM mem}: Type :=
+Inductive state `{mem_ops: Mem.MemOps mem}: Type :=
   | State:                      (**r Execution within a function *)
       forall (f: function)              (**r currently executing function  *)
              (s: stmt)                  (**r statement under consideration *)

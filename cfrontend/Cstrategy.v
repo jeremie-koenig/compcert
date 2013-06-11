@@ -33,7 +33,7 @@ Require Import Csyntax.
 Require Import Csem.
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 Section STRATEGY.
 

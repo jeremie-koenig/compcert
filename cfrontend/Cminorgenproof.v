@@ -36,7 +36,7 @@ Open Local Scope error_monad_scope.
 
 Section TRANSLATION.
 
-Context `{M0: Mem.MEM}.
+Context `{M0: Mem.MemSpec}.
 Variable prog: Csharpminor.program.
 Variable tprog: program.
 Hypothesis TRANSL: transl_program prog = OK tprog.

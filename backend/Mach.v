@@ -126,10 +126,10 @@ store in the reserved location.
 Definition chunk_of_type (ty: typ) :=
   match ty with Tint => Mint32 | Tfloat => Mfloat64al32 end.
 
-Definition load_stack `{Mem.MEM} (m: mem) (sp: val) (ty: typ) (ofs: int) :=
+Definition load_stack `{Mem.MemOps} (m: mem) (sp: val) (ty: typ) (ofs: int) :=
   Mem.loadv (chunk_of_type ty) m (Val.add sp (Vint ofs)).
 
-Definition store_stack `{Mem.MEM} (m: mem) (sp: val) (ty: typ) (ofs: int) (v: val) :=
+Definition store_stack `{Mem.MemOps} (m: mem) (sp: val) (ty: typ) (ofs: int) (v: val) :=
   Mem.storev (chunk_of_type ty) m (Val.add sp (Vint ofs)) v.
 
 Module RegEq.
@@ -207,7 +207,7 @@ Proof.
 Qed.
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 Section RELSEM.
 
@@ -265,7 +265,7 @@ Inductive stackframe: Type :=
              (c: code),       (**r program point in calling function *)
       stackframe.
 
-Inductive state `{M: Mem.MEM mem}: Type :=
+Inductive state `{mem_ops: Mem.MemOps mem}: Type :=
   | State:
       forall (stack: list stackframe)  (**r call stack *)
              (f: block)                (**r pointer to current function *)

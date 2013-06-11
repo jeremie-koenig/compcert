@@ -33,7 +33,7 @@ Require Import Compiler.
 Require Import Errors.
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 (** * Preservation of whole-program behaviors *)
 

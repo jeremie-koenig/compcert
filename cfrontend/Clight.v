@@ -32,7 +32,7 @@ Require Import Ctypes.
 Require Import Cop.
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 (** * Abstract syntax *)
 
@@ -456,7 +456,7 @@ Definition is_call_cont (k: cont) : Prop :=
 
 (** States *)
 
-Inductive state `{M: Mem.MEM mem}: Type :=
+Inductive state `{mem_ops: Mem.MemOps mem}: Type :=
   | State
       (f: function)
       (s: statement)

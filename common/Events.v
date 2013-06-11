@@ -510,7 +510,7 @@ Fixpoint output_trace (t: trace) : Prop :=
 (** * Semantics of volatile memory accesses *)
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 Definition block_is_volatile (F V: Type) (ge: Genv.t F V) (b: block) : bool :=
   match Genv.find_var_info ge b with

@@ -31,7 +31,7 @@ Require Import Csharpminor.
 Require Import Cshmgen.
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 (** * Properties of operations over types *)
 

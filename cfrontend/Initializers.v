@@ -26,7 +26,7 @@ Require Import Csyntax.
 Open Scope error_monad_scope.
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 (** * Evaluation of compile-time constant expressions *)
 
@@ -53,7 +53,7 @@ Definition do_cast (v: val) (t1 t2: type) : res val :=
   | None => Error(msg "undefined cast")
   end.
 
-Fixpoint constval `{M: Mem.MEM mem} (a: expr) : res val :=
+Fixpoint constval `{mem_ops: Mem.MemOps mem} (a: expr) : res val :=
   match a with
   | Eval v ty =>
       match v with

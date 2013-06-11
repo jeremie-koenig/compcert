@@ -233,7 +233,7 @@ Fixpoint undef_regs (l: list preg) (rs: regset) : regset :=
   end.
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 Section RELSEM.
 
@@ -416,7 +416,7 @@ Definition nextinstr (rs: regset) :=
 Definition nextinstr_nf (rs: regset) : regset :=
   nextinstr (undef_regs (CR ZF :: CR CF :: CR PF :: CR SOF :: nil) rs).
 
-Definition goto_label `{Mem.MEM mem} (c: code) (lbl: label) (rs: regset) (m: mem) :=
+Definition goto_label `{Mem.MemOps mem} (c: code) (lbl: label) (rs: regset) (m: mem) :=
   match label_pos lbl 0 c with
   | None => Stuck
   | Some pos =>
@@ -744,7 +744,7 @@ Definition annot_arguments
 
 (** Execution of the instruction at [rs#PC]. *)
 
-Inductive state `{Mem.MEM mem}: Type :=
+Inductive state `{Mem.MemOps mem}: Type :=
   | State: regset -> mem -> state.
 
 Inductive step: state -> trace -> state -> Prop :=

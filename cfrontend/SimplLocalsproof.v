@@ -36,7 +36,7 @@ Module VSP := FSetProperties.Properties(VSet).
 
 Section PRESERVATION.
 
-Context `{M0: Mem.MEM}.
+Context `{M0: Mem.MemSpec}.
 Variable prog: program.
 Variable tprog: program.
 Hypothesis TRANSF: transf_program prog = OK tprog.

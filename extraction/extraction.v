@@ -107,5 +107,5 @@ Separate Extraction
    Compiler.transf_c_program Compiler.transf_cminor_program
    Cexec.do_initial_state Cexec.do_step Cexec.at_final_state
    Initializers.transl_init Initializers.constval
-   Csyntax.Eindex Csyntax.Epreincr Memimpl.mem_MEM.
+   Csyntax.Eindex Csyntax.Epreincr Memimpl.mem_ops.
 

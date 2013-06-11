@@ -31,7 +31,7 @@ Require Import Parallelmove.
 Require Import Reload.
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 (** * Exploitation of the typing hypothesis *)
 

@@ -28,7 +28,7 @@ Open Local Scope cminorsel_scope.
 
 Section CMCONSTR.
 
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 Variable ge: genv.
 Variable sp: val.
 Variable e: env.

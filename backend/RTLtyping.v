@@ -27,7 +27,7 @@ Require Import RTL.
 Require Import Conventions.
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 (** * The type system *)
 

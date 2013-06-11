@@ -113,7 +113,7 @@ Require Import LTL.
 Module RegsetP := Properties(Regset).
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 Section AGREE.
 

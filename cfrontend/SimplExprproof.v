@@ -33,7 +33,7 @@ Require Import SimplExprspec.
 
 Section PRESERVATION.
 
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 Variable prog: Csyntax.program.
 Variable tprog: Clight.program.
 Hypothesis TRANSL: transl_program prog = OK tprog.

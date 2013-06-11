@@ -24,7 +24,7 @@ Require Import CSE.
 
 Section COMBINE.
 
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 Variable ge: genv.
 Variable sp: val.
 Variable m: mem.

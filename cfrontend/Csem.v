@@ -31,7 +31,7 @@ Require Import Csyntax.
 Require Import Smallstep.
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 (** * Operational semantics *)
 
@@ -204,7 +204,7 @@ Variable e: env.
 
 (** Head reduction for l-values. *)
 
-Inductive lred `{M: Mem.MEM mem}: expr -> mem -> expr -> mem -> Prop :=
+Inductive lred `{mem_ops: Mem.MemOps mem}: expr -> mem -> expr -> mem -> Prop :=
   | red_var_local: forall x ty m b,
       e!x = Some(b, ty) ->
       lred (Evar x ty) m
@@ -498,7 +498,7 @@ Definition is_call_cont (k: cont) : Prop :=
   the symmetrical transition from a function back to its caller
   ([Returnstate]). *)
 
-Inductive state `{M: Mem.MEM mem}: Type :=
+Inductive state `{mem_ops: Mem.MemOps mem}: Type :=
   | State                               (**r execution of a statement *)
       (f: function)
       (s: statement)

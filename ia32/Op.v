@@ -142,7 +142,7 @@ Global Opaque eq_addressing eq_operation.
 (** * Evaluation functions *)
 
 Section EVAL.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 Definition symbol_address (F V: Type) (genv: Genv.t F V) (id: ident) (ofs: int) : val :=
   match Genv.find_symbol genv id with
@@ -256,7 +256,7 @@ Ltac FuncInv :=
 (** * Static typing of conditions, operators and addressing modes. *)
 
 Section WITHMEM.
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 
 Definition type_of_condition (c: condition) : list typ :=
   match c with

@@ -178,12 +178,12 @@ let make_builtin_memcpy args =
   match args with
   | Econs(dst, Econs(src, Econs(sz, Econs(al, Enil)))) ->
       let sz1 =
-        match Initializers.constval Memimpl.mem_MEM sz with
+        match Initializers.constval Memimpl.mem_ops sz with
         | Errors.OK(Vint n) -> n
         | _ -> error "ill-formed __builtin_memcpy_aligned (3rd argument must be 
 a constant)"; Integers.Int.zero in
       let al1 =
-        match Initializers.constval Memimpl.mem_MEM al with
+        match Initializers.constval Memimpl.mem_ops al with
         | Errors.OK(Vint n) -> n
         | _ -> error "ill-formed __builtin_memcpy_aligned (4th argument must be 
 a constant)"; Integers.Int.one in
@@ -769,7 +769,7 @@ and convertInitList env il =
   | i :: il' -> Init_cons(convertInit env i, convertInitList env il')
 
 let convertInitializer env ty i =
-  match Initializers.transl_init Memimpl.mem_MEM (convertTyp env ty) (convertInit env i)
+  match Initializers.transl_init Memimpl.mem_ops (convertTyp env ty) (convertInit env i)
   with
   | Errors.OK init -> init
   | Errors.Error msg ->

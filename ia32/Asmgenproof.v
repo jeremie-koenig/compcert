@@ -33,7 +33,7 @@ Require Import Asmgenproof1.
 
 Section PRESERVATION.
 
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 Variable prog: Mach.program.
 Variable tprog: Asm.program.
 Hypothesis TRANSF: transf_program prog = Errors.OK tprog.

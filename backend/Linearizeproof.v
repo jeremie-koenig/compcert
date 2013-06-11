@@ -36,7 +36,7 @@ Module NodesetFacts := FSetFacts.Facts(Nodeset).
 
 Section LINEARIZATION.
 
-Context `{M: Mem.MEM}.
+Context `{Hmem: Mem.MemSpec}.
 Variable prog: LTL.program.
 Variable tprog: LTLin.program.
 
