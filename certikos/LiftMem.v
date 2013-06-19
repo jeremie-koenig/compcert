@@ -316,16 +316,13 @@ Hint Rewrite @lift_empty_extract using typeclasses eauto: lift.
 (** Hook the rewrite rules into the lift database. *)
 Hint Extern 10 => progress (autorewrite with lift in *): lift.
 
-Section LIFTMEM.
-  Context W `{HW: LiftMem W} mem `{Hmem: Mem.MemSpec mem}.
-
   (** This is the main tactic we use: it lifts a theorem [Hf] of
     the underlying memory model by "peeling off" its structure
     recursively to prove the lifted goal. The leaf goals are
     handled with the caller-provided tactic [leaftac]. *)
 
   (* Premises are "translated" and used to specialize Hf *)
-  Ltac peel_intro recurse Hf x :=
+  Ltac peel_intro mem recurse Hf x :=
     intro x;
     let T := type of x in
     lazymatch type of Hf with
@@ -349,7 +346,7 @@ Section LIFTMEM.
 
   (* Existential: we must use [set] to augment any memory state
     provided by Hf, but we can otherwise just pass everything along *)
-  Ltac peel_exists recurse Hf x :=
+  Ltac peel_exists mem recurse Hf x :=
     let Hf' := fresh Hf in
     destruct Hf as [x Hf'];
     let T := type of x in
@@ -369,12 +366,12 @@ Section LIFTMEM.
   Ltac peel Hf leaftac :=
     let recurse Hf := peel Hf leaftac in
     try lazymatch goal with
-      | |- forall (x: _), _ =>
-        let x := fresh x in peel_intro recurse Hf x
-      | |- exists (x: _), _ =>
-        let x := fresh x in peel_exists recurse Hf x
-      | |- { x: _ | _ } =>
-        let x := fresh x in peel_exists recurse Hf x
+      | _: Mem.MemOps ?mem |- forall (x: _), _ =>
+        let x := fresh x in peel_intro mem recurse Hf x
+      | _: Mem.MemOps ?mem |- exists (x: _), _ =>
+        let x := fresh x in peel_exists mem recurse Hf x
+      | _: Mem.MemOps ?mem |- { x: _ | _ } =>
+        let x := fresh x in peel_exists mem recurse Hf x
       | |- _ /\ _ =>
         peel_conj recurse Hf
       | |- ?T =>
@@ -393,6 +390,9 @@ Section LIFTMEM.
 
   Ltac lift f :=
     now lift_partial f.
+
+Section LIFTMEM.
+  Context W `{HW: LiftMem W} mem `{Hmem: Mem.MemSpec mem}.
 
   Hint Immediate
     (lift_option_eq_preserves_context (W:=W))
