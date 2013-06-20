@@ -204,6 +204,9 @@ latexdoc:
 	@tools/ndfun $*.vp > $*.v || { rm -f $*.v; exit 2; }
 	@chmod -w $*.v
 
+%.pdf: %.dia
+	dia -t pdf -e $@ $<
+
 driver/Configuration.ml: Makefile.config VERSION
 	(echo let stdlib_path = "\"$(LIBDIR)\""; \
          echo let prepro = "\"$(CPREPRO)\""; \
