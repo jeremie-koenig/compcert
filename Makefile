@@ -110,6 +110,7 @@ DRIVER=Compiler.v Complements.v
 CERTIKOS=\
   Monad.v \
   LiftMem.v \
+  LiftExtCall.v \
   AbstractData.v \
 
 # All source files
