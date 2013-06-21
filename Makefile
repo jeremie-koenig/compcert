@@ -112,6 +112,8 @@ CERTIKOS=\
   LiftMem.v \
   LiftExtCall.v \
   AbstractData.v \
+  AbstractPrimitives.v \
+  Layer.v \
 
 # All source files
 
