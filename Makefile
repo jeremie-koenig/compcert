@@ -108,7 +108,9 @@ DRIVER=Compiler.v Complements.v
 # Certikos
 
 CERTIKOS=\
+  Functor.v \
   Monad.v \
+  Comonad.v \
   LiftMem.v \
   LiftExtCall.v \
   AbstractData.v \

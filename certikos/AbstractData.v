@@ -1,5 +1,5 @@
 Require Import Memory.
-Require Import Monad.
+Require Export Comonad.
 Require Import LiftMem.
 
 (** * Types of abstract data *)

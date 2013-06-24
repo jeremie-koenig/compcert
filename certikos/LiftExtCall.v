@@ -1,8 +1,10 @@
+Require Import Coq.Program.Basics.
 Require Import AST.
 Require Import Memory.
 Require Import Globalenvs.
 Require Import Events.
-Require Import Monad.
+Require Import Functor.
+Require Import Comonad.
 Require Import LiftMem.
 
 Section LIFTEXTCALL.
@@ -13,7 +15,7 @@ Section LIFTEXTCALL.
     powerset_lift_intro x:
       pX x -> powerset_lift f pX (f x).
 
-  Instance powerset_fmap: FunctorOp (fun X => X -> Prop) := {
+  Instance powerset_fmap: FunctorOps (fun X => X -> Prop) := {
     fmap := @powerset_lift
   }.
 
