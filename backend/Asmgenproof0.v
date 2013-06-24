@@ -138,7 +138,7 @@ Qed.
 (** * Agreement between Mach registers and processor registers *)
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hmem: Mem.MemoryStates}.
 
 Record agree (ms: Mach.regset) (sp: val) (rs: Asm.regset) : Prop := mkagree {
   agree_sp: rs#SP = sp;
@@ -359,7 +359,7 @@ End WITHMEM.
 (** * Correspondence between Mach code and Asm code *)
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 Lemma find_instr_in:
   forall c pos i,
@@ -665,7 +665,7 @@ Ltac TailNoLabel :=
 
 Section STRAIGHTLINE.
 
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 Variable ge: genv.
 Variable fn: function.
 
@@ -781,7 +781,7 @@ End STRAIGHTLINE.
 
 Section MATCH_STACK.
 
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 Variable ge: Mach.genv.
 
 Inductive match_stack: list Mach.stackframe -> Prop :=

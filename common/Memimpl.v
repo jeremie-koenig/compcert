@@ -3941,7 +3941,7 @@ Proof.
   repeat rewrite Zplus_0_r. intros [m'' [A B]]. congruence.
 Qed.
 
-Instance mem_ops: Mem.MemOps mem := {
+Instance mem_ops: Mem.MemoryOps mem := {
   empty := empty;
   alloc := alloc;
   free := free;
@@ -3958,7 +3958,7 @@ Instance mem_ops: Mem.MemOps mem := {
   inject_neutral := inject_neutral
 }.
 
-Instance mem_spec: Mem.MemSpec mem := {
+Instance mem_spec: Mem.MemoryStates mem := {
   nextblock_pos := nextblock_pos;
   valid_not_valid_diff := valid_not_valid_diff;
   perm_implies := perm_implies;

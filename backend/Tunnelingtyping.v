@@ -21,7 +21,7 @@ Require Import Tunneling.
 Require Import Tunnelingproof.
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 (** Tunneling preserves typing. *)
 

@@ -36,7 +36,7 @@ Module VSP := FSetProperties.Properties(VSet).
 
 Section PRESERVATION.
 
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 Variable prog: program.
 Variable tprog: program.
 Hypothesis TRANSF: transf_program prog = OK tprog.

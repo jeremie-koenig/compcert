@@ -418,6 +418,13 @@ Class ExtFunOps (external_function: Type) := {
   ef_reloads: external_function -> bool
 }.
 
+Class ExternalFunctions (external_function: Type)
+  `{ef_ops: ExtFunOps external_function} :=
+{
+}.
+
+Arguments ExternalFunctions external_function {ef_ops}.
+
 Inductive annot_arg : Type :=
   | AA_arg (ty: typ)
   | AA_int (n: int)
@@ -530,6 +537,9 @@ Local Instance ef_ops: ExtFunOps external_function := {
   ef_reloads := ef_reloads
 }.
 
+Local Instance ef_spec: ExternalFunctions external_function := {
+}.
+
 End EFImpl.
 
 (** Function definitions are the union of internal and external functions. *)
@@ -542,7 +552,7 @@ Arguments External {external_function ef_ops} [F] _.
 
 Section TRANSF_FUNDEF.
 
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 Variable A B: Type.
 Variable transf: A -> B.
 
@@ -556,7 +566,7 @@ End TRANSF_FUNDEF.
 
 Section TRANSF_PARTIAL_FUNDEF.
 
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 Variable A B: Type.
 Variable transf_partial: A -> res B.
 

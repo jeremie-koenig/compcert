@@ -27,7 +27,7 @@ Require Import Coloring.
 
 Section WITHEF.
 Import EFImpl.
-Existing Instance ef_ops.
+Existing Instances ef_ops ef_spec.
 
 (** * Correctness of the interference graph *)
 

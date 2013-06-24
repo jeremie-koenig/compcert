@@ -20,7 +20,7 @@ Require Import Conventions.
 Require Import Linear.
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 (** * Equations between slots and machine registers *)
 

@@ -21,7 +21,7 @@ Require Import Lineartyping.
 Require Import Conventions.
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 (** * Resource bounds for a function *)
 

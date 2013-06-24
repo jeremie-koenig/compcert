@@ -27,7 +27,7 @@ Require Import Linear.
 Require Import RRE.
 
 Section WITHMEM.
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 
 (** * Operations over equations *)
 

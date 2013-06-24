@@ -29,7 +29,7 @@ Require Import Locations.
 Require Import Conventions.
 
 Section WITHMEM.
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 
 (** * Abstract syntax *)
 
@@ -119,7 +119,7 @@ Inductive stackframe : Type :=
              (pc: node),        (**r program point in calling function *)
       stackframe.
 
-Inductive state `{mem_ops: Mem.MemOps mem} : Type :=
+Inductive state `{mem_ops: Mem.MemoryOps mem} : Type :=
   | State:
       forall (stack: list stackframe) (**r call stack *)
              (f: function)            (**r function currently executing *)

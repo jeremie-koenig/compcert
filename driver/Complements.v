@@ -33,10 +33,10 @@ Require Import Compiler.
 Require Import Errors.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hmem: Mem.MemoryStates}.
 
 Import EFImpl ECImpl.
-Local Existing Instances ef_ops ec_ops ec_spec.
+Local Existing Instances ef_ops ef_spec ec_ops ec_spec.
 
 (** * Preservation of whole-program behaviors *)
 

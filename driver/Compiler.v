@@ -87,7 +87,7 @@ Require Stackingproof.
 Require Asmgenproof.
 
 Import EFImpl Events.ECImpl.
-Local Existing Instances ef_ops ec_ops ec_spec.
+Local Existing Instances ef_ops ef_spec ec_ops ec_spec.
 
 (** Pretty-printers (defined in Caml). *)
 Parameter print_Clight: Clight.program -> unit.
@@ -105,7 +105,7 @@ Open Local Scope string_scope.
 (** * Composing the translation passes *)
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hmem: Mem.MemoryStates}.
 
 (** We first define useful monadic composition operators,
     along with funny (but convenient) notations. *)

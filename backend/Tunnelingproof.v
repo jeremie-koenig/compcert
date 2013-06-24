@@ -27,7 +27,7 @@ Require Import LTL.
 Require Import Tunneling.
 
 Section WITHMEM.
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 
 (** * Properties of the branch map computed using union-find. *)
 

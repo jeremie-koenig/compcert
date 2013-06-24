@@ -65,7 +65,7 @@ Require Import LTL.
 Module U := UnionFind.UF(PTree).
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 Definition record_goto (uf: U.t) (pc: node) (i: instruction) : U.t :=
   match i with

@@ -24,7 +24,7 @@ Require Import Ctypes.
 Require Import Cop.
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 (** ** Expressions *)
 

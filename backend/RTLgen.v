@@ -26,7 +26,7 @@ Require Import RTL.
 Open Local Scope string_scope.
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 (** * Translation environments and state *)
 

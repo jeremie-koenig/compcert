@@ -28,7 +28,7 @@ Open Local Scope cminorsel_scope.
 
 Section CMCONSTR.
 
-Context `{Hec: Events.ExtCallSpec}.
+Context `{Hec: Events.ExternalCalls}.
 Variable ge: genv.
 Variable sp: val.
 Variable e: env.

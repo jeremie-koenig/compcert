@@ -29,8 +29,8 @@ Section SPEC.
 
 Local Open Scope gensym_monad_scope.
 Import EFImpl.
-Existing Instance ef_ops.
-Context `{Hmem: Mem.MemSpec}.
+Existing Instances ef_ops ef_spec.
+Context `{Hmem: Mem.MemoryStates}.
 
 (** * Relational specification of the translation. *)
 

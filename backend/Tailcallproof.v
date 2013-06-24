@@ -28,7 +28,7 @@ Require Import Conventions.
 Require Import Tailcall.
 
 Section WITHEC.
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 
 (** * Syntactic properties of the code transformation *)
 

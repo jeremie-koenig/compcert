@@ -30,7 +30,7 @@ Require Import Conventions.
   accessed through [Lgetstack] and [Lsetstack] Linear instructions. *)
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 Section WT_INSTR.
 

@@ -33,7 +33,7 @@ Require Import Asmgenproof1.
 
 Section PRESERVATION.
 
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 Variable prog: Mach.program.
 Variable tprog: Asm.program.
 Hypothesis TRANSF: transf_program prog = Errors.OK tprog.

@@ -337,7 +337,7 @@ End REDUCE.
 (** * The static analysis *)
 
 Section WITHMEM.
-Context `{Hec: Events.ExtCallSpec}.
+Context `{Hec: Events.ExternalCalls}.
 
 (** We now define a notion of satisfiability of a numbering.  This semantic
   notion plays a central role in the correctness proof (see [CSEproof]),
@@ -395,7 +395,7 @@ End WITHMEM.
 Module Numbering.
   Definition t := numbering.
   Definition ge (n1 n2: numbering) : Prop :=
-    forall `(Hec: Events.ExtCallSpec) ge sp rs m, 
+    forall `(Hec: Events.ExternalCalls) ge sp rs m, 
     numbering_satisfiable ge sp rs m n2 ->
     numbering_satisfiable ge sp rs m n1.
   Definition top := empty_numbering.
@@ -415,7 +415,7 @@ End Numbering.
 Module Solver := BBlock_solver(Numbering).
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 (** The transfer function for the dataflow analysis returns the numbering
   ``after'' execution of the instruction at [pc], as a function of the
