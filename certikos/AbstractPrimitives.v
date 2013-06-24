@@ -5,7 +5,7 @@ Require Import LiftExtCall.
 Require Import AbstractData.
 
 Class AbstractPrimOps (mem data prim: Type)
-  `{mem_ops: Mem.MemOps mem}
+  `{mem_ops: Mem.MemoryOps mem}
   `{data_ops: AbstractDataOps data} :=
 {
   prim_sig (p: prim): signature;
@@ -15,7 +15,7 @@ Class AbstractPrimOps (mem data prim: Type)
 Class AbstractPrimitives (mem data prim: Type)
   `{prim_ops: AbstractPrimOps mem data prim} :=
 {
-  prim_mem :> Mem.MemSpec mem;
+  prim_mem :> Mem.MemoryStates mem;
   prim_abstract_data :> AbstractData data;
   prim_extcall_properties (p: prim):
     extcall_properties (prim_extcall_sem p) (prim_sig p)
@@ -35,11 +35,14 @@ Section EXTCALLS.
     ef_reloads p := false
   }.
 
+  Global Instance prim_ef_spec: ExternalFunctions prim := {
+  }.
+
   Global Instance prim_ec_ops: ExtCallOps (mem × data) prim := {
     external_call p := prim_extcall_sem p
   }.
 
-  Global Instance prim_ec_spec: ExtCallSpec (mem × data) prim := {
+  Global Instance prim_ec_spec: ExternalCalls (mem × data) prim := {
     external_call_spec p := prim_extcall_properties p
   }.
 End EXTCALLS.

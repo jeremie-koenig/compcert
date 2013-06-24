@@ -5,12 +5,12 @@ Require Import Monad.
 
 (** * Prerequisites *)
 
-Class LiftMemOps (W: Type -> Type) := {
+Class LiftMemoryOps (W: Type -> Type) := {
   liftmem_comonad_ops :> ComonadOps W;
   lift_empty {mem}: mem -> W mem
 }.
 
-Class LiftMem (W: Type -> Type) `{Wmemops: LiftMemOps W}: Prop := {
+Class LiftMem (W: Type -> Type) `{Wmemops: LiftMemoryOps W}: Prop := {
   liftmem_comonad :> Comonad W;
   lift_empty_extract {mem} (m: mem):
     extract (lift_empty m) = m
@@ -21,7 +21,7 @@ Class LiftMem (W: Type -> Type) `{Wmemops: LiftMemOps W}: Prop := {
 Section LIFT.
   Context `{HW: ComonadOps} `{HF: Functor} {mem: Type}.
 
-  (** Because [Mem.MemSpec] contains so many theorems, we need some
+  (** Because [Mem.MemoryStates] contains so many theorems, we need some
     systematic way to lift the memory operations on [W mem], so that
     the lifting of the theorems is convenient to automate.
 
@@ -49,13 +49,13 @@ Section LIFT.
 End LIFT.
 
 Section LIFTOPS.
-  Context W `{Wmemops: LiftMemOps W}.
-  Context mem `{mem_ops: Mem.MemOps mem}.
+  Context W `{Wmemops: LiftMemoryOps W}.
+  Context mem `{mem_ops: Mem.MemoryOps mem}.
 
   (** We can now use [lift] to define the operations of the comonadic
     memory states. *)
 
-  Global Instance liftmem_ops: Mem.MemOps (W mem) := {
+  Global Instance liftmem_ops: Mem.MemoryOps (W mem) := {
     empty :=
       lift_empty Mem.empty;
     nextblock wm :=
@@ -89,7 +89,7 @@ End LIFTOPS.
 
 (** * Lifting the properties *)
 
-(** Now we lift the properties listed in [Mem.MemSpec]: given a theorem
+(** Now we lift the properties listed in [Mem.MemoryStates]: given a theorem
   about [mem], we need to prove the equivalent theorem about [W mem]
   and the corresponding lifted operations it involves. To do this,
   we need some theorems about lift to help us rewrite our lifted goals
@@ -178,10 +178,10 @@ Section LIFTPROD.
   Qed.
 End LIFTPROD.
 
-(** ** Lifting [Mem.MemSpec] *)
+(** ** Lifting [Mem.MemoryStates] *)
 
 Section LIFTDERIVED.
-  Context `{HW: LiftMem} `{Hmem: Mem.MemSpec}.
+  Context `{HW: LiftMem} `{Hmem: Mem.MemoryStates}.
 
   (** Now we must come up with a suitable leaf tactic.
     The first step for proving a lifted theorem involving an
@@ -264,7 +264,7 @@ Hint Resolve
   lift_free_list
   : lift.
 
-(** For the fields of [Mem.MemOps], which are defined in terms
+(** For the fields of [Mem.MemoryOps], which are defined in terms
   of [lift] to begin with, we can use [simpl], making sure that
   we stop once we reach [lift]: *)
 
@@ -366,11 +366,11 @@ Hint Extern 10 => progress (autorewrite with lift in *): lift.
   Ltac peel Hf leaftac :=
     let recurse Hf := peel Hf leaftac in
     try lazymatch goal with
-      | _: Mem.MemOps ?mem |- forall (x: _), _ =>
+      | _: Mem.MemoryOps ?mem |- forall (x: _), _ =>
         let x := fresh x in peel_intro mem recurse Hf x
-      | _: Mem.MemOps ?mem |- exists (x: _), _ =>
+      | _: Mem.MemoryOps ?mem |- exists (x: _), _ =>
         let x := fresh x in peel_exists mem recurse Hf x
-      | _: Mem.MemOps ?mem |- { x: _ | _ } =>
+      | _: Mem.MemoryOps ?mem |- { x: _ | _ } =>
         let x := fresh x in peel_exists mem recurse Hf x
       | |- _ /\ _ =>
         peel_conj recurse Hf
@@ -392,13 +392,13 @@ Hint Extern 10 => progress (autorewrite with lift in *): lift.
     now lift_partial f.
 
 Section LIFTMEM.
-  Context W `{HW: LiftMem W} mem `{Hmem: Mem.MemSpec mem}.
+  Context W `{HW: LiftMem W} mem `{Hmem: Mem.MemoryStates mem}.
 
   Hint Immediate
     (lift_option_eq_preserves_context (W:=W))
     : lift.
 
-  Global Instance liftmem_spec: Mem.MemSpec (W mem).
+  Global Instance liftmem_spec: Mem.MemoryStates (W mem).
   Proof.
     esplit.
     lift Mem.nextblock_pos.

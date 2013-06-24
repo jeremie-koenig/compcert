@@ -26,7 +26,7 @@ Class AbstractData (data: Type) `{data_ops: AbstractDataOps data} := {
 
 Class MemWithDataOps (mem: Type -> Type) := {
   mwd_memops (data: Type) `{AbstractDataOps data} :>
-    Mem.MemOps (mem data);
+    Mem.MemoryOps (mem data);
   get_abstract_data `{data_ops: AbstractDataOps}:
     mem data -> data;
   put_abstract_data {data1 data2}:
@@ -37,7 +37,7 @@ Class MemWithDataOps (mem: Type -> Type) := {
 Class MemWithData (mem: Type -> Type) `{mem_ops: MemWithDataOps mem} := {
   mwd_mem :>
     forall data `{AbstractData data},
-    Mem.MemSpec (mem data);
+    Mem.MemoryStates (mem data);
   (** XXX: traditionaly for lenses, get_put and put_get are named
     the other way around. *)
   get_put_abstract_data {data1 data2}:
@@ -58,14 +58,14 @@ Infix "×" := prod (at level 40).
 Notation "(×  A )" := (fun X => X × A).
 
 Section WITHDATA.
-  Context mem `{Hmem: Mem.MemSpec mem}.
+  Context mem `{Hmem: Mem.MemoryStates mem}.
   Context data `{data_ops: AbstractData data}.
 
-  Global Instance data_liftmem_ops: LiftMemOps (× data) := {
+  Global Instance data_liftmem_ops: LiftMemoryOps (× data) := {
     lift_empty mem m := (m, empty_data)
   }.
 
-  Global Instance mwd_MEMOPS: Mem.MemOps (mem × data) :=
+  Global Instance mwd_MEMOPS: Mem.MemoryOps (mem × data) :=
     liftmem_ops (× data) mem.
 
   Global Instance data_liftmem: LiftMem (× data) := {}.
@@ -73,14 +73,14 @@ Section WITHDATA.
     reflexivity.
   Qed.
 
-  Global Instance mwd_MEM: Mem.MemSpec (mem × data) :=
+  Global Instance mwd_MEM: Mem.MemoryStates (mem × data) :=
     liftmem_spec (× data) mem.
 End WITHDATA.
 
 (** * The functor [(mem ×)] can be used for [MemWithData] *)
 
 Section OPERATIONS.
-  Context `{Hmem: Mem.MemSpec}.
+  Context `{Hmem: Mem.MemoryStates}.
 
   Global Instance prod_mwdops: MemWithDataOps (mem ×) := {
     mwd_memops data data_ops :=
@@ -95,7 +95,7 @@ End OPERATIONS.
 (** Theorems *)
 
 Section PROPERTIES.
-  Context `{Hmem: Mem.MemSpec}.
+  Context `{Hmem: Mem.MemoryStates}.
   Context {A} `{Aops: AbstractData A} {B} `{Bops: AbstractData B}.
 
   Theorem prod_get_put_abstract_data (m: mem × A) (b: B):
@@ -112,7 +112,7 @@ Section PROPERTIES.
   Qed.
 End PROPERTIES.
 
-Global Instance prod_mwd `{Mem.MemSpec}: MemWithData (mem ×) := {
+Global Instance prod_mwd `{Mem.MemoryStates}: MemWithData (mem ×) := {
   mwd_mem data data_ops Hdata :=
     mwd_MEM mem data;
   get_put_abstract_data data1 data2 data1_ops Hdata1 data2_ops Hdata2 :=
@@ -126,7 +126,7 @@ Global Instance prod_mwd `{Mem.MemSpec}: MemWithData (mem ×) := {
 Require Import Globalenvs.
 
 Section GLOBALENVS.
-  Context `{Hmem: Mem.MemSpec} `{data_ops: AbstractData}.
+  Context `{Hmem: Mem.MemoryStates} `{data_ops: AbstractData}.
 
   Lemma lift_option_abstract_data:
     forall (f: mem -> option mem) (m m': mem × data),
@@ -160,7 +160,7 @@ Section GLOBALENVS.
 End GLOBALENVS.
 
 Section GLOBALENVS_HET.
-  Context `{Hmem: Mem.MemSpec} F V (ge: Genv.t F V).
+  Context `{Hmem: Mem.MemoryStates} F V (ge: Genv.t F V).
 
   Hint Resolve lift_option_abstract_data: lift.
   Hint Rewrite @lift_store_init_data using typeclasses eauto: lift.

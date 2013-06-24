@@ -6,7 +6,7 @@ Require Import Monad.
 Require Import LiftMem.
 
 Section LIFTEXTCALL.
-  Context `{Hec: ExtCallSpec}.
+  Context `{Hec: ExternalCalls}.
   Context `{HW: LiftMem}.
 
   Inductive powerset_lift {X Y} (f: X -> Y) (pX: X -> Prop): Y -> Prop :=
@@ -65,7 +65,7 @@ Section LIFTEXTCALL.
 
   Hint Resolve lift_external_call: lift.
 
-  Global Instance liftmem_ec_spec: ExtCallSpec (W mem) external_function := {}.
+  Global Instance liftmem_ec_spec: ExternalCalls (W mem) external_function := {}.
   Proof.
     intro ef; split.
     lift (ec_well_typed (external_call_spec ef)).

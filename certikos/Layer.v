@@ -9,13 +9,13 @@ Require Import LiftExtCall.
 (** * The [Layer] interface *)
 
 Class Layer mem external_function data prim
-  `{mem_ops: !Mem.MemOps mem}
+  `{mem_ops: !Mem.MemoryOps mem}
   `{ef_ops: !ExtFunOps external_function}
   `{ec_ops: !ExtCallOps mem external_function}
   `{data_ops: !AbstractDataOps data}
   `{prim_ops: !AbstractPrimOps mem data prim} :=
 {
-  layer_extfun_spec :> ExtCallSpec mem external_function;
+  layer_extfun_spec :> ExternalCalls mem external_function;
   layer_abstract_prim :> AbstractPrimitives mem data prim
 }.
 
@@ -28,10 +28,12 @@ Class Layer mem external_function data prim
 Section EFPLUS.
   Context {ef1 ef2 mem: Type}.
   Context `{ef1_ops: !ExtFunOps ef1} `{ef2_ops: !ExtFunOps ef2}.
-  Context `{mem_ops: !Mem.MemOps mem}.
+  Context `{mem_ops: !Mem.MemoryOps mem}.
   Context `{ec1_ops: !ExtCallOps mem ef1} `{ec2_ops: !ExtCallOps mem ef2}.
-  Context `{Hmem: !Mem.MemSpec mem}.
-  Context `{Hec1: !ExtCallSpec mem ef1} `{Hec2: !ExtCallSpec mem ef2}.
+(* FIXME: unnecessary?
+  Context `{Hmem: !Mem.MemoryStates mem}.
+ *)
+  Context `{Hec1: !ExternalCalls mem ef1} `{Hec2: !ExternalCalls mem ef2}.
 
   Instance efplus_ef_ops: ExtFunOps (ef1 + ef2) := {
     ef_sig ef :=
@@ -51,6 +53,8 @@ Section EFPLUS.
       end
   }.
 
+  Instance efplus_ef_spec: ExternalFunctions (ef1 + ef2).
+
   Instance efplus_ec_ops: ExtCallOps mem (ef1 + ef2) := {
     external_call ef :=
       match ef with
@@ -59,7 +63,7 @@ Section EFPLUS.
       end
   }.
 
-  Instance efplus_ec_spec: ExtCallSpec mem (ef1 + ef2) := {
+  Instance efplus_ec_spec: ExternalCalls mem (ef1 + ef2) := {
     external_call_spec ef :=
       match ef with
         | inl ef => external_call_spec ef
@@ -76,7 +80,7 @@ Section LAYER.
   Instance: ExtCallOps (mem × data) external_function :=
     liftmem_ec_ops.
 
-  Instance: ExtCallSpec (mem × data) external_function :=
+  Instance: ExternalCalls (mem × data) external_function :=
     liftmem_ec_spec.
 
   Global Instance layer_ef_ops:
@@ -88,6 +92,6 @@ Section LAYER.
       efplus_ec_ops.
 
   Global Instance layer_ec_spec:
-    ExtCallSpec (mem × data) (external_function + prim) :=
+    ExternalCalls (mem × data) (external_function + prim) :=
       efplus_ec_spec.
 End LAYER.
