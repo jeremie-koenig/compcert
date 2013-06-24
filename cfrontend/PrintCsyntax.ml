@@ -21,7 +21,7 @@ open Camlcoq
 open Datatypes
 open Values
 open AST
-open AST.EFImpl
+open ExtFunImpl
 open Globalenvs
 open Ctypes
 open Cop

@@ -92,7 +92,7 @@ Require Import InterfGraph.
 *)
 
 Section WITHEF.
-Import EFImpl.
+Require Import ExtFunImpl.
 Existing Instances ef_ops ef_spec.
 
 Definition add_interf_live

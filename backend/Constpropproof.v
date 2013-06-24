@@ -32,7 +32,7 @@ Require Import ConstpropOpproof.
 
 Section PRESERVATION.
 
-Import EFImpl ECImpl.
+Require Import ExtFunImpl ExtCallImpl.
 Existing Instances ef_ops ef_spec ec_ops ec_spec.
 Context `{Hmem: Mem.MemoryStates}.
 Variable prog: program.

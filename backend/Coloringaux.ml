@@ -13,7 +13,7 @@
 open Camlcoq
 open Datatypes
 open AST
-open AST.EFImpl
+open ExtFunImpl
 open Maps
 open Registers
 open Machregs

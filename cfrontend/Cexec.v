@@ -58,7 +58,7 @@ Notation " 'check' A ; B" := (if A then B else nil)
   : list_monad_scope.
 
 Section WITHEF.
-Import EFImpl ECImpl.
+Require Import ExtFunImpl ExtCallImpl.
 Existing Instances ef_ops ef_spec ec_ops ec_spec.
 
 Definition is_val (a: expr) : option (val * type) :=

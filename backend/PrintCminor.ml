@@ -256,7 +256,7 @@ let print_function p id f =
 
 let print_extfun p id ef =
   fprintf p "@[<v 0>extern @[<hov 2>\"%s\" =@ %s :@ %a@]@ "
-    (extern_atom id) (name_of_external ef) print_sig (ef_sig EFImpl.ef_ops ef)
+    (extern_atom id) (name_of_external ef) print_sig (ef_sig ExtFunImpl.ef_ops ef)
 
 let print_init_data p = function
   | Init_int8 i -> fprintf p "int8 %ld" (camlint_of_coqint i)

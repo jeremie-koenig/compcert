@@ -35,7 +35,7 @@ Require Import Coloringproof.
 Require Import Allocation.
 
 Section WITHEF.
-Import EFImpl.
+Require Import ExtFunImpl.
 Existing Instances ef_ops ef_spec.
 
 (** * Properties of allocated locations *)
@@ -119,7 +119,7 @@ Require Import LTL.
 Module RegsetP := Properties(Regset).
 
 Section WITHMEM.
-Import EFImpl ECImpl.
+Require Import ExtFunImpl ExtCallImpl.
 Existing Instances ef_ops ef_spec ec_ops ec_spec.
 Context `{Hmem: Mem.MemoryStates}.
 

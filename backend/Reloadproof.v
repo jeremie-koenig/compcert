@@ -31,7 +31,7 @@ Require Import Parallelmove.
 Require Import Reload.
 
 Section WITHMEM.
-Import EFImpl ECImpl.
+Require Import ExtFunImpl ExtCallImpl.
 Existing Instances ef_ops ef_spec ec_ops ec_spec.
 Context `{Hmem: Mem.MemoryStates}.
 

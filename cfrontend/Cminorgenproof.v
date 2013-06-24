@@ -37,7 +37,7 @@ Open Local Scope error_monad_scope.
 Section TRANSLATION.
 
 Context `{Hmem: Mem.MemoryStates}.
-Import EFImpl ECImpl.
+Require Import ExtFunImpl ExtCallImpl.
 Existing Instances ef_ops ef_spec ec_ops ec_spec.
 
 Variable prog: Csharpminor.program.

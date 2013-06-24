@@ -28,7 +28,7 @@ Require Import SimplExpr.
 Section SPEC.
 
 Local Open Scope gensym_monad_scope.
-Import EFImpl.
+Require Import ExtFunImpl.
 Existing Instances ef_ops ef_spec.
 Context `{Hmem: Mem.MemoryStates}.
 

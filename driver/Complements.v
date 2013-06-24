@@ -35,7 +35,7 @@ Require Import Errors.
 Section WITHMEM.
 Context `{Hmem: Mem.MemoryStates}.
 
-Import EFImpl ECImpl.
+Require Import ExtFunImpl ExtCallImpl.
 Local Existing Instances ef_ops ef_spec ec_ops ec_spec.
 
 (** * Preservation of whole-program behaviors *)

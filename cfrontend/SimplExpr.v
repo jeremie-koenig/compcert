@@ -91,7 +91,7 @@ Definition gensym (ty: type): mon ident :=
         (Ple_succ (gen_next g)).
 
 Section WITHEF.
-Import EFImpl.
+Require Import ExtFunImpl.
 Existing Instances ef_ops ef_spec.
 
 (** Construct a sequence from a list of statements.  To facilitate the

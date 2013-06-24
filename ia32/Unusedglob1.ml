@@ -14,7 +14,7 @@
 
 open Datatypes
 open AST
-open AST.EFImpl
+open ExtFunImpl
 open Asm
 
 let referenced_addr (Addrmode(base, ofs, const)) =

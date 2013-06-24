@@ -35,7 +35,7 @@ Open Local Scope string_scope.
 Open Local Scope error_monad_scope.
 
 Section WITHEF.
-Import EFImpl.
+Require Import ExtFunImpl.
 Existing Instances ef_ops ef_spec.
 
 (** * Csharpminor constructors *)

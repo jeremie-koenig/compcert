@@ -86,7 +86,7 @@ Require RREtyping.
 Require Stackingproof.
 Require Asmgenproof.
 
-Import EFImpl Events.ECImpl.
+Require Import ExtFunImpl ExtCallImpl.
 Local Existing Instances ef_ops ef_spec ec_ops ec_spec.
 
 (** Pretty-printers (defined in Caml). *)

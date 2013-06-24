@@ -108,7 +108,7 @@ let print_globdef pp (id, gd) =
   | Gfun(Internal f) -> print_function pp id f
   | _ -> ()
 
-let print_program pp (prog: EFImpl.external_function RTL.program) =
+let print_program pp (prog: ExtFunImpl.external_function RTL.program) =
   List.iter (print_globdef pp) prog.prog_defs
 
 let print_if optdest prog =
