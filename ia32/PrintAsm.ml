@@ -17,7 +17,7 @@ open Datatypes
 open Camlcoq
 open Sections
 open AST
-open AST.EFImpl
+open ExtFunImpl
 open Memdata
 open Asm
 

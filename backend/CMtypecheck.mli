@@ -16,6 +16,6 @@
 exception Error of string
 
 val type_program:
-  AST.EFImpl.external_function Cminor.program ->
-  AST.EFImpl.external_function Cminor.program
+  ExtFunImpl.external_function Cminor.program ->
+  ExtFunImpl.external_function Cminor.program
 

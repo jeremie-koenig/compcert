@@ -116,7 +116,7 @@ Module RegsetLat := LFSet(Regset).
 Module DS := Backward_Dataflow_Solver(RegsetLat)(NodeSetBackward).
 
 Section WITHEF.
-Import EFImpl.
+Require Import ExtFunImpl.
 Existing Instances ef_ops ef_spec.
 
 Definition analyze (f: RTL.function): option (PMap.t Regset.t) :=

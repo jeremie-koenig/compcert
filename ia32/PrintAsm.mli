@@ -11,4 +11,4 @@
 (* *********************************************************************)
 
 val print_program:
-  out_channel -> AST.EFImpl.external_function Asm.program -> unit
+  out_channel -> ExtFunImpl.external_function Asm.program -> unit

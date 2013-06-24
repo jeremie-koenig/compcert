@@ -15,7 +15,7 @@
 open Printf
 open Camlcoq
 open AST
-open AST.EFImpl
+open ExtFunImpl
 
 let name_of_type = function Tint -> "int" | Tfloat -> "float"
 

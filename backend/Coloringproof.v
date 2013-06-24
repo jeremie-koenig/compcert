@@ -26,7 +26,7 @@ Require Import InterfGraph.
 Require Import Coloring.
 
 Section WITHEF.
-Import EFImpl.
+Require Import ExtFunImpl.
 Existing Instances ef_ops ef_spec.
 
 (** * Correctness of the interference graph *)

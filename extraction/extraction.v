@@ -21,6 +21,7 @@ Require Coloring.
 Require Allocation.
 Require Compiler.
 Require Memimpl.
+Require ExtCallImpl.
 
 (* Standard lib *)
 Require Import ExtrOcamlBasic.
@@ -108,5 +109,5 @@ Separate Extraction
    Cexec.do_initial_state Cexec.do_step Cexec.at_final_state
    Initializers.transl_init Initializers.constval
    Csyntax.Eindex Csyntax.Epreincr Memimpl.mem_ops
-   Events.ECImpl.ec_ops.
+   ExtCallImpl.ec_ops.
 

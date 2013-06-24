@@ -21,7 +21,7 @@ open Builtins
 
 open Camlcoq
 open AST
-open AST.EFImpl
+open ExtFunImpl
 open Values
 open Ctypes
 open Cop
