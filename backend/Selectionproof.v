@@ -31,7 +31,7 @@ Require Import SelectOpproof.
 Open Local Scope cminorsel_scope.
 
 Section WITHMEM.
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 
 (** * Correctness of the instruction selection functions for expressions *)
 

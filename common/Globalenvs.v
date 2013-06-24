@@ -56,7 +56,7 @@ Set Implicit Arguments.
 (** Auxiliary function for initialization of global variables. *)
 
 Section STORE_ZEROS.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hmem: Mem.MemoryStates}.
 
 Function store_zeros (m: mem) (b: block) (p: Z) (n: Z) {wf (Zwf 0) n}: option mem :=
   if zle n 0 then Some m else
@@ -80,7 +80,7 @@ Module Genv.
 (** * Global environments *)
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hmem: Mem.MemoryStates}.
 
 Section GENV.
 

@@ -29,7 +29,7 @@ Require Import Op.
 Require Import Registers.
 
 Section WITHMEM.
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 
 (** * Abstract syntax *)
 
@@ -170,7 +170,7 @@ Inductive stackframe : Type :=
              (rs: regset),         (**r register state in calling function *)
       stackframe.
 
-Inductive state `{mem_ops: Mem.MemOps mem} : Type :=
+Inductive state `{mem_ops: Mem.MemoryOps mem} : Type :=
   | State:
       forall (stack: list stackframe) (**r call stack *)
              (f: function)            (**r current function *)

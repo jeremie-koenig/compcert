@@ -73,7 +73,7 @@ Inductive stmt `{ef_ops: ExtFunOps} : Type :=
   | Sgoto: label -> stmt.
 
 Section WITHMEM.
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 
 Record function : Type := mkfunction {
   fn_sig: signature;
@@ -114,7 +114,7 @@ Inductive cont: Type :=
 
 (** States *)
 
-Inductive state `{mem_ops: Mem.MemOps mem}: Type :=
+Inductive state `{mem_ops: Mem.MemoryOps mem}: Type :=
   | State:                              (**r execution within a function *)
       forall (f: function)              (**r currently executing function  *)
              (s: stmt)                  (**r statement under consideration *)

@@ -59,7 +59,7 @@ Notation " 'check' A ; B" := (if A then B else nil)
 
 Section WITHEF.
 Import EFImpl ECImpl.
-Existing Instances ef_ops ec_ops ec_spec.
+Existing Instances ef_ops ef_spec ec_ops ec_spec.
 
 Definition is_val (a: expr) : option (val * type) :=
   match a with
@@ -101,7 +101,7 @@ Defined.
 (** * Events, volatile memory accesses, and external functions. *)
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hmem: Mem.MemoryStates}.
 
 Section EXEC.
 

@@ -85,7 +85,7 @@ Inductive perm_kind: Type :=
 
 Module Mem.
 
-Class MemOps (mem: Type) := {
+Class MemoryOps (mem: Type) := {
 
 nullptr: block := 0;
 
@@ -206,7 +206,7 @@ inject_neutral: forall (thr: block) (m: mem), Prop
 
 Section MEMOPS_DEFS.
 
-Context `{mem_ops: MemOps}.
+Context `{mem_ops: MemoryOps}.
 
 (** Block identifiers below [nextblock] are said to be valid, meaning
   that they have been allocated previously.  Block identifiers above
@@ -243,7 +243,7 @@ Definition inj_offset_aligned (delta: Z) (size: Z) : Prop :=
 Definition flat_inj (thr: block) : meminj :=
   fun (b: block) => if zlt b thr then Some(b, 0) else None.
 
-Class MemSpec (mem: Type) `{mem_ops: MemOps mem} := {
+Class MemoryStates (mem: Type) `{mem_ops: MemoryOps mem} := {
 
 (** * Permissions, block validity, access validity, and bounds *)
 

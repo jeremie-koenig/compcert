@@ -201,7 +201,7 @@ Inductive instruction `{ef_ops: ExtFunOps}: Type :=
   | Pannot(ef: external_function)(args: list annot_param).
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 Definition code := list instruction.
 Definition function := code.
@@ -227,7 +227,7 @@ Notation "a # b" := (a b) (at level 1, only parsing).
 Notation "a # b <- c" := (Pregmap.set b c a) (at level 1, b at next level).
 
 Section WITHMEM.
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 
 Definition regset := Pregmap.t val.
 Definition genv := Genv.t fundef unit.
@@ -421,7 +421,7 @@ Definition nextinstr (rs: regset) :=
 Definition nextinstr_nf (rs: regset) : regset :=
   nextinstr (undef_regs (CR ZF :: CR CF :: CR PF :: CR SOF :: nil) rs).
 
-Definition goto_label `{Mem.MemOps mem} (c: code) (lbl: label) (rs: regset) (m: mem) :=
+Definition goto_label `{Mem.MemoryOps mem} (c: code) (lbl: label) (rs: regset) (m: mem) :=
   match label_pos lbl 0 c with
   | None => Stuck
   | Some pos =>
@@ -749,7 +749,7 @@ Definition annot_arguments
 
 (** Execution of the instruction at [rs#PC]. *)
 
-Inductive state `{Mem.MemOps mem}: Type :=
+Inductive state `{Mem.MemoryOps mem}: Type :=
   | State: regset -> mem -> state.
 
 Inductive step: state -> trace -> state -> Prop :=

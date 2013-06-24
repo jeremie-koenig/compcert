@@ -25,7 +25,7 @@ Require Import Conventions.
   of LTL. *)
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 Section WT_INSTR.
 

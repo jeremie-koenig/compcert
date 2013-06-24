@@ -36,7 +36,7 @@ Require Import Allocation.
 
 Section WITHEF.
 Import EFImpl.
-Existing Instance ef_ops.
+Existing Instances ef_ops ef_spec.
 
 (** * Properties of allocated locations *)
 
@@ -120,8 +120,8 @@ Module RegsetP := Properties(Regset).
 
 Section WITHMEM.
 Import EFImpl ECImpl.
-Existing Instances ef_ops ec_ops ec_spec.
-Context `{Hmem: Mem.MemSpec}.
+Existing Instances ef_ops ef_spec ec_ops ec_spec.
+Context `{Hmem: Mem.MemoryStates}.
 
 Section AGREE.
 

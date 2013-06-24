@@ -32,7 +32,7 @@ Require Import Ctypes.
 Require Import Cop.
 
 Section WITHMEM.
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 
 (** * Abstract syntax *)
 
@@ -320,7 +320,7 @@ End WITHMEM.
 
 Section SEMANTICS.
 
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 Variable ge: genv.
 
 (** [type_of_global b] returns the type of the global variable or function
@@ -459,7 +459,7 @@ Definition is_call_cont (k: cont) : Prop :=
 
 (** States *)
 
-Inductive state `{mem_ops: Mem.MemOps mem}: Type :=
+Inductive state `{mem_ops: Mem.MemoryOps mem}: Type :=
   | State
       (f: function)
       (s: statement)
@@ -672,7 +672,7 @@ Inductive final_state: state -> int -> Prop :=
 End SEMANTICS.
 
 Section WITHMEM'.
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 
 (** The two semantics for function parameters.  First, parameters as local variables. *)
 

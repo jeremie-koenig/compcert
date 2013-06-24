@@ -26,8 +26,8 @@ Require Import Csyntax.
 Open Scope error_monad_scope.
 
 Section WITHMEM.
-Context `{ef_ops: ExtFunOps}.
-Context `{Hmem: Mem.MemSpec}.
+Context `{Hef: ExternalFunctions}.
+Context `{Hmem: Mem.MemoryStates}.
 
 (** * Evaluation of compile-time constant expressions *)
 
@@ -54,7 +54,7 @@ Definition do_cast (v: val) (t1 t2: type) : res val :=
   | None => Error(msg "undefined cast")
   end.
 
-Fixpoint constval `{mem_ops: Mem.MemOps mem} (a: expr) : res val :=
+Fixpoint constval `{mem_ops: Mem.MemoryOps mem} (a: expr) : res val :=
   match a with
   | Eval v ty =>
       match v with
@@ -172,7 +172,7 @@ Definition padding (frm to: Z) : list init_data :=
 
 End WITHMEM.
 
-Fixpoint transl_init `{ef_ops: ExtFunOps} `{mem_ops: Mem.MemOps}
+Fixpoint transl_init `{ef_ops: ExtFunOps} `{mem_ops: Mem.MemoryOps}
                      (ty: type) (i: initializer)
                      {struct i} : res (list init_data) :=
   match i, ty with
@@ -194,7 +194,7 @@ Fixpoint transl_init `{ef_ops: ExtFunOps} `{mem_ops: Mem.MemOps}
       Error (msg "wrong type for compound initializer")
   end
 
-with transl_init_array `{ef_ops: ExtFunOps} `{mem_ops: Mem.MemOps}
+with transl_init_array `{ef_ops: ExtFunOps} `{mem_ops: Mem.MemoryOps}
                        (ty: type) (il: initializer_list) (sz: Z)
                        {struct il} : res (list init_data) :=
   match il with
@@ -208,7 +208,7 @@ with transl_init_array `{ef_ops: ExtFunOps} `{mem_ops: Mem.MemOps}
       OK (d1 ++ d2)
   end
 
-with transl_init_struct `{ef_ops: ExtFunOps} `{mem_ops: Mem.MemOps}
+with transl_init_struct `{ef_ops: ExtFunOps} `{mem_ops: Mem.MemoryOps}
                         (id: ident) (ty: type)
                         (fl: fieldlist) (il: initializer_list) (pos: Z)
                         {struct il} : res (list init_data) :=
@@ -224,7 +224,7 @@ with transl_init_struct `{ef_ops: ExtFunOps} `{mem_ops: Mem.MemOps}
       Error (msg "wrong number of elements in struct initializer")
   end
 
-with transl_init_union `{ef_ops: ExtFunOps} `{mem_ops: Mem.MemOps}
+with transl_init_union `{ef_ops: ExtFunOps} `{mem_ops: Mem.MemoryOps}
                        (id: ident) (ty ty1: type) (il: initializer_list)
                        {struct il} : res (list init_data) :=
   match il with

@@ -29,7 +29,7 @@ Require Import Conventions.
   i.e. either non-temporary registers or [Local] stack locations. *)
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 Section WT_INSTR.
 

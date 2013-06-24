@@ -436,7 +436,7 @@ Definition build_compilenv `{ef_ops: ExtFunOps} (f: Csharpminor.function) : comp
   overflow machine arithmetic and lead to incorrect code. *)
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 Definition transl_funbody
       (cenv: compilenv) (stacksize: Z) (f: Csharpminor.function): res function :=

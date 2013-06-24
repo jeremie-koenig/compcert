@@ -21,7 +21,7 @@ Require Import RTL.
 Require Import Conventions.
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 (** An [Icall] instruction that stores its result in register [rreg]
   can be turned into a tail call if:

@@ -35,7 +35,7 @@ Require Import Conventions.
   well-typed. *)
 
 Import EFImpl.
-Local Existing Instance ef_ops.
+Local Existing Instances ef_ops ef_spec.
 
 Section TYPING_FUNCTION.
 

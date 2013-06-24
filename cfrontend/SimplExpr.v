@@ -92,7 +92,7 @@ Definition gensym (ty: type): mon ident :=
 
 Section WITHEF.
 Import EFImpl.
-Existing Instance ef_ops.
+Existing Instances ef_ops ef_spec.
 
 (** Construct a sequence from a list of statements.  To facilitate the
    proof, the sequence is nested to the left and starts with a [Sskip]. *)

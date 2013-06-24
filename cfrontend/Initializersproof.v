@@ -32,7 +32,7 @@ Require Import Initializers.
 Open Scope error_monad_scope.
 
 Section WITHMEM.
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 
 Section SOUNDNESS.
 

@@ -25,7 +25,7 @@ Require Import Conventions.
 Require Import Stacklayout.
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 (** * Layout of activation records *)
 

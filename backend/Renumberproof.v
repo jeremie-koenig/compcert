@@ -26,7 +26,7 @@ Require Import Renumber.
 
 Section PRESERVATION.
 
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 Variable prog: program.
 Let tprog := transf_program prog.
 Let ge := Genv.globalenv prog.

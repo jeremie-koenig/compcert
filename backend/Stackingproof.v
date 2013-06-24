@@ -35,7 +35,7 @@ Require Import Stacklayout.
 Require Import Stacking.
 
 Section WITHMEM.
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 
 (** * Properties of frame offsets *)
 

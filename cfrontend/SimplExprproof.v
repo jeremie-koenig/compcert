@@ -34,8 +34,8 @@ Require Import SimplExprspec.
 Section PRESERVATION.
 
 Import EFImpl ECImpl.
-Existing Instances ef_ops ec_ops ec_spec.
-Context `{Hmem: Mem.MemSpec}.
+Existing Instances ef_ops ef_spec ec_ops ec_spec.
+Context `{Hmem: Mem.MemoryStates}.
 Variable prog: Csyntax.program.
 Variable tprog: Clight.program.
 Hypothesis TRANSL: transl_program prog = OK tprog.

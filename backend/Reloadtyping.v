@@ -27,7 +27,7 @@ Require Import Reload.
 Require Import Reloadproof.
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 (** * Typing Linear constructors *)
 

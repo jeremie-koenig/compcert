@@ -50,7 +50,7 @@ Require Stacklayout.
   made explicit. *)
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 Definition label := positive.
 
@@ -131,10 +131,10 @@ store in the reserved location.
 Definition chunk_of_type (ty: typ) :=
   match ty with Tint => Mint32 | Tfloat => Mfloat64al32 end.
 
-Definition load_stack `{Mem.MemOps} (m: mem) (sp: val) (ty: typ) (ofs: int) :=
+Definition load_stack `{Mem.MemoryOps} (m: mem) (sp: val) (ty: typ) (ofs: int) :=
   Mem.loadv (chunk_of_type ty) m (Val.add sp (Vint ofs)).
 
-Definition store_stack `{Mem.MemOps} (m: mem) (sp: val) (ty: typ) (ofs: int) (v: val) :=
+Definition store_stack `{Mem.MemoryOps} (m: mem) (sp: val) (ty: typ) (ofs: int) (v: val) :=
   Mem.storev (chunk_of_type ty) m (Val.add sp (Vint ofs)) v.
 
 Module RegEq.
@@ -185,7 +185,7 @@ Definition undef_op (op: operation) (rs: regset) :=
 Definition undef_setstack (rs: regset) := undef_move rs.
 
 Section WITHMEM.
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 
 Definition is_label (lbl: label) (instr: instruction) : bool :=
   match instr with
@@ -270,7 +270,7 @@ Inductive stackframe: Type :=
              (c: code),       (**r program point in calling function *)
       stackframe.
 
-Inductive state `{mem_ops: Mem.MemOps mem}: Type :=
+Inductive state `{mem_ops: Mem.MemoryOps mem}: Type :=
   | State:
       forall (stack: list stackframe)  (**r call stack *)
              (f: block)                (**r pointer to current function *)

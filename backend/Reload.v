@@ -25,7 +25,7 @@ Require Import Linear.
 Open Local Scope error_monad_scope.
 
 Section WITHEF.
-Context `{ef_ops: ExtFunOps}.
+Context `{Hef: ExternalFunctions}.
 
 (** * Spilling and reloading *)
 

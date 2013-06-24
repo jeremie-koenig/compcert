@@ -32,8 +32,8 @@ Require Import Cshmgen.
 
 Section WITHMEM.
 Import EFImpl ECImpl.
-Existing Instances ef_ops ec_ops ec_spec.
-Context `{Hmem: Mem.MemSpec}.
+Existing Instances ef_ops ef_spec ec_ops ec_spec.
+Context `{Hmem: Mem.MemoryStates}.
 
 (** * Properties of operations over types *)
 

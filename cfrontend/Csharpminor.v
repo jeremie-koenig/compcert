@@ -25,7 +25,7 @@ Require Cminor.
 Require Import Smallstep.
 
 Section WITHMEM1.
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 
 (** Abstract syntax *)
 
@@ -146,7 +146,7 @@ Inductive cont: Type :=
 
 (** States *)
 
-Inductive state `{mem_ops: Mem.MemOps mem}: Type :=
+Inductive state `{mem_ops: Mem.MemoryOps mem}: Type :=
   | State:                      (**r Execution within a function *)
       forall (f: function)              (**r currently executing function  *)
              (s: stmt)                  (**r statement under consideration *)
@@ -238,7 +238,7 @@ with find_label_ls `{ef_ops: ExtFunOps} (lbl: label) (sl: lbl_stmt) (k: cont)
   end.
 
 Section WITHMEM2.
-Context `{Hec: ExtCallSpec}.
+Context `{Hec: ExternalCalls}.
 
 (** Evaluation of operator applications. *)
 
