@@ -88,7 +88,7 @@ Section OPERATIONS.
     get_abstract_data data data_ops :=
       snd;
     put_abstract_data data1 data2 data1_ops data2_ops :=
-      fun m b => set b m
+      fun m b => put b m
   }.
 End OPERATIONS.
 

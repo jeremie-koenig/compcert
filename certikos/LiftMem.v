@@ -35,7 +35,7 @@ Section LIFT.
     the following: *)
 
   Definition lift (f: mem -> F mem) (wm: W mem) :=
-    fmap (fun m' => set m' wm) (f (extract wm)).
+    fmap (fun m' => put m' wm) (f (extract wm)).
 
   (** Here are some basic theorems about [lift] with any functor. *)
 
@@ -116,14 +116,14 @@ Section LIFTOPTION.
 
   Lemma lift_option_eq_set_iff (f: mem -> option mem):
     forall (wm: W mem) (w': mem),
-      lift f wm = Some (set w' wm) <->
+      lift f wm = Some (put w' wm) <->
       f (extract wm) = Some w'.
   Proof.
     simpl; intros.
     split; destruct (f (extract wm)); try discriminate;
     intro H; inversion H.
     - apply f_equal.
-      eapply comonad_set_eq.
+      eapply comonad_put_eq.
       eassumption.
     - reflexivity.
   Qed.
@@ -131,7 +131,7 @@ Section LIFTOPTION.
   Lemma lift_option_eq_set (f: mem -> option mem):
     forall (wm: W mem) (m': mem),
       f (extract wm) = Some m' ->
-      lift f wm = Some (set m' wm).
+      lift f wm = Some (put m' wm).
   Proof.
     apply lift_option_eq_set_iff.
   Qed.
@@ -172,7 +172,7 @@ Section LIFTPROD.
 
   Theorem lift_prod_eq_set (f: mem -> (fun X => X * A) mem) wm m' a:
     f (extract wm) = (m', a) ->
-    lift f wm = (set m' wm, a).
+    lift f wm = (put m' wm, a).
   Proof.
     intro H; simpl.
     rewrite H; clear H; simpl.
@@ -218,7 +218,7 @@ Section LIFTDERIVED.
     intros; simpl in *.
     - inversion H; congruence.
     - destruct (Mem.free (extract wm) b lo hi); try discriminate.
-      rewrite <- (IHl (set m wm) wm').
+      rewrite <- (IHl (put m wm) wm').
       * autorewrite with comonad.
         reflexivity.
       * assumption.
@@ -285,7 +285,7 @@ Hint Resolve
   : lift.
 
 (* Post-process lift_?_eq_set *)
-Hint Extern 10 => rewrite !comonad_extract_set in *: lift.
+Hint Extern 10 => rewrite !comonad_extract_put in *: lift.
 
 (** For the premises we need to apply them explicitely. *)
 
@@ -295,11 +295,11 @@ Ltac lift_premise :=
       eapply lift_free_list in H
     | [ H: lift ?f ?wm = Some ?b |- _ ] =>
       eapply lift_option_eq in H
-    | [ H: lift ?f ?wm = Some (set ?m' ?wm) |- _ ] =>
+    | [ H: lift ?f ?wm = Some (put ?m' ?wm) |- _ ] =>
       eapply lift_option_eq_set in H
     | [ H: lift ?f ?wm = (?m, ?x) |- _ ] =>
       eapply lift_prod_eq in H
-    | [ H: lift ?f ?wm = (set ?m' ?wm, ?a) |- _ ] =>
+    | [ H: lift ?f ?wm = (put ?m' ?wm, ?a) |- _ ] =>
       eapply lift_prod_eq_set in H
   end.
 
@@ -353,7 +353,7 @@ Hint Extern 10 => progress (autorewrite with lift in *): lift.
     destruct Hf as [x Hf'];
     let T := type of x in
     match T with
-      | mem => eexists (set x _)
+      | mem => eexists (put x _)
       | _ => exists x
     end;
     recurse Hf'.

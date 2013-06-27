@@ -53,7 +53,7 @@ End FUNCTOR.
 Section THEORY.
   Context `{HW: Comonad}.
 
-  Definition set {A B} (x: B): W A -> W B :=
+  Definition put {A B} (x: B): W A -> W B :=
     extend (const x).
 
   Theorem comonad_extend_eq {A B} (f g: W A -> B) (w: W A):
@@ -65,41 +65,41 @@ Section THEORY.
     assumption.
   Qed.
 
-  Theorem comonad_set_eq {A B} (x y: B) (w: W A):
-    set x w = set y w <-> x = y.
+  Theorem comonad_put_eq {A B} (x y: B) (w: W A):
+    put x w = put y w <-> x = y.
   Proof.
     split.
     - apply comonad_extend_eq.
     - intro; apply f_equal2; trivial.
   Qed.
 
-  Theorem comonad_extract_set {A B} (x: A) (w: W B):
-    extract (set x w) = x.
+  Theorem comonad_extract_put {A B} (x: A) (w: W B):
+    extract (put x w) = x.
   Proof.
-    unfold set.
+    unfold put.
     apply comonad_extract_extend.
   Qed.
 
-  Theorem comonad_set_set {A B C} (x: A) (y: B) (w: W C):
-    set x (set y w) = set x w.
+  Theorem comonad_put_put {A B C} (x: A) (y: B) (w: W C):
+    put x (put y w) = put x w.
   Proof.
-    unfold set, const.
+    unfold put, const.
     rewrite comonad_extend_extend.
     reflexivity.
   Qed.
 
   (* This would be useful but proving might require more premises?
-  Theorem comonad_set_extract {A} (w: W A):
-    set (extract w) w = w.
+  Theorem comonad_put_extract {A} (w: W A):
+    put (extract w) w = w.
   Proof.
   Qed.
   *)
 End THEORY.
 
 Hint Rewrite
-    @comonad_set_eq
-    @comonad_extract_set
-    @comonad_set_set
+    @comonad_put_eq
+    @comonad_extract_put
+    @comonad_put_put
   using typeclasses eauto: comonad.
 
 
