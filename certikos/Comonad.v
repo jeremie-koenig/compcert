@@ -1,6 +1,7 @@
 Require Export Coq.Program.Basics.
 Require Import Axioms.
 Require Import Functor.
+Require Import Lens.
 
 
 (** * Interface of comonads *)
@@ -87,19 +88,53 @@ Section THEORY.
     rewrite comonad_extend_extend.
     reflexivity.
   Qed.
+End THEORY.
 
-  (* This would be useful but proving might require more premises?
-  Theorem comonad_put_extract {A} (w: W A):
+
+(** * Comonad-based lens *)
+
+(** Given a comonad [W], we can define lens operations, where we get
+  a substructure of type [A] in a structure of type [W A]. However,
+  [LensGetPut] does not follow from the comonad laws. *)
+
+Section LENS.
+  Context (W: Type -> Type) `{HW: Comonad W} (A: Type).
+
+  Global Instance comonad_get: Getter (W A) A := {
+    get := extract
+  }.
+
+  Global Instance comonad_set: Setter (W A) A := {
+    set := put
+  }.
+
+  Global Instance comonad_get_set: LensGetSet (W A) A := {
+    lens_get_set := comonad_extract_put
+  }.
+
+  Global Instance comonad_set_set: LensSetSet (W A) A := {
+    lens_set_set := comonad_put_put
+  }.
+
+  Context `{Hps: !LensSetGet (W A) A}.
+
+  (** Provided the Put/Get law is proved separately, we get a lens. *)
+  Global Instance comonad_lens: Lens (W A) A := {}.
+
+  (** In addition, we can provide this equivalent lemma, formulated in
+    terms of extract and set. *)
+  Lemma comonad_put_extract (w: W A):
     put (extract w) w = w.
   Proof.
+    exact (lens_set_get w).
   Qed.
-  *)
-End THEORY.
+End LENS.
 
 Hint Rewrite
     @comonad_put_eq
     @comonad_extract_put
     @comonad_put_put
+    @comonad_put_extract
   using typeclasses eauto: comonad.
 
 

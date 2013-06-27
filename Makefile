@@ -109,6 +109,7 @@ DRIVER=Compiler.v Complements.v
 # Certikos
 
 CERTIKOS=\
+  Lens.v \
   Functor.v \
   Monad.v \
   Comonad.v \
