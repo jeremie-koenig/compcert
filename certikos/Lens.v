@@ -120,34 +120,34 @@ Section COMPOSE.
   Context `{get_AB: Getter A B} `{set_AB: Setter A B} `{Hlens_AB: !Lens A B}.
   Context `{get_BC: Getter B C} `{set_BC: Setter B C} `{Hlens_BC: !Lens B C}.
 
-  Global Instance lens_compose_get: Getter A C := {
+  Instance lens_compose_get: Getter A C := {
     get a := get (get a)
   }.
 
-  Global Instance lens_compose_set: Setter A C := {
+  Instance lens_compose_set: Setter A C := {
     set c a := modify (set c) a
   }.
 
-  Global Instance lens_compose_get_set: LensGetSet A C.
+  Instance lens_compose_get_set: LensGetSet A C.
   Proof.
     constructor; simpl; intros.
     autorewrite with lens.
     reflexivity.
   Qed.
 
-  Global Instance lens_compose_set_get: LensSetGet A C.
+  Instance lens_compose_set_get: LensSetGet A C.
   Proof.
     constructor; simpl; intros.
     autorewrite with lens.
     reflexivity.
   Qed.
 
-  Global Instance lens_compose_set_set: LensSetSet A C.
+  Instance lens_compose_set_set: LensSetSet A C.
   Proof.
     constructor; simpl; intros.
     autorewrite with lens.
     reflexivity.
   Qed.
 
-  Global Instance lens_compose: Lens A C := {}.
+  Instance lens_compose: Lens A C := {}.
 End COMPOSE.
