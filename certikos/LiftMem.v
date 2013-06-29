@@ -4,24 +4,30 @@ Require Import Memory.
 Require Import Functor.
 Require Import Monad.
 Require Import Comonad.
+Require Import Lens.
 
 (** * Prerequisites *)
 
-Class LiftMemoryOps (W: Type -> Type) := {
-  liftmem_comonad_ops :> ComonadOps W;
-  lift_empty {mem}: mem -> W mem
+Class LiftMemoryOps (mem bmem: Type) := {
+  liftmem_bops :> Mem.MemoryOps bmem;
+  liftmem_get :> Getter mem bmem;
+  liftmem_set :> Setter mem bmem;
+  liftmem_empty: mem
 }.
 
-Class LiftMem (W: Type -> Type) `{Wmemops: LiftMemoryOps W}: Prop := {
-  liftmem_comonad :> Comonad W;
-  lift_empty_extract {mem} (m: mem):
-    extract (lift_empty m) = m
+Class LiftMem (mem bmem: Type) `{mem_liftops: LiftMemoryOps mem bmem} := {
+  liftmem_bspec :> Mem.MemoryStates bmem;
+  liftmem_lens :> Lens mem bmem;
+  liftmem_get_empty: get liftmem_empty = Mem.empty
 }.
 
 (** * Lifting memory operations *)
 
+Class Lift A B := { lift: A -> B }.
+
 Section LIFT.
-  Context `{HW: ComonadOps} `{HF: Functor} {mem: Type}.
+  Context {mem bmem} `{getb: Getter mem bmem} `{setb: Setter mem bmem}.
+  Context `{HF: Functor}.
 
   (** Because [Mem.MemoryStates] contains so many theorems, we need some
     systematic way to lift the memory operations on [W mem], so that
@@ -34,32 +40,41 @@ Section LIFT.
     yield a function of type [W mem -> W (F mem)]. Instead, we use
     the following: *)
 
-  Definition lift (f: mem -> F mem) (wm: W mem) :=
-    fmap (fun m' => put m' wm) (f (extract wm)).
+  Global Instance lens_lift: Lift (bmem -> F bmem) (mem -> F mem) := {
+    lift f m := fmap (fun bm => set bm m) (f (get m))
+  }.
 
   (** Here are some basic theorems about [lift] with any functor. *)
 
-  Theorem lift_mor (f g: mem -> F mem) (wa: W mem):
-    f (extract wa) = g (extract wa) ->
-    lift f wa = lift g wa.
+  Theorem lift_mor (f g: bmem -> F bmem) (m: mem):
+    f (get m) = g (get m) ->
+    lift f m = lift g m.
   Proof.
     intros Hfg.
-    unfold lift.
+    simpl.
     apply f_equal.
     assumption.
   Qed.
 End LIFT.
 
+Section LIFTINSTANCES.
+  Context {mem bmem} `{getb: Getter mem bmem} `{setb: Setter mem bmem}.
+
+  Global Instance lift_const A: Lift (bmem -> A) (mem -> A) :=
+    lens_lift (F := (fun _ => A)).
+  Global Instance lift_prod A: Lift (bmem -> bmem * A) (mem -> mem * A) :=
+    lens_lift.
+End LIFTINSTANCES.
+
 Section LIFTOPS.
-  Context W `{Wmemops: LiftMemoryOps W}.
-  Context mem `{mem_ops: Mem.MemoryOps mem}.
+  Context mem `{mem_liftops: LiftMemoryOps mem}.
 
   (** We can now use [lift] to define the operations of the comonadic
     memory states. *)
 
-  Global Instance liftmem_ops: Mem.MemoryOps (W mem) := {
+  Global Instance liftmem_ops: Mem.MemoryOps mem := {
     empty :=
-      lift_empty Mem.empty;
+      liftmem_empty;
     nextblock wm :=
       lift Mem.nextblock wm;
     alloc wm lo hi :=
@@ -81,11 +96,11 @@ Section LIFTOPS.
     drop_perm wm b lo hi p :=
       lift (fun m => Mem.drop_perm m b lo hi p) wm;
     extends wm1 wm2 :=
-      Mem.extends (extract wm1) (extract wm2);
+      Mem.extends (get wm1) (get wm2);
     inject i wm1 wm2 :=
-      Mem.inject i (extract wm1) (extract wm2);
+      Mem.inject i (get wm1) (get wm2);
     inject_neutral thr wm :=
-      Mem.inject_neutral thr (extract wm)
+      Mem.inject_neutral thr (get wm)
   }.
 End LIFTOPS.
 
@@ -100,45 +115,45 @@ End LIFTOPS.
 (** ** Properties of [lift (F:=option)] *)
 
 Section LIFTOPTION.
-  Context `{HW: Comonad} {mem: Type}.
+  Context {mem bmem} `{Hgs: LensGetSet mem bmem}.
 
-  Lemma lift_option_eq (f: mem -> option mem):
-    forall (wa wb: W mem),
+  Lemma lift_option_eq (f: bmem -> option bmem):
+    forall (wa wb: mem),
       lift f wa = Some wb ->
-      f (extract wa) = Some (extract wb).
+      f (get wa) = Some (get wb).
   Proof.
     unfold lift; simpl; intros.
-    destruct (f (extract wa)); try discriminate.
+    destruct (f (get wa)); try discriminate.
     inversion H.
-    autorewrite with comonad.
+    autorewrite with lens.
     reflexivity.
   Qed.
 
-  Lemma lift_option_eq_set_iff (f: mem -> option mem):
-    forall (wm: W mem) (w': mem),
-      lift f wm = Some (put w' wm) <->
-      f (extract wm) = Some w'.
+  Lemma lift_option_eq_set_iff (f: bmem -> option bmem):
+    forall (wm: mem) (w': bmem),
+      lift f wm = Some (set w' wm) <->
+      f (get wm) = Some w'.
   Proof.
     simpl; intros.
-    split; destruct (f (extract wm)); try discriminate;
+    split; destruct (f (get wm)); try discriminate;
     intro H; inversion H.
     - apply f_equal.
-      eapply comonad_put_eq.
-      eassumption.
+      apply lens_eq_set in H1.
+      assumption.
     - reflexivity.
   Qed.
 
-  Lemma lift_option_eq_set (f: mem -> option mem):
-    forall (wm: W mem) (m': mem),
-      f (extract wm) = Some m' ->
-      lift f wm = Some (put m' wm).
+  Lemma lift_option_eq_set (f: bmem -> option bmem):
+    forall (wm: mem) (m': bmem),
+      f (get wm) = Some m' ->
+      lift f wm = Some (set m' wm).
   Proof.
     apply lift_option_eq_set_iff.
   Qed.
 
-  Theorem lift_option_eq_preserves_context (f g: mem -> option mem):
-    forall (wm: W mem) (wm': W mem),
-      g (extract wm) = Some (extract wm') ->
+  Theorem lift_option_eq_preserves_context (f g: bmem -> option bmem):
+    forall (wm: mem) (wm': mem),
+      g (get wm) = Some (get wm') ->
       lift f wm = Some wm' ->
       lift g wm = Some wm'.
   Proof.
@@ -155,24 +170,23 @@ End LIFTOPTION.
 (** ** Properties of [lift (F := fun X => A * X)] *)
 
 Section LIFTPROD.
-  Context `{HW: Comonad} {mem: Type} {A: Type}.
-  Open Scope type_scope.
+  Context {mem bmem} `{Hgs: LensGetSet mem bmem} {A: Type}.
 
-  Theorem lift_prod_eq (f: mem -> (fun X => X * A) mem) wm wm' a:
+  Theorem lift_prod_eq (f: bmem -> bmem * A) (wm wm': mem) (a: A):
     lift f wm = (wm', a) ->
-    f (extract wm) = (extract wm', a).
+    f (get wm) = (get wm', a).
   Proof.
     simpl.
-    destruct (f (extract wm)) as [m' a'].
+    destruct (f (get wm)) as [m' a'].
     intros H.
     inversion H.
-    autorewrite with comonad in *.
+    autorewrite with lens in *.
     reflexivity.
   Qed.
 
-  Theorem lift_prod_eq_set (f: mem -> (fun X => X * A) mem) wm m' a:
-    f (extract wm) = (m', a) ->
-    lift f wm = (put m' wm, a).
+  Theorem lift_prod_eq_set (f: bmem -> bmem * A) wm m' a:
+    f (get wm) = (m', a) ->
+    lift f wm = (set m' wm, a).
   Proof.
     intro H; simpl.
     rewrite H; clear H; simpl.
@@ -183,7 +197,7 @@ End LIFTPROD.
 (** ** Lifting [Mem.MemoryStates] *)
 
 Section LIFTDERIVED.
-  Context `{HW: LiftMem} `{Hmem: Mem.MemoryStates}.
+  Context `{HW: LiftMem}.
 
   (** Now we must come up with a suitable leaf tactic.
     The first step for proving a lifted theorem involving an
@@ -194,9 +208,9 @@ Section LIFTDERIVED.
     the [W mem] versions are indeed equivalent to lifting the [mem]
     versions. *)
 
-  Theorem lift_loadv chunk (wm: W mem) addr:
+  Theorem lift_loadv chunk wm addr:
     Mem.loadv chunk wm addr =
-    lift (fun m: mem => Mem.loadv chunk m addr) wm.
+    lift (fun m => Mem.loadv chunk m addr) wm.
   Proof.
     reflexivity.
   Qed.
@@ -209,43 +223,45 @@ Section LIFTDERIVED.
     destruct a; reflexivity.
   Qed.
 
-  Theorem lift_free_list (l: list (block * Z * Z)):
-    forall (wm wm': W mem),
-      Mem.free_list wm l = Some wm' ->
-      lift (fun m => Mem.free_list m l) wm = Some (extract wm').
+  Theorem lift_free_list l wm:
+    Mem.free_list wm l =
+    lift (fun m => Mem.free_list m l) wm.
   Proof.
+    revert wm.
     induction l as [ | [[b lo] hi] l IHl];
     intros; simpl in *.
-    - inversion H; congruence.
-    - destruct (Mem.free (extract wm) b lo hi); try discriminate.
-      rewrite <- (IHl (put m wm) wm').
-      * autorewrite with comonad.
-        reflexivity.
-      * assumption.
+    * rewrite lens_set_get.
+      reflexivity.
+    * destruct (Mem.free (get wm) b lo hi); [| reflexivity].
+      rewrite IHl.
+      rewrite lens_get_set.
+      destruct (Mem.free_list b0 l); [| reflexivity].
+      rewrite lens_set_set.
+      reflexivity.
   Qed.
 
-  Theorem lift_valid_block (wm: W mem) (b: block):
+  Theorem lift_valid_block (wm: mem) (b: block):
     Mem.valid_block wm b <->
     lift (fun m => Mem.valid_block m b) wm.
   Proof.
     reflexivity.
   Qed.
 
-  Theorem lift_range_perm (wm: W mem) b lo hi k p:
+  Theorem lift_range_perm (wm: mem) b lo hi k p:
     Mem.range_perm wm b lo hi k p <->
     lift (fun m => Mem.range_perm m b lo hi k p) wm.
   Proof.
     reflexivity.
   Qed.
 
-  Theorem lift_valid_access (wm: W mem) chunk b ofs p:
+  Theorem lift_valid_access (wm: mem) chunk b ofs p:
     Mem.valid_access wm chunk b ofs p <->
     lift (fun m => Mem.valid_access m chunk b ofs p) wm.
   Proof.
     reflexivity.
   Qed.
 
-  Theorem lift_weak_valid_pointer (wm: W mem) b ofs:
+  Theorem lift_weak_valid_pointer (wm: mem) b ofs:
     Mem.weak_valid_pointer wm b ofs =
     lift (fun m => Mem.weak_valid_pointer m b ofs) wm.
   Proof.
@@ -256,21 +272,18 @@ End LIFTDERIVED.
 Hint Rewrite
   @lift_loadv
   @lift_storev
+  @lift_free_list
   @lift_valid_block
   @lift_range_perm
   @lift_valid_access
   @lift_weak_valid_pointer
   using typeclasses eauto : lift.
 
-Hint Resolve
-  lift_free_list
-  : lift.
-
 (** For the fields of [Mem.MemoryOps], which are defined in terms
   of [lift] to begin with, we can use [simpl], making sure that
   we stop once we reach [lift]: *)
 
-Arguments lift _ _ _ _ _ _ _ : simpl never.
+Arguments lift _ _ _ _ : simpl never.
 
 (** Once we've rewritten everything in terms of [lift], we can apply
   some of the generic theorems we proved earlier. For the goal we
@@ -285,21 +298,19 @@ Hint Resolve
   : lift.
 
 (* Post-process lift_?_eq_set *)
-Hint Extern 10 => rewrite !comonad_extract_put in *: lift.
+Hint Extern 10 => rewrite !lens_get_set in *: lift.
 
 (** For the premises we need to apply them explicitely. *)
 
 Ltac lift_premise :=
   match goal with
-    | [ H: Mem.free_list _ _ = _ |- _ ] =>
-      eapply lift_free_list in H
     | [ H: lift ?f ?wm = Some ?b |- _ ] =>
       eapply lift_option_eq in H
-    | [ H: lift ?f ?wm = Some (put ?m' ?wm) |- _ ] =>
+    | [ H: lift ?f ?wm = Some (set ?m' ?wm) |- _ ] =>
       eapply lift_option_eq_set in H
     | [ H: lift ?f ?wm = (?m, ?x) |- _ ] =>
       eapply lift_prod_eq in H
-    | [ H: lift ?f ?wm = (put ?m' ?wm, ?a) |- _ ] =>
+    | [ H: lift ?f ?wm = (set ?m' ?wm, ?a) |- _ ] =>
       eapply lift_prod_eq_set in H
   end.
 
@@ -313,15 +324,18 @@ Hint Extern 10 => progress (repeat lift_premise): lift.
 Hint Extern 10 => progress (unfold lift in *; simpl in * ): lift. 
 
 (** Replace [(extract Mem.empty)] by the underlying [Mem.empty]. *)
-Hint Rewrite @lift_empty_extract using typeclasses eauto: lift.
+Hint Rewrite @liftmem_get_empty using typeclasses eauto: lift.
 
 (** Hook the rewrite rules into the lift database. *)
-Hint Extern 10 => progress (autorewrite with lift in *): lift.
+Hint Extern 10 => progress (autorewrite with lift in * ): lift.
 
   (** This is the main tactic we use: it lifts a theorem [Hf] of
     the underlying memory model by "peeling off" its structure
     recursively to prove the lifted goal. The leaf goals are
     handled with the caller-provided tactic [leaftac]. *)
+
+  (* FIXME: we could probably do away with the mem parameter to the
+    tactics below (just try both possibilities and see what works) *)
 
   (* Premises are "translated" and used to specialize Hf *)
   Ltac peel_intro mem recurse Hf x :=
@@ -334,7 +348,7 @@ Hint Extern 10 => progress (autorewrite with lift in *): lift.
 
       (* [mem] argument, use [extract] *)
       | forall (m: mem), _ =>
-	specialize (Hf (extract x))
+	specialize (Hf (get x))
 
       (* Otherwise, recurse. *)
       | forall (H: ?T'), _ =>
@@ -353,7 +367,7 @@ Hint Extern 10 => progress (autorewrite with lift in *): lift.
     destruct Hf as [x Hf'];
     let T := type of x in
     match T with
-      | mem => eexists (put x _)
+      | mem => eexists (set x _)
       | _ => exists x
     end;
     recurse Hf'.
@@ -368,12 +382,12 @@ Hint Extern 10 => progress (autorewrite with lift in *): lift.
   Ltac peel Hf leaftac :=
     let recurse Hf := peel Hf leaftac in
     try lazymatch goal with
-      | _: Mem.MemoryOps ?mem |- forall (x: _), _ =>
-        let x := fresh x in peel_intro mem recurse Hf x
-      | _: Mem.MemoryOps ?mem |- exists (x: _), _ =>
-        let x := fresh x in peel_exists mem recurse Hf x
-      | _: Mem.MemoryOps ?mem |- { x: _ | _ } =>
-        let x := fresh x in peel_exists mem recurse Hf x
+      | _: LiftMem ?mem ?bmem |- forall (x: _), _ =>
+        let x := fresh x in peel_intro bmem recurse Hf x
+      | _: LiftMem ?mem ?bmem |- exists (x: _), _ =>
+        let x := fresh x in peel_exists bmem recurse Hf x
+      | _: LiftMem ?mem ?bmem |- { x: _ | _ } =>
+        let x := fresh x in peel_exists bmem recurse Hf x
       | |- _ /\ _ =>
         peel_conj recurse Hf
       | |- ?T =>
@@ -394,13 +408,18 @@ Hint Extern 10 => progress (autorewrite with lift in *): lift.
     now lift_partial f.
 
 Section LIFTMEM.
-  Context W `{HW: LiftMem W} mem `{Hmem: Mem.MemoryStates mem}.
+  Context mem bmem `{Hmem: LiftMem mem bmem}.
 
-  Hint Immediate
-    (lift_option_eq_preserves_context (W:=W))
+  Hint Extern 10 (lift _ _ = Some _) =>
+    eapply lift_option_eq_preserves_context; eassumption
     : lift.
+(*
+  Hint Immediate
+    lift_option_eq_preserves_context
+    : lift.
+*)
 
-  Global Instance liftmem_spec: Mem.MemoryStates (W mem).
+  Global Instance liftmem_spec: Mem.MemoryStates mem.
   Proof.
     esplit.
     lift Mem.nextblock_pos.
@@ -482,19 +501,30 @@ Section LIFTMEM.
     lift Mem.load_storebytes_other.
     lift_partial Mem.storebytes_concat.
       simpl in *; unfold lift in *; simpl in *.
-      destruct (Mem.storebytes (extract m) b ofs (bytes1 ++ bytes2));
-      destruct (Mem.storebytes (extract m) b ofs bytes1);
-      destruct (Mem.storebytes (extract m1) b (ofs + Z.of_nat (length bytes1)));
+      destruct (Mem.storebytes (get m) b ofs (bytes1 ++ bytes2));
+      destruct (Mem.storebytes (get m) b ofs bytes1);
+      destruct (Mem.storebytes (get m1) b (ofs + Z.of_nat (length bytes1)));
       try discriminate.
       inversion Hf;
       inversion x;
       inversion x0;
       subst.
-      autorewrite with comonad.
+      autorewrite with lens.
       reflexivity.
-    intros m b ofs bytes1 bytes2 m2.
-      pose proof (Mem.storebytes_split (extract m) b ofs bytes1 bytes2 (extract m2)) as Hf.
-      (*FIXME: *) admit.
+    lift_partial Mem.storebytes_split.
+      autorewrite with lift in *.
+      simpl in *.
+      debug eauto with lift.
+      unfold lift; simpl.
+      autorewrite with lens.
+      rewrite Hf0r.
+      autorewrite with lens.
+      unfold lift in *; simpl in *.
+      destruct (Mem.storebytes (get m) b ofs (bytes1 ++ bytes2));
+        try discriminate.
+      inversion x.
+      autorewrite with lens.
+      reflexivity.
     lift Mem.alloc_result.
     lift Mem.nextblock_alloc.
     lift Mem.valid_block_alloc.
