@@ -33,24 +33,32 @@ Class Lens S V `{lens_get: Getter S V} `{lens_set: Setter S V} := {
 
 (** * Theory *)
 
-Section THEORY.
+(** ** The [modify] operation *)
+
+Section MODIFY.
   Context {S V} `{HSV: Lens S V}.
 
   Definition modify (f: V -> V) (s: S) :=
     set (f (get s)) s.
-
-  Lemma lens_get_modify f s:
-    get (modify f s) = f (get s).
-  Proof.
-    apply lens_get_set.
-  Qed.
 
   Lemma lens_unfold_modify f s:
     modify f s = set (f (get s)) s.
   Proof.
     reflexivity.
   Qed.
-End THEORY.
+End MODIFY.
+
+(** ** Consequences of [LensGetSet] *)
+
+Section GETSET.
+  Context {S V} `{Hgs: LensGetSet S V}.
+
+  Lemma lens_get_modify f s:
+    get (modify f s) = f (get s).
+  Proof.
+    apply lens_get_set.
+  Qed.
+End GETSET.
 
 Hint Rewrite
     @lens_get_set
