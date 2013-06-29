@@ -116,6 +116,8 @@ Section LENS.
     lens_set_set := comonad_put_put
   }.
 
+  (** [LensSetGet] does not hold in general -- for instance in the store
+    comonad, [put] overwrites all entries instead of just the focused one. *)
   Context `{Hps: !LensSetGet (W A) A}.
 
   (** Provided the Put/Get law is proved separately, we get a lens. *)
