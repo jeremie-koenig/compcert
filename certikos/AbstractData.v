@@ -32,18 +32,18 @@ Section WITHDATA.
   Context mem `{Hmem: Mem.MemoryStates mem}.
   Context data `{data_ops: AbstractData data}.
 
-  Global Instance data_liftmem_ops: LiftMemoryOps (× data) := {
-    lift_empty mem m := (m, empty_data)
+  Global Instance data_liftmem_ops: LiftMemoryOps (mem × data) mem := {
+    liftmem_empty := (Mem.empty, empty_data)
   }.
 
   Global Instance mwd_MEMOPS: Mem.MemoryOps (mem × data) :=
-    liftmem_ops (× data) mem.
+    liftmem_ops (mem × data) mem.
 
-  Global Instance data_liftmem: LiftMem (× data) := {}.
+  Global Instance data_liftmem: LiftMem (mem × data) mem := {}.
   Proof.
     reflexivity.
   Qed.
 
   Global Instance mwd_MEM: Mem.MemoryStates (mem × data) :=
-    liftmem_spec (× data) mem.
+    liftmem_spec (mem × data) mem.
 End WITHDATA.
