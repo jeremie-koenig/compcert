@@ -297,9 +297,6 @@ Hint Resolve
   @lift_prod_eq_set
   : lift.
 
-(* Post-process lift_?_eq_set *)
-Hint Extern 10 => rewrite !lens_get_set in *: lift.
-
 (** For the premises we need to apply them explicitely. *)
 
 Ltac lift_premise :=
@@ -321,13 +318,14 @@ Hint Extern 10 => progress (repeat lift_premise): lift.
   which is stated in terms of the original operations applied to
   [(extract wm)]. This hint makes sure [eauto] can do that. *)
 
-Hint Extern 10 => progress (unfold lift in *; simpl in * ): lift. 
+Ltac lift_reduce :=
+  unfold lift in *; simpl in *;
+  autorewrite with lens in *.
 
 (** Replace [(extract Mem.empty)] by the underlying [Mem.empty]. *)
-Hint Rewrite @liftmem_get_empty using typeclasses eauto: lift.
+Hint Rewrite @liftmem_get_empty using typeclasses eauto: lens.
 
-(** Hook the rewrite rules into the lift database. *)
-Hint Extern 10 => progress (autorewrite with lift in * ): lift.
+Hint Extern 10 => progress lift_reduce; now eauto: lift. 
 
   (** This is the main tactic we use: it lifts a theorem [Hf] of
     the underlying memory model by "peeling off" its structure
@@ -341,7 +339,7 @@ Hint Extern 10 => progress (autorewrite with lift in * ): lift.
   Ltac peel_intro mem recurse Hf x :=
     intro x;
     let T := type of x in
-    lazymatch type of Hf with
+    match type of Hf with
       (* No transformation required, just pass it along. *)
       | forall (y: T), _ =>
 	specialize (Hf x)
@@ -381,7 +379,7 @@ Hint Extern 10 => progress (autorewrite with lift in * ): lift.
 
   Ltac peel Hf leaftac :=
     let recurse Hf := peel Hf leaftac in
-    try lazymatch goal with
+    try match goal with
       | _: LiftMem ?mem ?bmem |- forall (x: _), _ =>
         let x := fresh x in peel_intro bmem recurse Hf x
       | _: LiftMem ?mem ?bmem |- exists (x: _), _ =>
@@ -398,7 +396,9 @@ Hint Extern 10 => progress (autorewrite with lift in * ): lift.
     conjunction with [peel] to solve the goals automatically. *)
 
   Ltac lift_leaf f :=
-    eauto 10 using f with lift typeclass_instances.
+    autorewrite with lift in *;
+    simpl in *;
+    eauto 10 with lift typeclass_instances.
 
   Ltac lift_partial f :=
     pose proof f as Hf;
@@ -413,11 +413,6 @@ Section LIFTMEM.
   Hint Extern 10 (lift _ _ = Some _) =>
     eapply lift_option_eq_preserves_context; eassumption
     : lift.
-(*
-  Hint Immediate
-    lift_option_eq_preserves_context
-    : lift.
-*)
 
   Global Instance liftmem_spec: Mem.MemoryStates mem.
   Proof.
