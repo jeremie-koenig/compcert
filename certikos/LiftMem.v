@@ -67,7 +67,7 @@ Section LIFTINSTANCES.
 End LIFTINSTANCES.
 
 Section LIFTOPS.
-  Context mem `{mem_liftops: LiftMemoryOps mem}.
+  Context mem bmem `{mem_liftops: LiftMemoryOps mem bmem}.
 
   (** We can now use [lift] to define the operations of the comonadic
     memory states. *)
@@ -514,7 +514,6 @@ Section LIFTMEM.
     lift_partial Mem.storebytes_split.
       autorewrite with lift in *.
       simpl in *.
-      debug eauto with lift.
       unfold lift; simpl.
       autorewrite with lens.
       rewrite Hf0r.
