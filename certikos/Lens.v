@@ -58,6 +58,18 @@ Section GETSET.
   Proof.
     apply lens_get_set.
   Qed.
+
+  Theorem lens_eq_set (s: S) (u v: V):
+    set u s = set v s <-> u = v.
+  Proof.
+    split; intros.
+    * rewrite <- (lens_get_set u s).
+      rewrite <- (lens_get_set v s).
+      apply f_equal.
+      assumption.
+    * apply (f_equal (fun x => set x s)).
+      assumption.
+  Qed.
 End GETSET.
 
 Hint Rewrite
@@ -65,6 +77,7 @@ Hint Rewrite
     @lens_set_get
     @lens_set_set
     @lens_unfold_modify
+    @lens_eq_set
   using typeclasses eauto : lens.
 
 
