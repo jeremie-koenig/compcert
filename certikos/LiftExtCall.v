@@ -11,44 +11,6 @@ Section LIFTEXTCALL.
   Context `{Hec: ExternalCalls}.
   Context `{HW: LiftMem}.
 
-  Inductive powerset_lift {X Y} (f: X -> Y) (pX: X -> Prop): Y -> Prop :=
-    powerset_lift_intro x:
-      pX x -> powerset_lift f pX (f x).
-
-  Instance powerset_fmap: FunctorOps (fun X => X -> Prop) := {
-    fmap := @powerset_lift
-  }.
-
-  Instance powerset_functor: Functor (fun X => X -> Prop).
-  Proof.
-    Require Import Axioms.
-    split; simpl.
-    * intros A pA.
-      apply functional_extensionality; intro a.
-      apply prop_ext.
-      split; intro H.
-      - inversion H as [a' Hpa' Ha'].
-        subst.
-        exact Hpa'.
-      - fold (id a).
-        constructor.
-        assumption.
-    * intros A B C f g pA.
-      apply functional_extensionality; intro c.
-      apply prop_ext.
-      split; intro H.
-      - inversion H as [a Hpa Hac].
-        constructor.
-        constructor.
-        assumption.
-      - inversion H as [b Hb Hbc].
-        inversion Hb as [a Hpa Hab].
-        fold (compose f g).
-        fold (compose f g a).
-        constructor.
-        assumption.
-  Qed.
-
   Global Instance liftmem_ec_ops: ExtCallOps (W mem) external_function := {
     external_call ef F V ge args m tr ret m' :=
       lift (fun m => external_call ef ge args m tr ret) m m'
