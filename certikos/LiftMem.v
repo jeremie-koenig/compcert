@@ -8,14 +8,17 @@ Require Import Lens.
 
 (** * Prerequisites *)
 
-Class LiftMemoryOps (mem bmem: Type) := {
-  liftmem_bops :> Mem.MemoryOps bmem;
-  liftmem_get :> Getter mem bmem;
-  liftmem_set :> Setter mem bmem;
+Class LiftMemoryOps (mem bmem: Type)
+  `{bmem_ops: Mem.MemoryOps bmem}
+  `{bmem_get: Getter mem bmem}
+  `{bmem_set: Setter mem bmem} :=
+{
   liftmem_empty: mem
 }.
 
-Class LiftMem (mem bmem: Type) `{mem_liftops: LiftMemoryOps mem bmem} := {
+Class LiftMem (mem bmem: Type)
+  `{mem_liftops: LiftMemoryOps mem bmem} :=
+{
   liftmem_bspec :> Mem.MemoryStates bmem;
   liftmem_lens :> Lens mem bmem;
   liftmem_get_empty: get liftmem_empty = Mem.empty
