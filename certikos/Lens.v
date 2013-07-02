@@ -1,3 +1,6 @@
+Require Import Coq.Classes.Morphisms.
+Require Import Coq.Classes.RelationClasses.
+Require Import Coq.Setoids.Setoid.
 
 (** * Interface *)
 
@@ -48,6 +51,58 @@ Section MODIFY.
   Qed.
 End MODIFY.
 
+(** ** The [same_context] relation *)
+
+Section SAMECONTEXT.
+  Context {S V} `{lens_get: Getter S V} `{HSV: LensSetSet S V}.
+
+  Definition same_context: relation S :=
+    fun s t => forall v, set v s = set v t.
+
+  Lemma lens_set_same_context v s:
+    same_context (set v s) s.
+  Proof.
+    intro u.
+    apply lens_set_set.
+  Qed.
+
+  Lemma lens_modify_same_context f s:
+    same_context (modify f s) s.
+  Proof.
+    intro u.
+    unfold modify.
+    apply lens_set_set.
+  Qed.
+
+  Global Instance same_context_equiv: Equivalence same_context.
+  Proof.
+    split.
+    * intros s v.
+      reflexivity.
+    * intros s t Hst u.
+      symmetry; now auto.
+    * intros s1 s2 s3 H12 H23 u.
+      transitivity (set u s2); now auto.
+  Qed.
+
+  Global Instance same_context_set_mor:
+    Proper (eq ==> same_context ==> eq) set.
+  Proof.
+    intros u v Huv s t Hst.
+    subst.
+    apply Hst.
+  Qed.
+
+  Global Instance same_context_modify_mor f:
+    Proper (same_context ==> same_context) (modify f).
+  Proof.
+    intros s t Hst u.
+    unfold modify.
+    rewrite !lens_set_set.
+    apply Hst.
+  Qed.
+End SAMECONTEXT.
+
 (** ** Consequences of [LensGetSet] *)
 
 Section GETSET.
@@ -79,6 +134,13 @@ Hint Rewrite
     @lens_unfold_modify
     @lens_eq_set
   using typeclasses eauto : lens.
+
+Create HintDb lens discriminated.
+
+Hint Resolve
+    @lens_set_same_context
+    @lens_modify_same_context
+  : lens.
 
 
 (** * Instances *)
