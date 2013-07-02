@@ -184,6 +184,9 @@ drop_perm: forall (m: mem) (b: block) (lo hi: Z) (p: permission), option mem;
   more defined values stored in [m2] at the same addresses. *)
 extends: mem -> mem -> Prop;
 
+(** Memory states that inject into themselves. *)
+inject_neutral: forall (thr: block) (m: mem), Prop;
+
 (** A memory injection [f] is a function from addresses to either [None]
   or [Some] of an address and an offset.  It defines a correspondence
   between the blocks of two memory states [m1] and [m2]:
@@ -197,10 +200,7 @@ extends: mem -> mem -> Prop;
 
   Likewise, a memory injection [f] defines a relation between memory states 
   that we axiomatize below. *)
-inject: meminj -> mem -> mem -> Prop;
-
-(** Memory states that inject into themselves. *)
-inject_neutral: forall (thr: block) (m: mem), Prop
+inject: meminj -> mem -> mem -> Prop
 
 }.
 
@@ -917,6 +917,46 @@ weak_valid_pointer_extends m1 m2 b ofs:
   extends m1 m2 ->
   weak_valid_pointer m1 b ofs = true -> weak_valid_pointer m2 b ofs = true;
 
+perm_free_list:
+  forall l m m' b ofs k p,
+  free_list m l = Some m' ->
+  perm m' b ofs k p ->
+  perm m b ofs k p /\ 
+  (forall lo hi, In (b, lo, hi) l -> lo <= ofs < hi -> False);
+
+(** Memory states that inject into themselves. *)
+
+neutral_inject m:
+  inject_neutral (nextblock m) m ->
+  inject (flat_inj (nextblock m)) m m;
+
+empty_inject_neutral thr:
+  inject_neutral thr empty;
+
+alloc_inject_neutral thr m lo hi b m':
+  alloc m lo hi = (m', b) ->
+  inject_neutral thr m ->
+  nextblock m < thr ->
+  inject_neutral thr m';
+
+store_inject_neutral chunk m b ofs v m' thr:
+  store chunk m b ofs v = Some m' ->
+  inject_neutral thr m ->
+  b < thr ->
+  val_inject (flat_inj thr) v v ->
+  inject_neutral thr m';
+
+drop_inject_neutral m b lo hi p m' thr:
+  drop_perm m b lo hi p = Some m' ->
+  inject_neutral thr m ->
+  b < thr ->
+  inject_neutral thr m';
+
+(** This ugly workaround is to prevent the [intuition] tactic from
+  destructing instances of MEM which are in the context. *)
+ugly_workaround_dependee: Type;
+ugly_workaround_depender: ugly_workaround_dependee;
+
 (** * Memory injections *)
 
 mi_freeblocks f m1 m2:
@@ -1174,13 +1214,6 @@ free_right_inject:
     lo <= ofs + delta < hi -> False) ->
   inject f m1 m2';
 
-perm_free_list:
-  forall l m m' b ofs k p,
-  free_list m l = Some m' ->
-  perm m' b ofs k p ->
-  perm m b ofs k p /\ 
-  (forall lo hi, In (b, lo, hi) l -> lo <= ofs < hi -> False);
-
 free_inject f m1 l m1' m2 b lo hi m2':
   inject f m1 m2 ->
   free_list m1 l = Some m1' ->
@@ -1196,40 +1229,7 @@ drop_outside_inject f m1 m2 b lo hi p m2':
   (forall b' delta ofs k p,
     f b' = Some(b, delta) ->
     perm m1 b' ofs k p -> lo <= ofs + delta < hi -> False) ->
-  inject f m1 m2';
-
-(** Memory states that inject into themselves. *)
-
-neutral_inject m:
-  inject_neutral (nextblock m) m ->
-  inject (flat_inj (nextblock m)) m m;
-
-empty_inject_neutral thr:
-  inject_neutral thr empty;
-
-alloc_inject_neutral thr m lo hi b m':
-  alloc m lo hi = (m', b) ->
-  inject_neutral thr m ->
-  nextblock m < thr ->
-  inject_neutral thr m';
-
-store_inject_neutral chunk m b ofs v m' thr:
-  store chunk m b ofs v = Some m' ->
-  inject_neutral thr m ->
-  b < thr ->
-  val_inject (flat_inj thr) v v ->
-  inject_neutral thr m';
-
-drop_inject_neutral m b lo hi p m' thr:
-  drop_perm m b lo hi p = Some m' ->
-  inject_neutral thr m ->
-  b < thr ->
-  inject_neutral thr m';
-
-(** This ugly workaround is to prevent the [intuition] tactic from
-  destructing instances of MEM which are in the context. *)
-ugly_workaround_dependee: Type;
-ugly_workaround_depender: ugly_workaround_dependee
+  inject f m1 m2'
 
 }.
 
