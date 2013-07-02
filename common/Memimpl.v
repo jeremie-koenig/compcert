@@ -3954,11 +3954,10 @@ Instance mem_ops: Mem.MemoryOps mem := {
   perm := perm;
   valid_pointer := valid_pointer;
   extends := extends;
-  inject := inject;
   inject_neutral := inject_neutral
 }.
 
-Instance mem_spec: Mem.MemoryStates mem := {
+Local Instance mem_spec: Mem.MemorySpec mem := {
   nextblock_pos := nextblock_pos;
   valid_not_valid_diff := valid_not_valid_diff;
   perm_implies := perm_implies;
@@ -4097,6 +4096,21 @@ Instance mem_spec: Mem.MemoryStates mem := {
   valid_access_extends := valid_access_extends;
   valid_pointer_extends := valid_pointer_extends;
   weak_valid_pointer_extends := weak_valid_pointer_extends;
+  perm_free_list := perm_free_list;
+  empty_inject_neutral := empty_inject_neutral;
+  alloc_inject_neutral := alloc_inject_neutral;
+  store_inject_neutral := store_inject_neutral;
+  drop_inject_neutral := drop_inject_neutral;
+
+  ugly_workaround_dependee := unit;
+  ugly_workaround_depender := tt
+}.
+
+Instance inj_ops: Mem.InjectOps mem mem := {
+  inject := inject
+}.
+
+Local Instance inj_spec: Mem.MemoryInjections mem mem := {
   mi_freeblocks := mi_freeblocks;
   valid_block_inject_1 := valid_block_inject_1;
   valid_block_inject_2 := valid_block_inject_2;
@@ -4131,14 +4145,13 @@ Instance mem_spec: Mem.MemoryStates mem := {
   free_left_inject := free_left_inject;
   free_list_left_inject := free_list_left_inject;
   free_right_inject := free_right_inject;
-  perm_free_list := perm_free_list;
   free_inject := free_inject;
-  drop_outside_inject := drop_outside_inject;
-  neutral_inject := neutral_inject;
-  empty_inject_neutral := empty_inject_neutral;
-  alloc_inject_neutral := alloc_inject_neutral;
-  store_inject_neutral := store_inject_neutral;
-  drop_inject_neutral := drop_inject_neutral;
-  ugly_workaround_dependee := unit;
-  ugly_workaround_depender := tt
+  drop_outside_inject := drop_outside_inject
+}.
+
+Local Instance hinj_spec: Mem.HomogenousInjections mem := {
+  neutral_inject := neutral_inject
+}.
+
+Instance mem_states: Mem.MemoryStates mem := {
 }.
