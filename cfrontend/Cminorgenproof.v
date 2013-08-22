@@ -2468,6 +2468,24 @@ Definition measure (S: Csharpminor.state) : nat :=
   | _ => O
   end.
 
+(** We cannot use the regular [dependent induction] tactic for [MK] below,
+  because it goes haywire with the type class instances, so we roll our
+  own specialized version here. *)
+
+Ltac match_cont_generalize_eq_var MK :=
+  lazymatch type of MK with
+    | match_cont ?c _ _ _ _ =>
+        generalize (eq_refl c);
+        revert MK;
+        generalize c at 1 2;
+        intros ? MK
+  end.
+
+Ltac match_cont_dependent_induction MK :=
+  match_cont_generalize_eq_var MK;
+  induction MK;
+  intro Hc; inv Hc.
+
 Lemma transl_step_correct:
   forall S1 t S2, Csharpminor.step ge S1 t S2 ->
   forall T1, match_states S1 T1 ->
@@ -2478,7 +2496,7 @@ Proof.
 
 (* skip seq *)
   monadInv TR. left.
-  dependent induction MK.
+  match_cont_dependent_induction MK.
   econstructor; split. 
   apply plus_one. constructor.
   econstructor; eauto.
@@ -2490,7 +2508,7 @@ Proof.
   auto.
 (* skip block *)
   monadInv TR. left.
-  dependent induction MK.
+  match_cont_dependent_induction MK.
   econstructor; split.
   apply plus_one. constructor.
   econstructor; eauto.
@@ -2607,7 +2625,9 @@ Opaque PTree.set.
 
 (* exit seq *)
   monadInv TR. left.
-  dependent induction MK.
+  match_cont_generalize_eq_var MK.
+  revert s k.
+  induction MK; intros ? ? Hc; inv Hc.
   econstructor; split. 
   apply plus_one. constructor.
   econstructor; eauto. simpl. auto.
@@ -2619,7 +2639,7 @@ Opaque PTree.set.
 
 (* exit block 0 *)
   monadInv TR. left.
-  dependent induction MK.
+  match_cont_dependent_induction MK.
   econstructor; split.
   simpl. apply plus_one. constructor. 
   econstructor; eauto.
@@ -2629,7 +2649,7 @@ Opaque PTree.set.
 
 (* exit block n+1 *)
   monadInv TR. left.
-  dependent induction MK.
+  match_cont_dependent_induction MK.
   econstructor; split.
   simpl. apply plus_one. constructor. 
   econstructor; eauto. auto. 

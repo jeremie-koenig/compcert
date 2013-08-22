@@ -697,7 +697,7 @@ Class ExternalCalls `{ec_ops: ExtCallOps} := {
 End WITHMEM.
 
 Arguments ExtCallOps mem {mem_ops} external_function {ef_ops}.
-Arguments ExternalCalls mem {mem_ops} external_function {ef_ops ec_ops}.
+Arguments ExternalCalls mem {mem_ops inj_ops} external_function {ef_ops ec_ops}.
 
 (** Some shorthand accessors for the properties of ExternalCalls. *)
 Section WITHEC.
