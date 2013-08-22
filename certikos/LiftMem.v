@@ -10,6 +10,7 @@ Require Import Lens.
 
 Class LiftMemoryOps (mem bmem: Type)
   `{bmem_ops: Mem.MemoryOps bmem}
+  `{bmem_inj: !Mem.InjectOps bmem bmem}
   `{bmem_get: Getter mem bmem}
   `{bmem_set: Setter mem bmem} :=
 {
@@ -100,10 +101,13 @@ Section LIFTOPS.
       lift (fun m => Mem.drop_perm m b lo hi p) wm;
     extends wm1 wm2 :=
       Mem.extends (get wm1) (get wm2);
-    inject i wm1 wm2 :=
-      Mem.inject i (get wm1) (get wm2);
     inject_neutral thr wm :=
       Mem.inject_neutral thr (get wm)
+  }.
+
+  Global Instance liftmem_inj: Mem.InjectOps mem mem := {
+    inject i wm1 wm2 :=
+      Mem.inject i (get wm1) (get wm2)
   }.
 End LIFTOPS.
 
@@ -419,6 +423,9 @@ Section LIFTMEM.
 
   Global Instance liftmem_spec: Mem.MemoryStates mem.
   Proof.
+    split.
+
+    (* MemorySpec *)
     esplit.
     lift Mem.nextblock_pos.
     lift Mem.valid_not_valid_diff.
@@ -581,6 +588,17 @@ Section LIFTMEM.
     lift Mem.valid_access_extends.
     lift Mem.valid_pointer_extends.
     lift Mem.weak_valid_pointer_extends.
+    lift Mem.perm_free_list.
+    lift Mem.empty_inject_neutral.
+    lift Mem.alloc_inject_neutral.
+    lift Mem.store_inject_neutral.
+    lift Mem.drop_inject_neutral.
+    exact tt.
+
+    (* HomogenousInjections *)
+    split.
+    (* - MemoryInjections *)
+    split.
     lift Mem.mi_freeblocks.
     lift Mem.valid_block_inject_1.
     lift Mem.valid_block_inject_2.
@@ -615,14 +633,9 @@ Section LIFTMEM.
     lift Mem.free_left_inject.
     lift Mem.free_list_left_inject.
     lift Mem.free_right_inject.
-    lift Mem.perm_free_list.
     lift Mem.free_inject.
     lift Mem.drop_outside_inject.
+    (* - neutral_inject *)
     lift Mem.neutral_inject.
-    lift Mem.empty_inject_neutral.
-    lift Mem.alloc_inject_neutral.
-    lift Mem.store_inject_neutral.
-    lift Mem.drop_inject_neutral.
-    exact tt.
   Defined.
 End LIFTMEM.
