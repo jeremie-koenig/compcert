@@ -10,6 +10,7 @@ Require Import LiftExtCall.
 
 Class Layer mem external_function data prim
   `{mem_ops: !Mem.MemoryOps mem}
+  `{inj_ops: !Mem.InjectOps mem mem}
   `{ef_ops: !ExtFunOps external_function}
   `{ec_ops: !ExtCallOps mem external_function}
   `{data_ops: !AbstractDataOps data}
@@ -29,6 +30,7 @@ Section EFPLUS.
   Context {ef1 ef2 mem: Type}.
   Context `{ef1_ops: !ExtFunOps ef1} `{ef2_ops: !ExtFunOps ef2}.
   Context `{mem_ops: !Mem.MemoryOps mem}.
+  Context `{inj_ops: !Mem.InjectOps mem mem}.
   Context `{ec1_ops: !ExtCallOps mem ef1} `{ec2_ops: !ExtCallOps mem ef2}.
 (* FIXME: unnecessary?
   Context `{Hmem: !Mem.MemoryStates mem}.
