@@ -6,6 +6,7 @@ Require Import AbstractData.
 
 Class AbstractPrimOps (mem data prim: Type)
   `{mem_ops: Mem.MemoryOps mem}
+  `{mem_inj: !Mem.InjectOps mem mem}
   `{data_ops: AbstractDataOps data} :=
 {
   prim_sig (p: prim): signature;

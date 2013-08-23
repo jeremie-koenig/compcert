@@ -36,14 +36,8 @@ Section WITHDATA.
     liftmem_empty := (Mem.empty, empty_data)
   }.
 
-  Global Instance mwd_MEMOPS: Mem.MemoryOps (mem × data) :=
-    liftmem_ops (mem × data) mem.
-
   Global Instance data_liftmem: LiftMem (mem × data) mem := {}.
   Proof.
     reflexivity.
   Qed.
-
-  Global Instance mwd_MEM: Mem.MemoryStates (mem × data) :=
-    liftmem_spec (mem × data) mem.
 End WITHDATA.
