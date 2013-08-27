@@ -3,15 +3,31 @@ Require Import Functor.
 
 (** * Interface of monads *)
 
-(** As in Haskell, we defined monads in terms of [ret] and [bind], and
-  provide derived definitions for [fmap] and [join]. *)
+(** As in Haskell, we define monads in terms of [ret] and [bind].
+  However we want to be able to use the corresponding [Functor]
+  instances both independently and in the context of monads.
+  To permit this, instead of defining a generic [Functor] instance
+  for all monads, we require a priori that monads be functors,
+  then define the relationship between [fmap], [ret] and [bind]
+  as the [monad_fmap] equation in the [Monad] class. This way,
+  code need not depend on this module when they use, say, [option]
+  as a simple [Functor] rather than a full-blown [Monad].
+  In addition, [id] for instance is both a [Monad] and [Comonad],
+  but we do not want to derive two separate instances of the
+  corresponding [Functor]. *)
 
-Class MonadOps (M: Type -> Type) := {
+Class MonadOps (M: Type -> Type) `{Mfmap: FunctorOps M} := {
   ret {A}: A -> M A;
   bind {A B}: (A -> M B) -> M A -> M B
 }.
 
+Notation "'do' x <- M ; N" := (bind (fun x => N) M)
+  (at level 200, x ident, M at level 100, N at level 200).
+
 Class Monad (M: Type -> Type) `{Mops: MonadOps M}: Prop := {
+  monad_functor :> Functor M;
+  monad_fmap {A B} (f: A -> B):
+    fmap f = bind (fun x => ret (f x));
   monad_ret_bind {A B} (f: A -> M B) (x: A):
     bind f (ret x) = f x;
   monad_bind_ret {A} (m: M A):
@@ -20,42 +36,21 @@ Class Monad (M: Type -> Type) `{Mops: MonadOps M}: Prop := {
     bind f (bind g m) = bind (fun x => bind f (g x)) m
 }.
 
+(** Using the theorem in [Monad], we can try to normalize monadic
+  expressions to the form [x1 <- M1; x2 <- M2; ...; xn <- Mn]. *)
 Hint Rewrite
     @monad_ret_bind
     @monad_bind_ret
     @monad_bind_bind
   using typeclasses eauto : monad.
 
-Notation "'do' x <- M ; N" := (bind (fun x => N) M)
-  (at level 200, x ident, M at level 100, N at level 200).
-
-
-(** * Monads are functors *)
-
-Section FUNCTOR.
-  Context `{HM: Monad}.
-
-  Global Instance monad_fmap: FunctorOps M := {
-    fmap A B f :=
-      bind (fun x => ret (f x))
-  }.
-
-  Global Instance monad_functor: Functor M.
-  Proof.
-    split; intros; simpl; autorewrite with monad.
-    - reflexivity.
-    - setoid_rewrite monad_ret_bind.
-      reflexivity.
-  Qed.
-
-  Theorem monad_return_fmap {A B} (f: A -> B) (x: A):
-    fmap f (ret x) = ret (f x).
-  Proof.
-    simpl.
-    autorewrite with monad.
-    reflexivity.
-  Qed.
-End FUNCTOR.
+(** Unfortunately, the [MonadOps] instance in [monad_fmap] cannot
+  be obtained by unification when matching the left-hand side of
+  the rewrite with the current goal. Since the [autorewrite] tactic
+  does not do type class resolution, we cannot use [monad_fmap]
+  as a rewrite rule. *)
+Ltac monadNorm :=
+  rewrite !monad_fmap; autorewrite with monad.
 
 
 (** * Some instances *)
@@ -74,6 +69,7 @@ Section INSTANCES.
 
   Global Instance option_monad: Monad option.
   Proof.
-    split; intros; try destruct m; now reflexivity.
+    split; intros; try destruct m; try reflexivity.
+    typeclasses eauto.
   Qed.
 End INSTANCES.

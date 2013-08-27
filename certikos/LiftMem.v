@@ -3,7 +3,6 @@ Require Import Values.
 Require Import Memory.
 Require Import Functor.
 Require Import Monad.
-Require Import Comonad.
 Require Import Lens.
 
 (** * Prerequisites *)

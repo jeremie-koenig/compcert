@@ -1,7 +1,7 @@
 Require Import AST.
 Require Import Memory.
 Require Import Globalenvs.
-Require Export Comonad.
+Require Export Functor.
 Require Import LiftMem.
 
 (** * Types of abstract data *)
@@ -23,10 +23,6 @@ Class AbstractData (data: Type) `{data_ops: AbstractDataOps data} := {
 
 
 (** * [mem × data] can be used as memory states *)
-
-Notation "( A  ×)" := (prod A).
-Infix "×" := prod (at level 40).
-Notation "(×  A )" := (fun X => X × A).
 
 Section WITHDATA.
   Context mem `{Hmem: Mem.MemoryStates mem}.

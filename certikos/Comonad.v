@@ -1,3 +1,6 @@
+(** FIXME: rework to follow the same approach as [Monad]
+  wrt its relation with [Functor]. *)
+
 Require Export Coq.Program.Basics.
 Require Import Axioms.
 Require Import Functor.

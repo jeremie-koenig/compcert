@@ -18,7 +18,14 @@ Class Functor (F: Type -> Type) `{Fmap: FunctorOps F} := {
 
 (** * Simple instances *)
 
+Notation "( A  ×)" := (prod A).
+Infix "×" := prod (at level 40).
+Notation "(×  A )" := (fun X => X × A).
+
 Section INSTANCES.
+
+  (** ** Constant *)
+
   (** The constant functor [A] maps everything to [@id A]. *)
   Global Instance const_fmap A: FunctorOps (fun X => A) := {
     fmap X Y f a := a
@@ -29,6 +36,8 @@ Section INSTANCES.
     tauto.
   Qed.
 
+  (** ** Identity *)
+
   (** The identity functor maps [f] to itself. *)
   Global Instance id_fmap: FunctorOps (fun X => X) := {
     fmap X Y f := f
@@ -37,6 +46,43 @@ Section INSTANCES.
   Global Instance id_functor: Functor (fun X => X).
   Proof.
     tauto.
+  Qed.
+
+  (** ** Product *)
+
+  Global Instance prodl_fmap A: FunctorOps (A ×) := {
+    fmap X Y f ax := match ax with (a, x) => (a, f x) end
+  }.
+
+  Global Instance prodr_fmap A: FunctorOps (× A) := {
+    fmap X Y f xa := match xa with (x, a) => (f x, a) end
+  }.
+
+  Global Instance prodl_functor A: Functor (A ×).
+  Proof.
+    tauto.
+  Qed.
+
+  Global Instance prodr_functor A: Functor (× A).
+  Proof.
+    tauto.
+  Qed.
+
+  (** ** Option *)
+
+  Global Instance option_fmap: FunctorOps option := {
+    fmap X Y f oa :=
+      match oa with
+        | Some a => Some (f a)
+        | None => None
+      end
+  }.
+
+  Global Instance option_functor: Functor option.
+  Proof.
+    constructor.
+    * intros A [a|]; reflexivity.
+    * intros A B C f g [a|]; reflexivity.
   Qed.
 End INSTANCES.
 
