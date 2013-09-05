@@ -4,25 +4,94 @@ Require Import Memory.
 Require Import Functor.
 Require Import Monad.
 Require Import Lens.
+Require Import Coq.Classes.Morphisms.
+Require Import Coq.Program.Basics.
 
 (** * Prerequisites *)
 
+(** We're going to lift the memory operations and theorems from a base
+  type [bmem] to a "richer" type [mem], which contains [bmem] as a
+  component. Formally, this means that we have a [Lens mem bmem] which
+  provides us with well-behaved accessors to the [bmem] component
+  inside of [mem]. While this is enough to lift most of the memory
+  operations and theorems, we do have additional prerequisites. *)
+
+(** First, in order to lift [MemoryOps], we need to know the value of
+  the empty memory state of the richer type [mem]; indeed there's no
+  way we would be able to construct that just from [empty : bmem].
+  However, the simpler memory state contained within this empty [mem]
+  should correspond to the empty [bmem] from the base memory states. *)
+
 Class LiftMemoryOps (mem bmem: Type)
   `{bmem_ops: Mem.MemoryOps bmem}
-  `{bmem_inj: !Mem.InjectOps bmem bmem}
   `{bmem_get: Getter mem bmem}
   `{bmem_set: Setter mem bmem} :=
 {
   liftmem_empty: mem
 }.
 
-Class LiftMem (mem bmem: Type)
+Class LiftMemorySpec (mem bmem: Type)
   `{mem_liftops: LiftMemoryOps mem bmem} :=
 {
-  liftmem_bspec :> Mem.MemoryStates bmem;
   liftmem_lens :> Lens mem bmem;
   liftmem_get_empty: get liftmem_empty = Mem.empty
 }.
+
+(** Furthermore, we need to know how the extra information fits with
+  memory injections. Indeed, we could decide that, if the smaller
+  [bmem] contained inside two [mem]'s inject into one another, then
+  the larger memory states also inject into one another (that is,
+  ignore the extra information for the purposes of memory injections),
+  but then we would have no guarantee at all regarding the way in
+  which this extra information evolves with program execution.
+  The other extreme would be to simply make use of the powerset
+  functor to lift [inject], so that two large memory states would
+  inject into one another only if they contain exactly the same
+  extra information. But this means it would be impossible for
+  this extra information to evolve with program execution.
+
+  Instead, we simply let the user specify how the extra information
+  affects injection by giving a relation on the larger structures
+  which is independent of the original memory states which are
+  contained within. This is expressed by the
+  [liftmem_inject_same_context] hypothesis below. Relations which
+  respect this requirement are equivalent to relations on the quotient
+  sets [mem / same_context], where [same_context] relates two larger
+  memory states which differ only by the base memory state they
+  contain. *)
+
+Class LiftInjectOps (smem bsmem tmem btmem: Type)
+  `{smem_lift_ops: LiftMemoryOps smem bsmem}
+  `{tmem_lift_ops: LiftMemoryOps tmem btmem}
+  `{stinj_ops: !Mem.InjectOps bsmem btmem} :=
+{
+  liftmem_context_inject: smem -> tmem -> Prop
+}.
+
+Class LiftInjections smem bsmem tmem btmem
+  `{inj_lift_ops: LiftInjectOps smem bsmem tmem btmem} :=
+{
+  liftinj_sspec :> LiftMemorySpec smem bsmem;
+  liftinj_tspec :> LiftMemorySpec tmem btmem;
+  liftmem_inject_same_context :>
+    Proper (same_context ==> same_context ==> impl) liftmem_context_inject
+}.
+
+(** For homogenous injections, we must also require that [context_inject]
+  be reflexive, so as to prove [neutral_inject]. If that proves to be too
+  restrictive, we could introduce the equivalent [inject_neutral] for the
+  context, and weaken the following to require only that [inject_neutral]
+  elements be proper. *)
+
+Class LiftHomogenousInjections mem bmem
+  `{liftmem_ops: LiftMemoryOps mem bmem}
+  `{inj_ops: !Mem.InjectOps bmem bmem}
+  `{liftinj_ops: !LiftInjectOps mem bmem mem bmem} :=
+{
+  lifthinj_liftinj :> LiftInjections mem bmem mem bmem;
+  lifthinj_context_inject_refl :> Reflexive liftmem_context_inject
+}.
+
 
 (** * Lifting memory operations *)
 
@@ -70,12 +139,12 @@ Section LIFTINSTANCES.
 End LIFTINSTANCES.
 
 Section LIFTOPS.
-  Context mem bmem `{mem_liftops: LiftMemoryOps mem bmem}.
-
   (** We can now use [lift] to define the operations of the comonadic
     memory states. *)
 
-  Global Instance liftmem_ops: Mem.MemoryOps mem := {
+  Global Instance liftmem_ops `{mem_liftops: LiftMemoryOps}:
+    Mem.MemoryOps mem :=
+  {
     empty :=
       liftmem_empty;
     nextblock wm :=
@@ -102,11 +171,6 @@ Section LIFTOPS.
       Mem.extends (get wm1) (get wm2);
     inject_neutral thr wm :=
       Mem.inject_neutral thr (get wm)
-  }.
-
-  Global Instance liftmem_inj: Mem.InjectOps mem mem := {
-    inject i wm1 wm2 :=
-      Mem.inject i (get wm1) (get wm2)
   }.
 End LIFTOPS.
 
@@ -157,6 +221,34 @@ Section LIFTOPTION.
     apply lift_option_eq_set_iff.
   Qed.
 
+  Theorem lift_option_eq_same_context `{Hlss: !LensSetSet mem bmem}:
+    forall (f: bmem -> option bmem) (wm wm': mem),
+      lift f wm = Some wm' ->
+      same_context wm wm'.
+  Proof.
+    intros f wm wm'.
+    unfold lift; simpl.
+    case (f (get wm)).
+    * intros ? H; inversion H; subst.
+      symmetry.
+      apply lens_set_same_context.
+    * discriminate.
+  Qed.
+
+  Theorem lift_option_same_context_eq `{Hlsg: !LensSetGet mem bmem}:
+    forall (f: bmem -> option bmem) (wm wm': mem),
+      f (get wm) = Some (get wm') ->
+      same_context wm wm' ->
+      lift f wm = Some wm'.
+  Proof.
+    intros f wm wm' Hc Hv.
+    simpl.
+    rewrite Hc; clear Hc.
+    f_equal.
+    rewrite Hv.
+    apply lens_set_get.
+  Qed.
+
   Theorem lift_option_eq_preserves_context (f g: bmem -> option bmem):
     forall (wm: mem) (wm': mem),
       g (get wm) = Some (get wm') ->
@@ -198,12 +290,25 @@ Section LIFTPROD.
     rewrite H; clear H; simpl.
     reflexivity.
   Qed.
+
+  Context `{Hlss: !LensSetSet mem bmem}.
+
+  Theorem lift_prod_eq_same_context (f: bmem -> bmem * A) (wm wm': mem) (a: A):
+    lift f wm = (wm', a) ->
+    same_context wm wm'.
+  Proof.
+    simpl.
+    destruct (f (get wm)).
+    intro H; inversion H; subst.
+    symmetry.
+    apply lens_set_same_context.
+  Qed.
 End LIFTPROD.
 
 (** ** Lifting [Mem.MemoryStates] *)
 
 Section LIFTDERIVED.
-  Context `{HW: LiftMem}.
+  Context `{HW: LiftMemorySpec}.
 
   (** Now we must come up with a suitable leaf tactic.
     The first step for proving a lifted theorem involving an
@@ -381,27 +486,27 @@ Hint Extern 10 => progress lift_reduce; now eauto: lift.
     let Hl := fresh Hf "l" in
     let Hr := fresh Hf "r" in
     destruct Hf as [Hl Hr];
-    try (split; [recurse Hl | recurse Hr]).
+    split; [recurse Hl | recurse Hr].
 
   Ltac peel Hf leaftac :=
     let recurse Hf := peel Hf leaftac in
     try match goal with
-      | _: LiftMem ?mem ?bmem |- forall (x: _), _ =>
+      | _: LiftMemoryOps ?mem ?bmem |- forall (x: _), _ =>
         let x := fresh x in peel_intro bmem recurse Hf x
-      | _: LiftMem ?mem ?bmem |- exists (x: _), _ =>
+      | _: LiftMemoryOps ?mem ?bmem |- exists (x: _), _ =>
         let x := fresh x in peel_exists bmem recurse Hf x
-      | _: LiftMem ?mem ?bmem |- { x: _ | _ } =>
+      | _: LiftMemoryOps ?mem ?bmem |- { x: _ | _ } =>
         let x := fresh x in peel_exists bmem recurse Hf x
       | |- _ /\ _ =>
         peel_conj recurse Hf
       | |- ?T =>
-        leaftac tt
+        leaftac
     end.
 
   (** We're now ready to define our leaf tactic, and use it in
     conjunction with [peel] to solve the goals automatically. *)
 
-  Ltac lift_leaf f :=
+  Ltac lift_leaf :=
     autorewrite with lift in *;
     simpl in *;
     eauto 10 with lift typeclass_instances.
@@ -414,18 +519,14 @@ Hint Extern 10 => progress lift_reduce; now eauto: lift.
     now lift_partial f.
 
 Section LIFTMEM.
-  Context mem bmem `{Hmem: LiftMem mem bmem}.
+  Context mem bmem `{Hmem: LiftMemorySpec mem bmem}.
 
-  Hint Extern 10 (lift _ _ = Some _) =>
-    eapply lift_option_eq_preserves_context; eassumption
-    : lift.
+  Hint Immediate lift_option_eq_preserves_context : lift.
 
-  Global Instance liftmem_spec: Mem.MemoryStates mem.
+  Global Instance liftmem_spec:
+    Mem.MemorySpec bmem -> Mem.MemorySpec mem.
   Proof.
-    split.
-
-    (* MemorySpec *)
-    esplit.
+    intro Hbmem; esplit.
     lift Mem.nextblock_pos.
     lift Mem.valid_not_valid_diff.
     lift Mem.perm_implies.
@@ -593,10 +694,105 @@ Section LIFTMEM.
     lift Mem.store_inject_neutral.
     lift Mem.drop_inject_neutral.
     exact tt.
+  Qed.
+End LIFTMEM.
 
-    (* HomogenousInjections *)
+Section LIFTINJOPS.
+  Context `{Hinj: LiftInjections}.
+
+  Global Instance liftmem_inj `{inj_liftops: LiftInjectOps}:
+    Mem.InjectOps smem tmem :=
+  {
+    inject i wm1 wm2 :=
+      Mem.inject i (get wm1) (get wm2) /\
+      liftmem_context_inject wm1 wm2
+  }.
+
+  (* Injection in the larger structure implies injection for the
+    underlying original memory states. *)
+  Theorem lift_inject_unlift ι (m1: smem) (m2: tmem):
+    Mem.inject ι m1 m2 ->
+    Mem.inject ι (get m1) (get m2).
+  Proof.
+    intros [H1 _].
+    assumption.
+  Qed.
+
+  (* Triangle diagrams evolving on the left *)
+  Theorem lift_inject_triangle_left ι1 m1 ι2 m1' m2:
+    same_context m1 m1' ->
+    Mem.inject ι1 m1 m2 ->
+    Mem.inject ι2 (get m1') (get m2) ->
+    Mem.inject ι2 m1' m2.
+  Proof.
+    intros Hsc [_ Hic] Him'.
     split.
-    (* - MemoryInjections *)
+    - assumption.
+    - rewrite <- Hsc.
+      assumption.
+  Qed.
+
+  (* Triangle diagrams evolving on the right *)
+  Theorem lift_inject_triangle_right ι1 m2 ι2 m1 m2':
+    same_context m2 m2' ->
+    Mem.inject ι1 m1 m2 ->
+    Mem.inject ι2 (get m1) (get m2') ->
+    Mem.inject ι2 m1 m2'.
+  Proof.
+    intros Hsc [_ Hic] Him'.
+    split.
+    - assumption.
+    - rewrite <- Hsc.
+      assumption.
+  Qed.
+
+  (* Square diagrams *)
+  Theorem lift_inject_square ι1 m1 m2 ι2 m1' m2':
+    same_context m1 m1' ->
+    same_context m2 m2' ->
+    Mem.inject ι1 m1 m2 ->
+    Mem.inject ι2 (get m1') (get m2') ->
+    Mem.inject ι2 m1' m2'.
+  Proof.
+    intros Hsc1 Hsc2 [_ Hic] Him'.
+    split; try assumption.
+    rewrite <- Hsc1.
+    rewrite <- Hsc2.
+    assumption.
+  Qed.
+End LIFTINJOPS.
+
+(* Do not simplify [Mem.inject] to solve our goals;
+  we use the tactics below instead. *)
+Arguments Mem.inject _ _ _ _ _ _ _ _ : simpl never.
+
+Hint Resolve lift_inject_unlift : lift.
+
+Ltac prove_premises :=
+  autorewrite with lens;
+  match goal with
+    | [ |- same_context _ _] =>
+      (eapply lift_option_eq_same_context; eassumption) ||
+      (eapply lift_prod_eq_same_context; eassumption) ||
+      reflexivity
+      (*eapply lift_same_context_set_r*)
+    | [ |- Mem.inject ?ι ?m1 ?m2] =>
+      eassumption 
+  end.
+
+Ltac lift_injection :=
+  (eapply lift_inject_triangle_left; prove_premises) ||
+  (eapply lift_inject_triangle_right; prove_premises) ||
+  (eapply lift_inject_square; prove_premises).
+
+Hint Extern 10 (Mem.inject _ _ _) => lift_injection : lift.
+
+Section LIFTINJ.
+  Context `{Hinj: LiftInjections}.
+
+  Global Instance liftinj_spec:
+    Mem.MemoryInjections bsmem btmem -> Mem.MemoryInjections smem tmem.
+  Proof.
     split.
     lift Mem.mi_freeblocks.
     lift Mem.valid_block_inject_1.
@@ -634,7 +830,18 @@ Section LIFTMEM.
     lift Mem.free_right_inject.
     lift Mem.free_inject.
     lift Mem.drop_outside_inject.
-    (* - neutral_inject *)
-    lift Mem.neutral_inject.
-  Defined.
-End LIFTMEM.
+  Qed.
+End LIFTINJ.
+
+Section LIFTMS.
+  Context `{Hinj: LiftHomogenousInjections}.
+
+  Global Instance lift_mem:
+    Mem.MemoryStates bmem -> Mem.MemoryStates mem := {}.
+  Proof.
+    split.
+    typeclasses eauto.
+    lift_partial Mem.neutral_inject.
+      split; now eauto with lift.
+  Qed.
+End LIFTMS.

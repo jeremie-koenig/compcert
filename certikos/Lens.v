@@ -133,14 +133,9 @@ Hint Rewrite
     @lens_set_set
     @lens_unfold_modify
     @lens_eq_set
-  using typeclasses eauto : lens.
-
-Create HintDb lens discriminated.
-
-Hint Resolve
     @lens_set_same_context
     @lens_modify_same_context
-  : lens.
+  using typeclasses eauto : lens.
 
 
 (** * Instances *)
