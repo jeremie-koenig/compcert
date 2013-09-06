@@ -1,5 +1,6 @@
 Require Import Coq.Classes.Morphisms.
 Require Import Coq.Classes.RelationClasses.
+Require Export Coq.Classes.RelationPairs.
 Require Import Coq.Setoids.Setoid.
 
 (** * Interface *)
@@ -35,6 +36,11 @@ Class Lens S V `{lens_get: Getter S V} `{lens_set: Setter S V} := {
 
 
 (** * Theory *)
+
+(** ** Getters are measures, cf. [Coq.Classes.RelationPairs] *)
+
+Instance lens_get_measure {S V} `{Getter S V}:
+  Measure get.
 
 (** ** The [modify] operation *)
 
