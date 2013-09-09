@@ -109,7 +109,7 @@ let compile_c_ast sourcename csyntax ofile =
   let clight =
     match SimplExpr.transl_program csyntax with
     | Errors.OK p ->
-        begin match SimplLocals.transf_program p with
+        begin match SimplLocals.transf_program ExtFunImpl.ef_ops p with
         | Errors.OK p' -> p'
         | Errors.Error msg ->
             print_error stderr msg;

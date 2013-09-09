@@ -23,6 +23,7 @@ open AST
 open Ctypes
 open Cop
 open Clight
+open ExtFunImpl
 
 (* Options, lists, pairs *)
 
