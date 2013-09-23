@@ -682,12 +682,12 @@ Record extcall_properties (sem: extcall_sem)
 
 (** [extcall_sem] and [extcall_properties] are wrapped into type classes *)
 
-Class ExtCallOps `{ef_ops: ExtFunOps} := {
+Class ExtCallOps `{mm_ops: !Mem.ModelOps mem} `{ef_ops: ExtFunOps} := {
   external_call (ef: external_function):
     extcall_sem
 }.
 
-Class ExternalCalls `{ec_ops: ExtCallOps} := {
+Class ExternalCalls `{ef_ops: ExtFunOps} `{ec_ops: !ExtCallOps} := {
   ec_mem_spec :> Mem.MemoryModel mem;
   ec_ef_spec :> ExternalFunctions external_function;
   external_call_spec (ef: external_function):
@@ -696,7 +696,7 @@ Class ExternalCalls `{ec_ops: ExtCallOps} := {
 
 End WITHMEM.
 
-Arguments ExtCallOps mem {mem_ops} external_function {ef_ops}.
+Arguments ExtCallOps mem {mem_ops inj_ops mm_ops} external_function {ef_ops}.
 Arguments ExternalCalls mem {mem_ops inj_ops mm_ops} external_function {ef_ops ec_ops}.
 
 (** Some shorthand accessors for the properties of ExternalCalls. *)
