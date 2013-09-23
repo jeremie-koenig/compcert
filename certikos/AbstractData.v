@@ -37,9 +37,13 @@ Class AbstractDataInjections (sdata tdata: Type)
 {
 }.
 
-Class AbstractDataHomogenousInjections data
+Class AbstractDataModelOps data
   `{data_ops: AbstractDataOps data}
   `{data_inj_ops: !AbstractDataInjectOps data data} :=
+{
+}.
+
+Class AbstractDataModel data `{data_mm_ops: AbstractDataModelOps data} :=
 {
   data_inject_reflexive :> Reflexive data_inject
 }.
@@ -62,21 +66,24 @@ Section DEFAULTHINJ.
   Global Instance data_eq_inj_spec:
     AbstractDataInjections data data | 10 := {}.
 
-  Global Instance data_eq_hinj_spec:
-    AbstractDataHomogenousInjections data | 10 := {}.
+  Global Instance data_eq_mm_ops:
+    AbstractDataModelOps data | 10 := {}.
+
+  Global Instance data_eq_mm_spec:
+    AbstractDataModel data | 10 := {}.
 End DEFAULTHINJ.
 
 (** * [mem × data] can be used as memory states *)
 
 Section LIFTMEM.
-  Context mem `{Hmem: Mem.MemoryStates mem}.
+  Context mem `{Hmem: Mem.MemoryModel mem}.
   Context data `{data_ops: AbstractData data}.
 
   Global Instance data_liftmem_ops: LiftMemoryOps (mem × data) mem := {
     liftmem_empty := (Mem.empty, empty_data)
   }.
 
-  Global Instance data_liftmem_spec: LiftMemorySpec (mem × data) mem := {}.
+  Global Instance data_liftmem_spec: LiftMemoryStates (mem × data) mem := {}.
   Proof.
     reflexivity.
   Qed.
@@ -105,24 +112,27 @@ Section LIFTINJ.
 End LIFTINJ.
 
 Section LIFTHINJ.
-  Context `{Hmem_hinj: Mem.HomogenousInjections}.
-  Context `{Hdata_hinj: AbstractDataHomogenousInjections}.
+  Context `{Hmm: Mem.MemoryModel}.
+  Context `{Hdata_mm: AbstractDataModel}.
 
   (* Into Lens.v? *)
   Instance get_measure `{Getter}: Measure get.
 
-  Global Instance data_lifthinj_spec:
-    LiftHomogenousInjections (mem × data) mem := {}.
+  Global Instance data_liftmm_ops:
+    LiftModelOps (mem × data) mem := {}.
+
+  Global Instance data_liftmm_spec:
+    LiftModel (mem × data) mem := {}.
 End LIFTHINJ.
 
-(** This should be enough to ensure that instances of [Mem.MemoryStates]
+(** This should be enough to ensure that instances of [Mem.MemoryModel]
   can be combined with instances of [AbstractDataHomogenousInjections]
-  to derive [Mem.MemoryStates] instances on the product (mem × data).
+  to derive [Mem.MemoryModel] instances on the product (mem × data).
   Below we just make sure that it is indeed the case. *)
 
 Section TEST.
-  Context `{Hmem: Mem.MemoryStates}.
-  Context `{Hdata: AbstractDataHomogenousInjections}.
+  Context `{Hmem: Mem.MemoryModel}.
+  Context `{Hdata: AbstractDataModel}.
 
-  Instance: Mem.MemoryStates (mem × data) := _.
+  Instance: Mem.MemoryModel (mem × data) := _.
 End TEST.

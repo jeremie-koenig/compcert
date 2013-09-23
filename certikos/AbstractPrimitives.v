@@ -5,8 +5,7 @@ Require Import LiftExtCall.
 Require Import AbstractData.
 
 Class AbstractPrimOps (mem data prim: Type)
-  `{mem_ops: Mem.MemoryOps mem}
-  `{mem_inj: !Mem.InjectOps mem mem}
+  `{mm_ops: Mem.ModelOps mem}
   `{data_ops: AbstractDataOps data} :=
 {
   prim_sig (p: prim): signature;
@@ -16,7 +15,7 @@ Class AbstractPrimOps (mem data prim: Type)
 Class AbstractPrimitives (mem data prim: Type)
   `{prim_ops: AbstractPrimOps mem data prim} :=
 {
-  prim_mem :> Mem.MemoryStates mem;
+  prim_mem :> Mem.MemoryModel mem;
   prim_abstract_data :> AbstractData data;
   prim_extcall_properties (p: prim):
     extcall_properties (prim_extcall_sem p) (prim_sig p)

@@ -12,7 +12,7 @@ Require Import LiftMem.
 Require Import PredicateMonad.
 
 Section LIFTEXTCALL.
-  Context `{Hlm: LiftHomogenousInjections}.
+  Context `{Hlm: LiftModel}.
   Context `{ef_ops: ExtFunOps}.
   Context `{ec_ops: !ExtCallOps bmem external_function}.
   Context `{Hec: !ExternalCalls bmem external_function}.

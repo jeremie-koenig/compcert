@@ -30,7 +30,7 @@ Class LiftMemoryOps (mem bmem: Type)
   liftmem_empty: mem
 }.
 
-Class LiftMemorySpec (mem bmem: Type)
+Class LiftMemoryStates (mem bmem: Type)
   `{mem_liftops: LiftMemoryOps mem bmem} :=
 {
   liftmem_lens :> Lens mem bmem;
@@ -71,8 +71,8 @@ Class LiftInjectOps (smem bsmem tmem btmem: Type)
 Class LiftInjections smem bsmem tmem btmem
   `{inj_lift_ops: LiftInjectOps smem bsmem tmem btmem} :=
 {
-  liftinj_sspec :> LiftMemorySpec smem bsmem;
-  liftinj_tspec :> LiftMemorySpec tmem btmem;
+  liftinj_sspec :> LiftMemoryStates smem bsmem;
+  liftinj_tspec :> LiftMemoryStates tmem btmem;
   liftmem_inject_same_context :>
     Proper (same_context ==> same_context ==> impl) liftmem_context_inject
 }.
@@ -83,10 +83,15 @@ Class LiftInjections smem bsmem tmem btmem
   context, and weaken the following to require only that [inject_neutral]
   elements be proper. *)
 
-Class LiftHomogenousInjections mem bmem
+Class LiftModelOps mem bmem
   `{liftmem_ops: LiftMemoryOps mem bmem}
   `{inj_ops: !Mem.InjectOps bmem bmem}
-  `{liftinj_ops: !LiftInjectOps mem bmem mem bmem} :=
+  `{liftinj_ops: !LiftInjectOps mem bmem mem bmem}
+  `{mm_ops: !Mem.ModelOps bmem} :=
+{
+}.
+
+Class LiftModel mem bmem `{liftmm_ops: LiftModelOps mem bmem} :=
 {
   lifthinj_liftinj :> LiftInjections mem bmem mem bmem;
   lifthinj_context_inject_refl :> Reflexive liftmem_context_inject
@@ -101,7 +106,7 @@ Section LIFT.
   Context {mem bmem} `{getb: Getter mem bmem} `{setb: Setter mem bmem}.
   Context `{HF: Functor}.
 
-  (** Because [Mem.MemoryStates] contains so many theorems, we need some
+  (** Because [Mem.MemoryModel] contains so many theorems, we need some
     systematic way to lift the memory operations on [W mem], so that
     the lifting of the theorems is convenient to automate.
 
@@ -168,15 +173,13 @@ Section LIFTOPS.
     drop_perm wm b lo hi p :=
       lift (fun m => Mem.drop_perm m b lo hi p) wm;
     extends wm1 wm2 :=
-      Mem.extends (get wm1) (get wm2);
-    inject_neutral thr wm :=
-      Mem.inject_neutral thr (get wm)
+      Mem.extends (get wm1) (get wm2)
   }.
 End LIFTOPS.
 
 (** * Lifting the properties *)
 
-(** Now we lift the properties listed in [Mem.MemoryStates]: given a theorem
+(** Now we lift the properties listed in [Mem.MemoryModel]: given a theorem
   about [mem], we need to prove the equivalent theorem about [W mem]
   and the corresponding lifted operations it involves. To do this,
   we need some theorems about lift to help us rewrite our lifted goals
@@ -305,10 +308,10 @@ Section LIFTPROD.
   Qed.
 End LIFTPROD.
 
-(** ** Lifting [Mem.MemoryStates] *)
+(** ** Lifting [Mem.MemoryModel] *)
 
 Section LIFTDERIVED.
-  Context `{HW: LiftMemorySpec}.
+  Context `{HW: LiftMemoryStates}.
 
   (** Now we must come up with a suitable leaf tactic.
     The first step for proving a lifted theorem involving an
@@ -519,12 +522,12 @@ Hint Extern 10 => progress lift_reduce; now eauto: lift.
     now lift_partial f.
 
 Section LIFTMEM.
-  Context mem bmem `{Hmem: LiftMemorySpec mem bmem}.
+  Context mem bmem `{Hmem: LiftMemoryStates mem bmem}.
 
   Hint Immediate lift_option_eq_preserves_context : lift.
 
   Global Instance liftmem_spec:
-    Mem.MemorySpec bmem -> Mem.MemorySpec mem.
+    Mem.MemoryStates bmem -> Mem.MemoryStates mem.
   Proof.
     intro Hbmem; esplit.
     lift Mem.nextblock_pos.
@@ -689,10 +692,6 @@ Section LIFTMEM.
     lift Mem.valid_pointer_extends.
     lift Mem.weak_valid_pointer_extends.
     lift Mem.perm_free_list.
-    lift Mem.empty_inject_neutral.
-    lift Mem.alloc_inject_neutral.
-    lift Mem.store_inject_neutral.
-    lift Mem.drop_inject_neutral.
     exact tt.
   Qed.
 End LIFTMEM.
@@ -834,13 +833,20 @@ Section LIFTINJ.
 End LIFTINJ.
 
 Section LIFTMS.
-  Context `{Hinj: LiftHomogenousInjections}.
+  Context `{Hinj: LiftModel}.
+
+  Global Instance lift_mm_ops: Mem.ModelOps mem := {
+    inject_neutral thr wm :=
+      Mem.inject_neutral thr (get wm)
+  }.
 
   Global Instance lift_mem:
-    Mem.MemoryStates bmem -> Mem.MemoryStates mem := {}.
+    Mem.MemoryModel bmem -> Mem.MemoryModel mem := {}.
   Proof.
-    split.
-    typeclasses eauto.
+    lift Mem.empty_inject_neutral.
+    lift Mem.alloc_inject_neutral.
+    lift Mem.store_inject_neutral.
+    lift Mem.drop_inject_neutral.
     lift_partial Mem.neutral_inject.
       split; now eauto with lift.
   Qed.
