@@ -510,7 +510,7 @@ Fixpoint output_trace (t: trace) : Prop :=
 (** * Semantics of volatile memory accesses *)
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemoryStates}.
+Context `{Hmem: Mem.MemoryModel}.
 
 Definition block_is_volatile (F V: Type) (ge: Genv.t F V) (b: block) : bool :=
   match Genv.find_var_info ge b with
@@ -688,7 +688,7 @@ Class ExtCallOps `{ef_ops: ExtFunOps} := {
 }.
 
 Class ExternalCalls `{ec_ops: ExtCallOps} := {
-  ec_mem_spec :> Mem.MemoryStates mem;
+  ec_mem_spec :> Mem.MemoryModel mem;
   ec_ef_spec :> ExternalFunctions external_function;
   external_call_spec (ef: external_function):
     extcall_properties (external_call ef) (ef_sig ef)
@@ -697,7 +697,7 @@ Class ExternalCalls `{ec_ops: ExtCallOps} := {
 End WITHMEM.
 
 Arguments ExtCallOps mem {mem_ops} external_function {ef_ops}.
-Arguments ExternalCalls mem {mem_ops inj_ops} external_function {ef_ops ec_ops}.
+Arguments ExternalCalls mem {mem_ops inj_ops mm_ops} external_function {ef_ops ec_ops}.
 
 (** Some shorthand accessors for the properties of ExternalCalls. *)
 Section WITHEC.

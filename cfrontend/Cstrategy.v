@@ -35,7 +35,7 @@ Require Import Csem.
 Section WITHMEM.
 Require Import ExtFunImpl ExtCallImpl.
 Existing Instances ef_ops ef_spec ec_ops ec_spec.
-Context `{Hmem: Mem.MemoryStates}.
+Context `{Hmem: Mem.MemoryModel}.
 
 Section STRATEGY.
 

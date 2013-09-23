@@ -105,7 +105,7 @@ Open Local Scope string_scope.
 (** * Composing the translation passes *)
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemoryStates}.
+Context `{Hmem: Mem.MemoryModel}.
 
 (** We first define useful monadic composition operators,
     along with funny (but convenient) notations. *)

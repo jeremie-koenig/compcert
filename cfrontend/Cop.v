@@ -24,7 +24,7 @@ Require Import Memory.
 Require Import Ctypes.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemoryStates}.
+Context `{Hmem: Mem.MemoryModel}.
 
 (** * Syntax of operators. *)
 
