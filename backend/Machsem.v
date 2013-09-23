@@ -27,7 +27,7 @@ Require Import Mach.
 Require Stacklayout.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemoryStates}.
+Context `{Hmem: Mem.MemoryModel}.
 
 (** The semantics for Mach is close to that of [Linear]: they differ only
   on the interpretation of stack slot accesses.  In Mach, these

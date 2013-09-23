@@ -27,7 +27,7 @@ Open Scope error_monad_scope.
 
 Section WITHMEM.
 Context `{Hef: ExternalFunctions}.
-Context `{Hmem: Mem.MemoryStates}.
+Context `{Hmem: Mem.MemoryModel}.
 
 (** * Evaluation of compile-time constant expressions *)
 

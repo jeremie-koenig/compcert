@@ -30,7 +30,7 @@ Section SPEC.
 Local Open Scope gensym_monad_scope.
 Require Import ExtFunImpl.
 Existing Instances ef_ops ef_spec.
-Context `{Hmem: Mem.MemoryStates}.
+Context `{Hmem: Mem.MemoryModel}.
 
 (** * Relational specification of the translation. *)
 

@@ -138,7 +138,7 @@ Qed.
 (** * Agreement between Mach registers and processor registers *)
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemoryStates}.
+Context `{Hmem: Mem.MemoryModel}.
 
 Record agree (ms: Mach.regset) (sp: val) (rs: Asm.regset) : Prop := mkagree {
   agree_sp: rs#SP = sp;

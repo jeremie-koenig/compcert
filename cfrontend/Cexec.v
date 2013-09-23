@@ -101,7 +101,7 @@ Defined.
 (** * Events, volatile memory accesses, and external functions. *)
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemoryStates}.
+Context `{Hmem: Mem.MemoryModel}.
 
 Section EXEC.
 

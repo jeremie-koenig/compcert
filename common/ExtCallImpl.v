@@ -19,7 +19,7 @@ Require Export ExtFunImpl.
 Set Implicit Arguments.
 
 Section WITHMEM.
-Context `{Hmem: Mem.MemoryStates}.
+Context `{Hmem: Mem.MemoryModel}.
 
 (** ** Semantics of volatile loads *)
 

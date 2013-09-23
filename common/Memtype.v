@@ -182,10 +182,7 @@ drop_perm: forall (m: mem) (b: block) (lo hi: Z) (p: permission), option mem;
   by relaxing the permissions of [m1] (for instance, allocating larger
   blocks) and replacing some of the [Vundef] values stored in [m1] by
   more defined values stored in [m2] at the same addresses. *)
-extends: mem -> mem -> Prop;
-
-(** Memory states that inject into themselves. *)
-inject_neutral: forall (thr: block) (m: mem), Prop
+extends: mem -> mem -> Prop
 
 }.
 
@@ -208,6 +205,19 @@ Class InjectOps smem tmem
   `{tmem_ops: MemoryOps tmem} := {
 
 inject: meminj -> smem -> tmem -> Prop
+
+}.
+
+(** A type of memory states is a "memory model" if it is equipped with
+  injections into itself. Some injection-related operations only make
+  sense when the source and target memory states are the same. *)
+
+Class ModelOps mem
+  `{mem_ops: !MemoryOps mem}
+  `{inj_ops: !InjectOps mem mem} := {
+
+(** Memory states that inject into themselves. *)
+inject_neutral: forall (thr: block) (m: mem), Prop
 
 }.
 
@@ -250,7 +260,7 @@ Definition inj_offset_aligned (delta: Z) (size: Z) : Prop :=
 Definition flat_inj (thr: block) : meminj :=
   fun (b: block) => if zlt b thr then Some(b, 0) else None.
 
-Class MemorySpec (mem: Type) `{mem_ops: MemoryOps mem} := {
+Class MemoryStates (mem: Type) `{mem_ops: MemoryOps mem} := {
 
 (** * Permissions, block validity, access validity, and bounds *)
 
@@ -931,32 +941,8 @@ perm_free_list:
   perm m b ofs k p /\ 
   (forall lo hi, In (b, lo, hi) l -> lo <= ofs < hi -> False);
 
-(** Memory states that inject into themselves. *)
-
-empty_inject_neutral thr:
-  inject_neutral thr empty;
-
-alloc_inject_neutral thr m lo hi b m':
-  alloc m lo hi = (m', b) ->
-  inject_neutral thr m ->
-  nextblock m < thr ->
-  inject_neutral thr m';
-
-store_inject_neutral chunk m b ofs v m' thr:
-  store chunk m b ofs v = Some m' ->
-  inject_neutral thr m ->
-  b < thr ->
-  val_inject (flat_inj thr) v v ->
-  inject_neutral thr m';
-
-drop_inject_neutral m b lo hi p m' thr:
-  drop_perm m b lo hi p = Some m' ->
-  inject_neutral thr m ->
-  b < thr ->
-  inject_neutral thr m';
-
 (** This ugly workaround is to prevent the [intuition] tactic from
-  destructing instances of MEM which are in the context. *)
+  destructing instances of [MemoryStates] which are in the context. *)
 ugly_workaround_dependee: Type;
 ugly_workaround_depender: ugly_workaround_dependee
 
@@ -1241,25 +1227,39 @@ drop_outside_inject f m1 m2 b lo hi p m2':
 
 }.
 
-Class HomogenousInjections mem
-  `{mem_ops: MemoryOps mem}
-  `{inj_ops: !InjectOps mem mem} :=
+Class MemoryModel mem `{mm_ops: ModelOps mem} :=
 {
+  memory_states_spec :> MemoryStates mem;
+  memory_states_inject :> MemoryInjections mem mem;
 
-homogenous_injecions :> MemoryInjections mem mem;
+(** Memory states that inject into themselves. *)
+
+empty_inject_neutral thr:
+  inject_neutral thr empty;
+
+alloc_inject_neutral thr m lo hi b m':
+  alloc m lo hi = (m', b) ->
+  inject_neutral thr m ->
+  nextblock m < thr ->
+  inject_neutral thr m';
+
+store_inject_neutral chunk m b ofs v m' thr:
+  store chunk m b ofs v = Some m' ->
+  inject_neutral thr m ->
+  b < thr ->
+  val_inject (flat_inj thr) v v ->
+  inject_neutral thr m';
+
+drop_inject_neutral m b lo hi p m' thr:
+  drop_perm m b lo hi p = Some m' ->
+  inject_neutral thr m ->
+  b < thr ->
+  inject_neutral thr m';
 
 neutral_inject m:
   inject_neutral (nextblock m) m ->
   inject (flat_inj (nextblock m)) m m
 
-}.
-
-Class MemoryStates mem
-  `{mem_ops: MemoryOps mem}
-  `{inj_ops: !InjectOps mem mem} :=
-{
-  memory_states_spec :> MemorySpec mem;
-  memory_states_inject :> HomogenousInjections mem
 }.
 
 End Mem.
