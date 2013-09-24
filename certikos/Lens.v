@@ -5,33 +5,52 @@ Require Import Coq.Setoids.Setoid.
 
 (** * Interface *)
 
-Class Getter (S V: Type) := {
-  get: S -> V
+(** Lenses are identified by the corresponding projection, which is
+  also used to define the [get] operation. Note that because we use
+  the letter [S] to denote the source type, which conflicts with the
+  successor function on [nat] from the standard library, we need to
+  use a verbose style below to avoid arguments being named [S0] or
+  something such. (This is an obvious software engineering quirk
+  with the way Coq generates identifier.) *)
+
+Class Getter {S V: Type} (π: S -> V) := {
+  get: S -> V := π
 }.
 
-Class Setter (S V: Type) := {
+Class Setter {S V: Type} (π: S -> V) := {
   set: V -> S -> S
 }.
 
-Class LensSetGet S V `{lens_get: Getter S V} `{lens_set: Setter S V} := {
+Arguments get {S V} π {_} _.
+Arguments set {S V} π {_} _ _.
+
+Class LensSetGet {S V} π
+  `{lens_get: Getter S V π}
+  `{lens_set: Setter S V π} :=
+{
   lens_set_get s:
-    set (get s) s = s
+    set π (get π s) s = s
 }.
 
-Class LensGetSet S V `{lens_get: Getter S V} `{lens_set: Setter S V} := {
+Class LensGetSet {S V} π
+  `{lens_get: Getter S V π}
+  `{lens_set: Setter S V π} :=
+{
   lens_get_set v s:
-    get (set v s) = v
+    get π (set π v s) = v
 }.
 
-Class LensSetSet S V `{lens_set: Setter S V} := {
+Class LensSetSet {S V} π
+  `{lens_set: Setter S V π} :=
+{
   lens_set_set u v s:
-    set u (set v s) = set u s
+    set π u (set π v s) = set π u s
 }.
 
-Class Lens S V `{lens_get: Getter S V} `{lens_set: Setter S V} := {
-  lens_lens_set_get :> LensSetGet S V;
-  lens_lens_get_set :> LensGetSet S V;
-  lens_lens_set_set :> LensSetSet S V
+Class Lens {S V} π `{lens_get: Getter S V π} `{lens_set: Setter S V π} := {
+  lens_lens_set_get :> LensSetGet π;
+  lens_lens_get_set :> LensGetSet π;
+  lens_lens_set_set :> LensSetSet π
 }.
 
 
@@ -40,40 +59,42 @@ Class Lens S V `{lens_get: Getter S V} `{lens_set: Setter S V} := {
 (** ** Getters are measures, cf. [Coq.Classes.RelationPairs] *)
 
 Instance lens_get_measure {S V} `{Getter S V}:
-  Measure get.
+  Measure (get π).
 
 (** ** The [modify] operation *)
 
 Section MODIFY.
-  Context {S V} `{HSV: Lens S V}.
+  Context {S V π} `{HSV: Lens S V π}.
 
   Definition modify (f: V -> V) (s: S) :=
-    set (f (get s)) s.
+    set π (f (get π s)) s.
 
   Lemma lens_unfold_modify f s:
-    modify f s = set (f (get s)) s.
+    modify f s = set π (f (get π s)) s.
   Proof.
     reflexivity.
   Qed.
 End MODIFY.
 
+Arguments modify {S V} π {_ _} _ _.
+
 (** ** The [same_context] relation *)
 
 Section SAMECONTEXT.
-  Context {S V} `{lens_get: Getter S V} `{HSV: LensSetSet S V}.
+  Context {S V π} `{lens_get: Getter S V π} `{HSV: LensSetSet S V π}.
 
   Definition same_context: relation S :=
-    fun s t => forall v, set v s = set v t.
+    fun s t => forall v, set π v s = set π v t.
 
   Lemma lens_set_same_context v s:
-    same_context (set v s) s.
+    same_context (set π v s) s.
   Proof.
     intro u.
     apply lens_set_set.
   Qed.
 
   Lemma lens_modify_same_context f s:
-    same_context (modify f s) s.
+    same_context (modify π f s) s.
   Proof.
     intro u.
     unfold modify.
@@ -88,11 +109,11 @@ Section SAMECONTEXT.
     * intros s t Hst u.
       symmetry; now auto.
     * intros s1 s2 s3 H12 H23 u.
-      transitivity (set u s2); now auto.
+      transitivity (set π u s2); now auto.
   Qed.
 
   Global Instance same_context_set_mor:
-    Proper (eq ==> same_context ==> eq) set.
+    Proper (eq ==> same_context ==> eq) (set π).
   Proof.
     intros u v Huv s t Hst.
     subst.
@@ -100,7 +121,7 @@ Section SAMECONTEXT.
   Qed.
 
   Global Instance same_context_modify_mor f:
-    Proper (same_context ==> same_context) (modify f).
+    Proper (same_context ==> same_context) (modify π f).
   Proof.
     intros s t Hst u.
     unfold modify.
@@ -109,26 +130,28 @@ Section SAMECONTEXT.
   Qed.
 End SAMECONTEXT.
 
+Arguments same_context {S V} π {_} _ _.
+
 (** ** Consequences of [LensGetSet] *)
 
 Section GETSET.
   Context {S V} `{Hgs: LensGetSet S V}.
 
   Lemma lens_get_modify f s:
-    get (modify f s) = f (get s).
+    get π (modify π f s) = f (get π s).
   Proof.
     apply lens_get_set.
   Qed.
 
   Theorem lens_eq_set (s: S) (u v: V):
-    set u s = set v s <-> u = v.
+    set π u s = set π v s <-> u = v.
   Proof.
     split; intros.
     * rewrite <- (lens_get_set u s).
       rewrite <- (lens_get_set v s).
       apply f_equal.
       assumption.
-    * apply (f_equal (fun x => set x s)).
+    * apply (f_equal (fun x => set π x s)).
       assumption.
   Qed.
 End GETSET.
@@ -149,28 +172,24 @@ Hint Rewrite
 (** ** Product *)
 
 Section PROD.
-  Global Instance prodr_get A B: Getter (A * B) A := {
-    get := @fst _ _
-  }.
+  Global Instance fst_get A B: Getter (@fst A B) := {}.
 
-  Global Instance prodr_set A B: Setter (A * B) A := {
+  Global Instance fst_set A B: Setter (@fst A B) := {
     set a x := (a, snd x)
   }.
 
-  Global Instance prodr_lens A B: Lens (A * B) A.
+  Global Instance fst_lens A B: Lens (@fst A B).
   Proof.
     split; split; intuition.
   Qed.
 
-  Global Instance prodl_get A B: Getter (A * B) B := {
-    get := @snd _ _
-  }.
+  Global Instance snd_get A B: Getter (@snd A B) := {}.
 
-  Global Instance prodl_set A B: Setter (A * B) B := {
+  Global Instance snd_set A B: Setter (@snd A B) := {
     set b x := (fst x, b)
   }.
 
-  Global Instance prodl_lens A B: Lens (A * B) B.
+  Global Instance snd_lens A B: Lens (@snd A B).
   Proof.
     split; split; intuition.
   Qed.
@@ -179,38 +198,44 @@ End PROD.
 (** ** Composing lens *)
 
 Section COMPOSE.
-  Context (A B C: Type).
-  Context `{get_AB: Getter A B} `{set_AB: Setter A B} `{Hlens_AB: !Lens A B}.
-  Context `{get_BC: Getter B C} `{set_BC: Setter B C} `{Hlens_BC: !Lens B C}.
+  Context {A B C} (π: A -> B) (ρ: B -> C) `{Hπ: Lens _ _ π} `{Hρ: Lens _ _ ρ}.
+  Import Program.Basics.
 
-  Instance lens_compose_get: Getter A C := {
-    get a := get (get a)
+  Instance compose_get: Getter (compose ρ π) := {}.
+
+  Instance compose_set: Setter (compose ρ π) := {
+    set c a := modify π (set ρ c) a
   }.
 
-  Instance lens_compose_set: Setter A C := {
-    set c a := modify (set c) a
-  }.
+  (** XXX: should we add this to the rewrite base? *)
+  Lemma compose_get_get_get a:
+    get (compose ρ π) a = get ρ (get π a).
+  Proof.
+    reflexivity.
+  Qed.
 
-  Instance lens_compose_get_set: LensGetSet A C.
+  Instance compose_get_set: LensGetSet (compose ρ π).
+  Proof.
+    constructor; simpl; intros.
+    rewrite compose_get_get_get.
+    autorewrite with lens.
+    reflexivity.
+  Qed.
+
+  Instance lens_compose_set_get: LensSetGet (compose ρ π).
+  Proof.
+    constructor; simpl; intros.
+    rewrite compose_get_get_get.
+    autorewrite with lens.
+    reflexivity.
+  Qed.
+
+  Instance lens_compose_set_set: LensSetSet (compose ρ π).
   Proof.
     constructor; simpl; intros.
     autorewrite with lens.
     reflexivity.
   Qed.
 
-  Instance lens_compose_set_get: LensSetGet A C.
-  Proof.
-    constructor; simpl; intros.
-    autorewrite with lens.
-    reflexivity.
-  Qed.
-
-  Instance lens_compose_set_set: LensSetSet A C.
-  Proof.
-    constructor; simpl; intros.
-    autorewrite with lens.
-    reflexivity.
-  Qed.
-
-  Instance lens_compose: Lens A C := {}.
+  Instance lens_compose: Lens (compose ρ π) := {}.
 End COMPOSE.

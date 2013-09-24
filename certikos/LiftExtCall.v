@@ -28,7 +28,7 @@ Section LIFTEXTCALL.
   (** Relations lifted with the powerset monad only relate memory
     states with the same abstract data. *)
   Lemma lift_relation_same_context (R: relation bmem):
-    subrelation (lift R) same_context.
+    subrelation (lift R) (same_context π).
   Proof.
     unfold lift; simpl.
     intros m1 m2 Hm.
@@ -40,7 +40,7 @@ Section LIFTEXTCALL.
   (** They also only relate memory states whose underlying components
     are related. *)
   Lemma lift_relation_unlift (R: relation bmem):
-    subrelation (lift R) (R @@ get)%signature.
+    subrelation (lift R) (R @@ get π)%signature.
   Proof.
     unfold lift, RelCompFun; simpl.
     intros m1 m2 Hm.
@@ -51,14 +51,14 @@ Section LIFTEXTCALL.
 
   (** In fact, lift R is the conjunction of these two relations. *)
   Lemma lift_relation_intro (R: bmem -> bmem -> Prop) (m1 m2: mem):
-    same_context m1 m2 ->
-    R (get m1) (get m2) ->
+    same_context π m1 m2 ->
+    R (get π m1) (get π m2) ->
     lift (Lift := lift_pred) R m1 m2.
   Proof.
     intros Hc Hb.
     unfold lift; simpl.
-    replace m2 with (set (get m2) m1).
-    * change (set (get m2) m1) with ((fun bm => set bm m1) (get m2)).
+    replace m2 with (set π (get π m2) m1).
+    * change (set π (get π m2) m1) with ((fun bm => set π bm m1) (get π m2)).
       eapply pred_fmap_intro.
       assumption.
     * rewrite Hc.
@@ -71,25 +71,25 @@ Section LIFTEXTCALL.
 
   Lemma lift_ec_same_context ef {F V} (ge: Genv.t F V) vargs m1 t vres m2:
     external_call ef ge vargs m1 t vres m2 ->
-    same_context m1 m2.
+    same_context π m1 m2.
   Proof.
     apply lift_relation_same_context.
   Qed.
 
   Lemma lift_ec_unlift ef {F V} (ge: Genv.t F V) vargs m1 t vres m2:
     external_call ef ge vargs m1 t vres m2 ->
-    external_call ef ge vargs (get m1) t vres (get m2).
+    external_call ef ge vargs (get π m1) t vres (get π m2).
   Proof.
     apply lift_relation_unlift.
   Qed.
 
   Lemma lift_ec_intro ef {F V} (ge: Genv.t F V) vargs m1 t vres m2:
-    same_context m1 m2 ->
-    external_call ef ge vargs (get m1) t vres (get m2) ->
+    same_context π m1 m2 ->
+    external_call ef ge vargs (get π m1) t vres (get π m2) ->
     external_call ef ge vargs m1 t vres m2.
   Proof.
-    change (external_call ef ge vargs (get m1) t vres)
-      with ((fun bm => external_call ef ge vargs bm t vres) (get m1)).
+    change (external_call ef ge vargs (get π m1) t vres)
+      with ((fun bm => external_call ef ge vargs bm t vres) (get π m1)).
     apply lift_relation_intro.
   Qed.
 

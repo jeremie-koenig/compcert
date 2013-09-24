@@ -79,11 +79,11 @@ Section LIFTMEM.
   Context mem `{Hmem: Mem.MemoryModel mem}.
   Context data `{data_ops: AbstractData data}.
 
-  Global Instance data_liftmem_ops: LiftMemoryOps (mem × data) mem := {
+  Global Instance data_liftmem_ops: LiftMemoryOps (@fst mem data) := {
     liftmem_empty := (Mem.empty, empty_data)
   }.
 
-  Global Instance data_liftmem_spec: LiftMemoryStates (mem × data) mem := {}.
+  Global Instance data_liftmem_spec: LiftMemoryStates (@fst mem data) := {}.
   Proof.
     reflexivity.
   Qed.
@@ -94,19 +94,20 @@ Section LIFTINJ.
   Context `{Hdata_inj: AbstractDataInjections}.
 
   Global Instance data_liftinj_ops:
-    LiftInjectOps (smem × sdata) smem (tmem × tdata) tmem :=
+    LiftInjectOps (@fst smem sdata) (@fst tmem tdata) :=
   {
-    liftmem_context_inject s t := data_inject (get s) (get t)
+    liftmem_context_inject s t := data_inject (get snd s) (get snd t)
   }.
 
   Global Instance data_liftinj_spec:
-    LiftInjections (smem × sdata) smem (tmem × tdata) tmem := {}.
+    LiftInjections (@fst smem sdata) (@fst tmem tdata) := {}.
   Proof.
     intros [sm1 sd1] [sm2 sd2] Hs [tm1 td1] [tm2 td2] Ht H.
     unfold same_context in *.
     simpl in *.
     specialize (Hs sm1); inversion Hs.
     specialize (Ht tm1); inversion Ht.
+    unfold get in *; simpl in *.
     congruence.
   Qed.
 End LIFTINJ.
@@ -115,14 +116,11 @@ Section LIFTHINJ.
   Context `{Hmm: Mem.MemoryModel}.
   Context `{Hdata_mm: AbstractDataModel}.
 
-  (* Into Lens.v? *)
-  Instance get_measure `{Getter}: Measure get.
-
   Global Instance data_liftmm_ops:
-    LiftModelOps (mem × data) mem := {}.
+    LiftModelOps (@fst mem data) := {}.
 
   Global Instance data_liftmm_spec:
-    LiftModel (mem × data) mem := {}.
+    LiftModel (@fst mem data) := {}.
 End LIFTHINJ.
 
 (** This should be enough to ensure that instances of [Mem.MemoryModel]

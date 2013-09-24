@@ -22,19 +22,19 @@ Require Import Coq.Program.Basics.
   However, the simpler memory state contained within this empty [mem]
   should correspond to the empty [bmem] from the base memory states. *)
 
-Class LiftMemoryOps (mem bmem: Type)
+Class LiftMemoryOps {mem bmem: Type} (π: mem -> bmem)
   `{bmem_ops: Mem.MemoryOps bmem}
-  `{bmem_get: Getter mem bmem}
-  `{bmem_set: Setter mem bmem} :=
+  `{bmem_get: !Getter π}
+  `{bmem_set: !Setter π} :=
 {
   liftmem_empty: mem
 }.
 
-Class LiftMemoryStates (mem bmem: Type)
-  `{mem_liftops: LiftMemoryOps mem bmem} :=
+Class LiftMemoryStates {mem bmem: Type} (π: mem -> bmem)
+  `{mem_liftops: LiftMemoryOps _ _ π}: Prop :=
 {
-  liftmem_lens :> Lens mem bmem;
-  liftmem_get_empty: get liftmem_empty = Mem.empty
+  liftmem_lens :> Lens π;
+  liftmem_get_empty: get π liftmem_empty = Mem.empty
 }.
 
 (** Furthermore, we need to know how the extra information fits with
@@ -60,21 +60,21 @@ Class LiftMemoryStates (mem bmem: Type)
   memory states which differ only by the base memory state they
   contain. *)
 
-Class LiftInjectOps (smem bsmem tmem btmem: Type)
-  `{smem_lift_ops: LiftMemoryOps smem bsmem}
-  `{tmem_lift_ops: LiftMemoryOps tmem btmem}
+Class LiftInjectOps {smem bsmem tmem btmem} (σ: smem -> bsmem) (τ: tmem -> btmem)
+  `{smem_lift_ops: LiftMemoryOps smem bsmem σ}
+  `{tmem_lift_ops: LiftMemoryOps tmem btmem τ}
   `{stinj_ops: !Mem.InjectOps bsmem btmem} :=
 {
   liftmem_context_inject: smem -> tmem -> Prop
 }.
 
-Class LiftInjections smem bsmem tmem btmem
-  `{inj_lift_ops: LiftInjectOps smem bsmem tmem btmem} :=
+Class LiftInjections {smem bsmem tmem btmem} σ τ
+  `{inj_lift_ops: LiftInjectOps smem bsmem tmem btmem σ τ}: Prop :=
 {
-  liftinj_sspec :> LiftMemoryStates smem bsmem;
-  liftinj_tspec :> LiftMemoryStates tmem btmem;
+  liftinj_sspec :> LiftMemoryStates σ;
+  liftinj_tspec :> LiftMemoryStates τ;
   liftmem_inject_same_context :>
-    Proper (same_context ==> same_context ==> impl) liftmem_context_inject
+    Proper (same_context σ ==> same_context τ ==> impl) liftmem_context_inject
 }.
 
 (** For homogenous injections, we must also require that [context_inject]
@@ -83,17 +83,18 @@ Class LiftInjections smem bsmem tmem btmem
   context, and weaken the following to require only that [inject_neutral]
   elements be proper. *)
 
-Class LiftModelOps mem bmem
-  `{liftmem_ops: LiftMemoryOps mem bmem}
+Class LiftModelOps {mem bmem} (π: mem -> bmem)
+  `{liftmem_ops: LiftMemoryOps mem bmem π}
   `{inj_ops: !Mem.InjectOps bmem bmem}
-  `{liftinj_ops: !LiftInjectOps mem bmem mem bmem}
+  `{liftinj_ops: !LiftInjectOps π π}
   `{mm_ops: !Mem.ModelOps bmem} :=
 {
 }.
 
-Class LiftModel mem bmem `{liftmm_ops: LiftModelOps mem bmem} :=
+Class LiftModel {mem bmem} (π: mem -> bmem)
+  `{liftmm_ops: LiftModelOps mem bmem π}: Prop :=
 {
-  lifthinj_liftinj :> LiftInjections mem bmem mem bmem;
+  lifthinj_liftinj :> LiftInjections π π;
   lifthinj_context_inject_refl :> Reflexive liftmem_context_inject
 }.
 
@@ -103,7 +104,7 @@ Class LiftModel mem bmem `{liftmm_ops: LiftModelOps mem bmem} :=
 Class Lift A B := { lift: A -> B }.
 
 Section LIFT.
-  Context {mem bmem} `{getb: Getter mem bmem} `{setb: Setter mem bmem}.
+  Context {mem bmem} {π: mem -> bmem} `{getb: !Getter π} `{setb: !Setter π}.
   Context `{HF: Functor}.
 
   (** Because [Mem.MemoryModel] contains so many theorems, we need some
@@ -118,13 +119,13 @@ Section LIFT.
     the following: *)
 
   Global Instance lens_lift: Lift (bmem -> F bmem) (mem -> F mem) := {
-    lift f m := fmap (fun bm => set bm m) (f (get m))
+    lift f m := fmap (fun bm => set π bm m) (f (get π m))
   }.
 
   (** Here are some basic theorems about [lift] with any functor. *)
 
   Theorem lift_mor (f g: bmem -> F bmem) (m: mem):
-    f (get m) = g (get m) ->
+    f (get π m) = g (get π m) ->
     lift f m = lift g m.
   Proof.
     intros Hfg.
@@ -135,7 +136,7 @@ Section LIFT.
 End LIFT.
 
 Section LIFTINSTANCES.
-  Context {mem bmem} `{getb: Getter mem bmem} `{setb: Setter mem bmem}.
+  Context {mem bmem} {π: mem -> bmem} `{getb: !Getter π} `{setb: !Setter π}.
 
   Global Instance lift_const A: Lift (bmem -> A) (mem -> A) :=
     lens_lift (F := (fun _ => A)).
@@ -173,7 +174,7 @@ Section LIFTOPS.
     drop_perm wm b lo hi p :=
       lift (fun m => Mem.drop_perm m b lo hi p) wm;
     extends wm1 wm2 :=
-      Mem.extends (get wm1) (get wm2)
+      Mem.extends (get π wm1) (get π wm2)
   }.
 End LIFTOPS.
 
@@ -188,15 +189,15 @@ End LIFTOPS.
 (** ** Properties of [lift (F:=option)] *)
 
 Section LIFTOPTION.
-  Context {mem bmem} `{Hgs: LensGetSet mem bmem}.
+  Context {mem bmem π} `{Hgs: LensGetSet mem bmem π}.
 
   Lemma lift_option_eq (f: bmem -> option bmem):
     forall (wa wb: mem),
       lift f wa = Some wb ->
-      f (get wa) = Some (get wb).
+      f (get π wa) = Some (get π wb).
   Proof.
     unfold lift; simpl; intros.
-    destruct (f (get wa)); try discriminate.
+    destruct (f (get π wa)); try discriminate.
     inversion H.
     autorewrite with lens.
     reflexivity.
@@ -204,11 +205,11 @@ Section LIFTOPTION.
 
   Lemma lift_option_eq_set_iff (f: bmem -> option bmem):
     forall (wm: mem) (w': bmem),
-      lift f wm = Some (set w' wm) <->
-      f (get wm) = Some w'.
+      lift f wm = Some (set π w' wm) <->
+      f (get π wm) = Some w'.
   Proof.
     simpl; intros.
-    split; destruct (f (get wm)); try discriminate;
+    split; destruct (f (get π wm)); try discriminate;
     intro H; inversion H.
     - apply f_equal.
       apply lens_eq_set in H1.
@@ -218,30 +219,30 @@ Section LIFTOPTION.
 
   Lemma lift_option_eq_set (f: bmem -> option bmem):
     forall (wm: mem) (m': bmem),
-      f (get wm) = Some m' ->
-      lift f wm = Some (set m' wm).
+      f (get π wm) = Some m' ->
+      lift f wm = Some (set π m' wm).
   Proof.
     apply lift_option_eq_set_iff.
   Qed.
 
-  Theorem lift_option_eq_same_context `{Hlss: !LensSetSet mem bmem}:
+  Theorem lift_option_eq_same_context `{Hlss: !LensSetSet π}:
     forall (f: bmem -> option bmem) (wm wm': mem),
       lift f wm = Some wm' ->
-      same_context wm wm'.
+      same_context π wm wm'.
   Proof.
     intros f wm wm'.
     unfold lift; simpl.
-    case (f (get wm)).
+    case (f (get π wm)).
     * intros ? H; inversion H; subst.
       symmetry.
       apply lens_set_same_context.
     * discriminate.
   Qed.
 
-  Theorem lift_option_same_context_eq `{Hlsg: !LensSetGet mem bmem}:
+  Theorem lift_option_same_context_eq `{Hlsg: !LensSetGet π}:
     forall (f: bmem -> option bmem) (wm wm': mem),
-      f (get wm) = Some (get wm') ->
-      same_context wm wm' ->
+      f (get π wm) = Some (get π wm') ->
+      same_context π wm wm' ->
       lift f wm = Some wm'.
   Proof.
     intros f wm wm' Hc Hv.
@@ -254,7 +255,7 @@ Section LIFTOPTION.
 
   Theorem lift_option_eq_preserves_context (f g: bmem -> option bmem):
     forall (wm: mem) (wm': mem),
-      g (get wm) = Some (get wm') ->
+      g (get π wm) = Some (get π wm') ->
       lift f wm = Some wm' ->
       lift g wm = Some wm'.
   Proof.
@@ -271,37 +272,37 @@ End LIFTOPTION.
 (** ** Properties of [lift (F := fun X => A * X)] *)
 
 Section LIFTPROD.
-  Context {mem bmem} `{Hgs: LensGetSet mem bmem} {A: Type}.
+  Context {mem bmem π} `{Hgs: LensGetSet mem bmem π} {A: Type}.
 
   Theorem lift_prod_eq (f: bmem -> bmem * A) (wm wm': mem) (a: A):
     lift f wm = (wm', a) ->
-    f (get wm) = (get wm', a).
+    f (get π wm) = (get π wm', a).
   Proof.
     simpl.
-    destruct (f (get wm)) as [m' a'].
+    destruct (f (get π wm)) as [m' a'].
     intros H.
     inversion H.
-    autorewrite with lens in *.
+    autorewrite with lens.
     reflexivity.
   Qed.
 
   Theorem lift_prod_eq_set (f: bmem -> bmem * A) wm m' a:
-    f (get wm) = (m', a) ->
-    lift f wm = (set m' wm, a).
+    f (get π wm) = (m', a) ->
+    lift f wm = (set π m' wm, a).
   Proof.
     intro H; simpl.
     rewrite H; clear H; simpl.
     reflexivity.
   Qed.
 
-  Context `{Hlss: !LensSetSet mem bmem}.
+  Context `{Hlss: !LensSetSet π}.
 
   Theorem lift_prod_eq_same_context (f: bmem -> bmem * A) (wm wm': mem) (a: A):
     lift f wm = (wm', a) ->
-    same_context wm wm'.
+    same_context π wm wm'.
   Proof.
     simpl.
-    destruct (f (get wm)).
+    destruct (f (get π wm)).
     intro H; inversion H; subst.
     symmetry.
     apply lens_set_same_context.
@@ -346,7 +347,7 @@ Section LIFTDERIVED.
     intros; simpl in *.
     * rewrite lens_set_get.
       reflexivity.
-    * destruct (Mem.free (get wm) b lo hi); [| reflexivity].
+    * destruct (Mem.free (get π wm) b lo hi); [| reflexivity].
       rewrite IHl.
       rewrite lens_get_set.
       destruct (Mem.free_list b0 l); [| reflexivity].
@@ -460,7 +461,7 @@ Hint Extern 10 => progress lift_reduce; now eauto: lift.
 
       (* [mem] argument, use [extract] *)
       | forall (m: mem), _ =>
-	specialize (Hf (get x))
+	specialize (Hf (get _ x))
 
       (* Otherwise, recurse. *)
       | forall (H: ?T'), _ =>
@@ -479,7 +480,7 @@ Hint Extern 10 => progress lift_reduce; now eauto: lift.
     destruct Hf as [x Hf'];
     let T := type of x in
     match T with
-      | mem => eexists (set x _)
+      | mem => eexists (set _ x _)
       | _ => exists x
     end;
     recurse Hf'.
@@ -494,11 +495,11 @@ Hint Extern 10 => progress lift_reduce; now eauto: lift.
   Ltac peel Hf leaftac :=
     let recurse Hf := peel Hf leaftac in
     try match goal with
-      | _: LiftMemoryOps ?mem ?bmem |- forall (x: _), _ =>
+      | _: LiftMemoryOps (bmem := ?bmem) _ |- forall (x: _), _ =>
         let x := fresh x in peel_intro bmem recurse Hf x
-      | _: LiftMemoryOps ?mem ?bmem |- exists (x: _), _ =>
+      | _: LiftMemoryOps (bmem := ?bmem) _ |- exists (x: _), _ =>
         let x := fresh x in peel_exists bmem recurse Hf x
-      | _: LiftMemoryOps ?mem ?bmem |- { x: _ | _ } =>
+      | _: LiftMemoryOps (bmem := ?bmem) _ |- { x: _ | _ } =>
         let x := fresh x in peel_exists bmem recurse Hf x
       | |- _ /\ _ =>
         peel_conj recurse Hf
@@ -609,9 +610,9 @@ Section LIFTMEM.
     lift Mem.load_storebytes_other.
     lift_partial Mem.storebytes_concat.
       simpl in *; unfold lift in *; simpl in *.
-      destruct (Mem.storebytes (get m) b ofs (bytes1 ++ bytes2));
-      destruct (Mem.storebytes (get m) b ofs bytes1);
-      destruct (Mem.storebytes (get m1) b (ofs + Z.of_nat (length bytes1)));
+      destruct (Mem.storebytes (get π m) b ofs (bytes1 ++ bytes2));
+      destruct (Mem.storebytes (get π m) b ofs bytes1);
+      destruct (Mem.storebytes (get π m1) b (ofs + Z.of_nat (length bytes1)));
       try discriminate.
       inversion Hf;
       inversion x;
@@ -627,7 +628,7 @@ Section LIFTMEM.
       rewrite Hf0r.
       autorewrite with lens.
       unfold lift in *; simpl in *.
-      destruct (Mem.storebytes (get m) b ofs (bytes1 ++ bytes2));
+      destruct (Mem.storebytes (get π m) b ofs (bytes1 ++ bytes2));
         try discriminate.
       inversion x.
       autorewrite with lens.
@@ -703,7 +704,7 @@ Section LIFTINJOPS.
     Mem.InjectOps smem tmem :=
   {
     inject i wm1 wm2 :=
-      Mem.inject i (get wm1) (get wm2) /\
+      Mem.inject i (get σ wm1) (get τ wm2) /\
       liftmem_context_inject wm1 wm2
   }.
 
@@ -711,7 +712,7 @@ Section LIFTINJOPS.
     underlying original memory states. *)
   Theorem lift_inject_unlift ι (m1: smem) (m2: tmem):
     Mem.inject ι m1 m2 ->
-    Mem.inject ι (get m1) (get m2).
+    Mem.inject ι (get σ m1) (get τ m2).
   Proof.
     intros [H1 _].
     assumption.
@@ -719,9 +720,9 @@ Section LIFTINJOPS.
 
   (* Triangle diagrams evolving on the left *)
   Theorem lift_inject_triangle_left ι1 m1 ι2 m1' m2:
-    same_context m1 m1' ->
+    same_context σ m1 m1' ->
     Mem.inject ι1 m1 m2 ->
-    Mem.inject ι2 (get m1') (get m2) ->
+    Mem.inject ι2 (get σ m1') (get τ m2) ->
     Mem.inject ι2 m1' m2.
   Proof.
     intros Hsc [_ Hic] Him'.
@@ -733,9 +734,9 @@ Section LIFTINJOPS.
 
   (* Triangle diagrams evolving on the right *)
   Theorem lift_inject_triangle_right ι1 m2 ι2 m1 m2':
-    same_context m2 m2' ->
+    same_context τ m2 m2' ->
     Mem.inject ι1 m1 m2 ->
-    Mem.inject ι2 (get m1) (get m2') ->
+    Mem.inject ι2 (get σ m1) (get τ m2') ->
     Mem.inject ι2 m1 m2'.
   Proof.
     intros Hsc [_ Hic] Him'.
@@ -747,10 +748,10 @@ Section LIFTINJOPS.
 
   (* Square diagrams *)
   Theorem lift_inject_square ι1 m1 m2 ι2 m1' m2':
-    same_context m1 m1' ->
-    same_context m2 m2' ->
+    same_context σ m1 m1' ->
+    same_context τ m2 m2' ->
     Mem.inject ι1 m1 m2 ->
-    Mem.inject ι2 (get m1') (get m2') ->
+    Mem.inject ι2 (get σ m1') (get τ m2') ->
     Mem.inject ι2 m1' m2'.
   Proof.
     intros Hsc1 Hsc2 [_ Hic] Him'.
@@ -770,7 +771,7 @@ Hint Resolve lift_inject_unlift : lift.
 Ltac prove_premises :=
   autorewrite with lens;
   match goal with
-    | [ |- same_context _ _] =>
+    | [ |- same_context _ _ _] =>
       (eapply lift_option_eq_same_context; eassumption) ||
       (eapply lift_prod_eq_same_context; eassumption) ||
       reflexivity
@@ -837,7 +838,7 @@ Section LIFTMS.
 
   Global Instance lift_mm_ops: Mem.ModelOps mem := {
     inject_neutral thr wm :=
-      Mem.inject_neutral thr (get wm)
+      Mem.inject_neutral thr (get π wm)
   }.
 
   Global Instance lift_mem:

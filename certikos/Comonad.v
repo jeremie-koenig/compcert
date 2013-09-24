@@ -103,28 +103,26 @@ End THEORY.
 Section LENS.
   Context (W: Type -> Type) `{HW: Comonad W} (A: Type).
 
-  Global Instance comonad_get: Getter (W A) A := {
-    get := extract
-  }.
+  Global Instance comonad_get: Getter (V:=A) extract := {}.
 
-  Global Instance comonad_set: Setter (W A) A := {
+  Global Instance comonad_set: Setter (V:=A) extract := {
     set := put
   }.
 
-  Global Instance comonad_get_set: LensGetSet (W A) A := {
+  Global Instance comonad_get_set: LensGetSet extract := {
     lens_get_set := comonad_extract_put
   }.
 
-  Global Instance comonad_set_set: LensSetSet (W A) A := {
+  Global Instance comonad_set_set: LensSetSet extract := {
     lens_set_set := comonad_put_put
   }.
 
   (** [LensSetGet] does not hold in general -- for instance in the store
     comonad, [put] overwrites all entries instead of just the focused one. *)
-  Context `{Hps: !LensSetGet (W A) A}.
+  Context `{Hps: !LensSetGet extract}.
 
   (** Provided the Put/Get law is proved separately, we get a lens. *)
-  Global Instance comonad_lens: Lens (W A) A := {}.
+  Global Instance comonad_lens: Lens extract := {}.
 
   (** In addition, we can provide this equivalent lemma, formulated in
     terms of extract and set. *)
