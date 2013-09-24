@@ -9,7 +9,7 @@ Require Import Globalenvs.
 Require Import Events.
 Require Import Lens.
 Require Import LiftMem.
-Require Import PredicateMonad.
+Require Import PowersetMonad.
 
 Section LIFTEXTCALL.
   Context `{Hlm: LiftModel}.

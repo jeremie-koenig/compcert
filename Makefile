@@ -113,7 +113,7 @@ CERTIKOS=\
   Functor.v \
   Monad.v \
   Comonad.v \
-  PredicateMonad.v \
+  PowersetMonad.v \
   LiftMem.v \
   LiftExtCall.v \
   AbstractData.v \
