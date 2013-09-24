@@ -7,16 +7,16 @@ Require Import Monad.
 (** [fmap f pA] is the image of the "set" [pA : A -> Prop] by the
   function [f]. *)
 
-Inductive pred_fmap {A B} (f: A -> B) (pA: A -> Prop): B -> Prop :=
-  | pred_fmap_intro a: pA a -> pred_fmap f pA (f a).
+Inductive powerset_fmap {A B} (f: A -> B) (pA: A -> Prop): B -> Prop :=
+  | powerset_fmap_intro a: pA a -> powerset_fmap f pA (f a).
 
-Arguments pred_fmap_intro {A B f pA} a _.
+Arguments powerset_fmap_intro {A B f pA} a _.
 
-Instance pred_functor_ops: FunctorOps (fun X => X -> Prop) := {
-  fmap A B := pred_fmap
+Instance powerset_functor_ops: FunctorOps (fun X => X -> Prop) := {
+  fmap A B := powerset_fmap
 }.
 
-Instance pred_functor: Functor (fun X => X -> Prop).
+Instance powerset_functor: Functor (fun X => X -> Prop).
 Proof.
   split.
   * intros A pA.
@@ -72,7 +72,7 @@ Proof.
       + assumption.
       + reflexivity.
     - destruct H as [x Hx Hxy]; subst.
-      apply (pred_fmap_intro x).
+      apply (powerset_fmap_intro x).
       assumption.
   * apply functional_extensionality; intro y.
     apply prop_ext; split; intro H.

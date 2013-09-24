@@ -17,7 +17,7 @@ Section LIFTEXTCALL.
   Context `{ec_ops: !ExtCallOps bmem external_function}.
   Context `{Hec: !ExternalCalls bmem external_function}.
 
-  Instance lift_pred : Lift (bmem -> bmem -> Prop) (mem -> mem -> Prop) :=
+  Instance lift_powerset : Lift (bmem -> bmem -> Prop) (mem -> mem -> Prop) :=
     lens_lift (F := (fun X => X -> Prop)).
 
   Global Instance liftmem_ec_ops: ExtCallOps mem external_function := {
@@ -53,13 +53,13 @@ Section LIFTEXTCALL.
   Lemma lift_relation_intro (R: bmem -> bmem -> Prop) (m1 m2: mem):
     same_context π m1 m2 ->
     R (get π m1) (get π m2) ->
-    lift (Lift := lift_pred) R m1 m2.
+    lift (Lift := lift_powerset) R m1 m2.
   Proof.
     intros Hc Hb.
     unfold lift; simpl.
     replace m2 with (set π (get π m2) m1).
     * change (set π (get π m2) m1) with ((fun bm => set π bm m1) (get π m2)).
-      eapply pred_fmap_intro.
+      eapply powerset_fmap_intro.
       assumption.
     * rewrite Hc.
       autorewrite with lens.
