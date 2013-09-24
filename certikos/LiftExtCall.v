@@ -93,14 +93,50 @@ Section LIFTEXTCALL.
     apply lift_relation_intro.
   Qed.
 
+  Lemma lift_ec_intro_set ef {F V} (ge: Genv.t F V) vargs m1 t vres m2':
+    external_call ef ge vargs (get π m1) t vres m2' ->
+    external_call ef ge vargs m1 t vres (set π m2' m1).
+  Proof.
+    intro H.
+    apply lift_ec_intro;
+    autorewrite with lens.
+    * reflexivity.
+    * assumption.
+  Qed.
+
+  Lemma lift_mem_unchanged_on P m1 m2:
+    mem_unchanged_on P (get π m1) (get π m2) ->
+    mem_unchanged_on P m1 m2.
+  Proof.
+    tauto.
+  Qed.
+
   Ltac solve_ec :=
     (apply lift_ec_unlift; assumption) ||
-    (apply lift_ec_intro;
+    (apply lift_mem_unchanged_on; autorewrite with lens; assumption) ||
+    ((apply lift_ec_intro_set || apply lift_ec_intro);
        ((eapply lift_ec_same_context; simpl; eassumption) ||
         (eapply lift_ec_unlift; eassumption) ||
         eassumption)).
 
   Hint Extern 10 => solve_ec : lift.
+
+  Lemma lift_loc_out_of_reach f m1:
+    loc_out_of_reach f m1 = loc_out_of_reach f (get π m1).
+  Proof.
+    reflexivity.
+  Qed.
+
+  Lemma lift_loc_out_of_bounds m:
+    loc_out_of_bounds m = loc_out_of_bounds (get π m).
+  Proof.
+    reflexivity.
+  Qed.
+
+  Hint Rewrite
+      @lift_loc_out_of_reach
+      @lift_loc_out_of_bounds
+    using typeclasses eauto : lift.
 
   Global Instance liftmem_ec_spec: ExternalCalls mem external_function := {}.
   Proof.
@@ -111,21 +147,21 @@ Section LIFTEXTCALL.
     lift (ec_valid_block (external_call_spec ef)).
     lift (ec_max_perm (external_call_spec ef)).
     lift (ec_readonly (external_call_spec ef)).
-    lift_partial (ec_mem_extends (external_call_spec ef)).
-      (* Need a theorem about mem_unchanged_on *)
-      instantiate (1:=m1').
-      admit.
-      admit.
+    lift (ec_mem_extends (external_call_spec ef)).
     lift_partial (ec_mem_inject (external_call_spec ef)).
-      (* ditto *)
-      instantiate (1:=m1').
-      admit.
-      admit.
-      admit.
+      unfold Mem.inject; simpl.
+      autorewrite with lens.
+      split.
+      assumption.
+      destruct x1 as [x11 x12].
+      assert (H: same_context π m1 m2).
+        eapply lift_ec_same_context.
+        unfold external_call; simpl.
+        apply x0.
+      rewrite <- H.
+      assumption.
     lift (ec_trace_length (external_call_spec ef)).
-    lift_partial (ec_receptive (external_call_spec ef)).
-      instantiate (1:=m).
-      admit.
+    lift (ec_receptive (external_call_spec ef)).
     lift_partial (ec_determ (external_call_spec ef)).
       simpl in *; unfold lift in *; simpl in *.
       inversion x.
