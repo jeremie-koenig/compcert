@@ -17,91 +17,19 @@ Section LIFTEXTCALL.
   Context `{ec_ops: !ExtCallOps bmem external_function}.
   Context `{Hec: !ExternalCalls bmem external_function}.
 
-  Instance lift_powerset : Lift (bmem -> bmem -> Prop) (mem -> mem -> Prop) :=
-    lens_lift (F := (fun X => X -> Prop)).
-
   Global Instance liftmem_ec_ops: ExtCallOps mem external_function := {
     external_call ef F V ge args m tr ret m' :=
       lift (fun m => external_call ef ge args m tr ret) m m'
   }.
 
-  (** Relations lifted with the powerset monad only relate memory
-    states with the same abstract data. *)
-  Lemma lift_relation_same_context (R: relation bmem):
-    subrelation (lift R) (same_context π).
-  Proof.
-    unfold lift; simpl.
-    intros m1 m2 Hm.
-    inversion Hm.
-    autorewrite with lens.
-    reflexivity.
-  Qed.
-
-  (** They also only relate memory states whose underlying components
-    are related. *)
-  Lemma lift_relation_unlift (R: relation bmem):
-    subrelation (lift R) (R @@ get π)%signature.
-  Proof.
-    unfold lift, RelCompFun; simpl.
-    intros m1 m2 Hm.
-    inversion Hm.
-    autorewrite with lens.
-    assumption.
-  Qed.
-
-  (** In fact, lift R is the conjunction of these two relations. *)
-  Lemma lift_relation_intro (R: bmem -> bmem -> Prop) (m1 m2: mem):
-    same_context π m1 m2 ->
-    R (get π m1) (get π m2) ->
-    lift (Lift := lift_powerset) R m1 m2.
-  Proof.
-    intros Hc Hb.
-    unfold lift; simpl.
-    replace m2 with (set π (get π m2) m1).
-    * change (set π (get π m2) m1) with ((fun bm => set π bm m1) (get π m2)).
-      eapply powerset_fmap_intro.
-      assumption.
-    * rewrite Hc.
-      autorewrite with lens.
-      reflexivity.
-  Qed.
-
-  (** Those are all beautiful and general, but if Coq is to unify anything
-    we will have to make them a little bit more specific... *)
-
-  Lemma lift_ec_same_context ef {F V} (ge: Genv.t F V) vargs m1 t vres m2:
-    external_call ef ge vargs m1 t vres m2 ->
-    same_context π m1 m2.
-  Proof.
-    apply lift_relation_same_context.
-  Qed.
+  (** Specialize the theorems about lifting relations to [external_call] *)
 
   Lemma lift_ec_unlift ef {F V} (ge: Genv.t F V) vargs m1 t vres m2:
     external_call ef ge vargs m1 t vres m2 ->
     external_call ef ge vargs (get π m1) t vres (get π m2).
   Proof.
-    apply lift_relation_unlift.
-  Qed.
-
-  Lemma lift_ec_intro ef {F V} (ge: Genv.t F V) vargs m1 t vres m2:
-    same_context π m1 m2 ->
-    external_call ef ge vargs (get π m1) t vres (get π m2) ->
-    external_call ef ge vargs m1 t vres m2.
-  Proof.
-    change (external_call ef ge vargs (get π m1) t vres)
-      with ((fun bm => external_call ef ge vargs bm t vres) (get π m1)).
-    apply lift_relation_intro.
-  Qed.
-
-  Lemma lift_ec_intro_set ef {F V} (ge: Genv.t F V) vargs m1 t vres m2':
-    external_call ef ge vargs (get π m1) t vres m2' ->
-    external_call ef ge vargs m1 t vres (set π m2' m1).
-  Proof.
-    intro H.
-    apply lift_ec_intro;
-    autorewrite with lens.
-    * reflexivity.
-    * assumption.
+    apply (lift_relation_unlift
+            (fun m1 m2 => external_call ef ge vargs m1 t vres m2)).
   Qed.
 
   Lemma lift_mem_unchanged_on P m1 m2:
@@ -110,16 +38,6 @@ Section LIFTEXTCALL.
   Proof.
     tauto.
   Qed.
-
-  Ltac solve_ec :=
-    (apply lift_ec_unlift; assumption) ||
-    (apply lift_mem_unchanged_on; autorewrite with lens; assumption) ||
-    ((apply lift_ec_intro_set || apply lift_ec_intro);
-       ((eapply lift_ec_same_context; simpl; eassumption) ||
-        (eapply lift_ec_unlift; eassumption) ||
-        eassumption)).
-
-  Hint Extern 10 => solve_ec : lift.
 
   Lemma lift_loc_out_of_reach f m1:
     loc_out_of_reach f m1 = loc_out_of_reach f (get π m1).
@@ -132,6 +50,11 @@ Section LIFTEXTCALL.
   Proof.
     reflexivity.
   Qed.
+
+  Hint Resolve
+    @lift_ec_unlift
+    @lift_mem_unchanged_on
+    : lift.
 
   Hint Rewrite
       @lift_loc_out_of_reach
@@ -154,10 +77,7 @@ Section LIFTEXTCALL.
       split.
       assumption.
       destruct x1 as [x11 x12].
-      assert (H: same_context π m1 m2).
-        eapply lift_ec_same_context.
-        unfold external_call; simpl.
-        apply x0.
+      assert (H: same_context π m1 m2) by decide_same_context.
       rewrite <- H.
       assumption.
     lift (ec_trace_length (external_call_spec ef)).

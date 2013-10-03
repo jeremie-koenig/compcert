@@ -4,6 +4,9 @@ Require Import Memory.
 Require Import Functor.
 Require Import Monad.
 Require Import Lens.
+Require Import PowersetMonad.
+Require Import Coq.Relations.Relations.
+Require Import Coq.Classes.RelationPairs.
 Require Import Coq.Classes.Morphisms.
 Require Import Coq.Program.Basics.
 
@@ -142,6 +145,8 @@ Section LIFTINSTANCES.
     lens_lift (F := (fun _ => A)).
   Global Instance lift_prod A: Lift (bmem -> bmem * A) (mem -> mem * A) :=
     lens_lift.
+  Global Instance lift_powerset: Lift (bmem->bmem->Prop) (mem->mem->Prop) :=
+    lens_lift (F := (fun X => X -> Prop)).
 End LIFTINSTANCES.
 
 Section LIFTOPS.
@@ -174,7 +179,7 @@ Section LIFTOPS.
     drop_perm wm b lo hi p :=
       lift (fun m => Mem.drop_perm m b lo hi p) wm;
     extends wm1 wm2 :=
-      Mem.extends (get π wm1) (get π wm2)
+      lift Mem.extends wm1 wm2
   }.
 End LIFTOPS.
 
@@ -309,6 +314,65 @@ Section LIFTPROD.
   Qed.
 End LIFTPROD.
 
+Section LIFTREL.
+  Context {S V} `{Lens S V}.
+
+  (** Relations lifted with the powerset monad only relate memory
+    states with the same abstract data. *)
+  Global Instance lift_relation_same_context (R: relation V):
+    subrelation (lift R) (same_context π).
+  Proof.
+    unfold lift; simpl.
+    intros s1 s2 Hs.
+    inversion Hs.
+    autorewrite with lens.
+    reflexivity.
+  Qed.
+
+  (** They also only relate memory states whose underlying components
+    are related. *)
+  Global Instance lift_relation_unlift (R: relation V):
+    subrelation (lift R) (R @@ get π)%signature.
+  Proof.
+    unfold lift, RelCompFun; simpl.
+    intros s1 s2 Hs.
+    inversion Hs.
+    autorewrite with lens.
+    assumption.
+  Qed.
+
+  (** In fact, lift R is the conjunction of these two relations. *)
+  Lemma lift_relation_intro (R: V -> V -> Prop) (s1 s2: S):
+    same_context π s1 s2 ->
+    R (get π s1) (get π s2) ->
+    lift (Lift := lift_powerset) R s1 s2.
+  Proof.
+    intros Hc Hv.
+    unfold lift; simpl.
+    replace s2 with (set π (get π s2) s1).
+    * change (set π (get π s2) s1) with ((fun v => set π v s1) (get π s2)).
+      eapply powerset_fmap_intro.
+      assumption.
+    * rewrite Hc.
+      autorewrite with lens.
+      reflexivity.
+  Qed.
+End LIFTREL.
+
+(** Decision procedure for [same_context]: use the theorems above to
+  extract the [same_context] consequences of every hypothesis, use
+  [autorewrite with lens] to eliminate all occurences of [set] then
+  use [congruence]. *)
+
+Ltac decide_same_context :=
+  repeat match goal with
+    | [ H: lift ?f _ = Some _ |- _ ] => apply lift_option_eq_same_context in H
+    | [ H: lift ?f _ = (_, _) |- _ ] => apply lift_prod_eq_same_context in H
+    | [ H: lift ?R _ _ |- _ ] => apply lift_relation_same_context in H
+  end;
+  autorewrite with lens in *;
+  congruence.
+
 (** ** Lifting [Mem.MemoryModel] *)
 
 Section LIFTDERIVED.
@@ -410,6 +474,11 @@ Hint Resolve
   @lift_option_eq_set
   @lift_prod_eq
   @lift_prod_eq_set
+  @lift_relation_intro
+  : lift.
+
+Hint Extern 10 (same_context _ _ _) =>
+  decide_same_context
   : lift.
 
 (** For the premises we need to apply them explicitely. *)
@@ -521,6 +590,22 @@ Hint Extern 10 => progress lift_reduce; now eauto: lift.
 
   Ltac lift f :=
     now lift_partial f.
+
+(** The theorems about lifted relations are stated in terms of [subrelation],
+  so [eauto] needs some help with unification. *)
+Section LIFTEXTENDS.
+  Context `{Hlm: LiftMemoryStates}.
+
+  Lemma lift_extends_unlift (m1 m2: mem):
+    Mem.extends m1 m2 ->
+    Mem.extends (get π m1) (get π m2).
+  Proof.
+    simpl.
+    apply lift_relation_unlift.
+  Qed.
+End LIFTEXTENDS.
+
+Hint Resolve @lift_extends_unlift : lift.
 
 Section LIFTMEM.
   Context mem bmem `{Hmem: LiftMemoryStates mem bmem}.
