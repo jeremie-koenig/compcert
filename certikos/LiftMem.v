@@ -878,7 +878,7 @@ Section LIFTINJ.
   Global Instance liftinj_spec:
     Mem.MemoryInjections bsmem btmem -> Mem.MemoryInjections smem tmem.
   Proof.
-    split.
+    split; try typeclasses eauto.
     lift Mem.mi_freeblocks.
     lift Mem.valid_block_inject_1.
     lift Mem.valid_block_inject_2.
