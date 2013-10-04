@@ -114,6 +114,7 @@ CERTIKOS=\
   Monad.v \
   Comonad.v \
   PowersetMonad.v \
+  Lift.v \
   LiftMem.v \
   LiftExtCall.v \
   AbstractData.v \

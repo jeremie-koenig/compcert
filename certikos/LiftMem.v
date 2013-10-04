@@ -1,14 +1,12 @@
+Require Import Coq.Program.Basics.
+Require Import Coq.Classes.Morphisms.
 Require Import Coqlib.
 Require Import Values.
 Require Import Memory.
 Require Import Functor.
 Require Import Monad.
 Require Import Lens.
-Require Import PowersetMonad.
-Require Import Coq.Relations.Relations.
-Require Import Coq.Classes.RelationPairs.
-Require Import Coq.Classes.Morphisms.
-Require Import Coq.Program.Basics.
+Require Export Lift.
 
 (** * Prerequisites *)
 
@@ -42,7 +40,7 @@ Class LiftMemoryStates {mem bmem: Type} (π: mem -> bmem)
 
 (** Furthermore, we need to know how the extra information fits with
   memory injections. Indeed, we could decide that, if the smaller
-  [bmem] contained inside two [mem]'s inject into one another, then
+  [bmem]s contained inside two [mem]s inject into one another, then
   the larger memory states also inject into one another (that is,
   ignore the extra information for the purposes of memory injections),
   but then we would have no guarantee at all regarding the way in
@@ -101,54 +99,6 @@ Class LiftModel {mem bmem} (π: mem -> bmem)
   lifthinj_context_inject_refl :> Reflexive liftmem_context_inject
 }.
 
-
-(** * Lifting memory operations *)
-
-Class Lift A B := { lift: A -> B }.
-
-Section LIFT.
-  Context {mem bmem} {π: mem -> bmem} `{getb: !Getter π} `{setb: !Setter π}.
-  Context `{HF: Functor}.
-
-  (** Because [Mem.MemoryModel] contains so many theorems, we need some
-    systematic way to lift the memory operations on [W mem], so that
-    the lifting of the theorems is convenient to automate.
-
-    The signature of most of the memory operations are variations on
-    the theme [mem -> F mem], where [F] is a functor such as [option]
-    or [- * Z]. We need to lift them to [W mem -> F (W mem)]. Note
-    that using the comonad's [fmap] is not possible because that would
-    yield a function of type [W mem -> W (F mem)]. Instead, we use
-    the following: *)
-
-  Global Instance lens_lift: Lift (bmem -> F bmem) (mem -> F mem) := {
-    lift f m := fmap (fun bm => set π bm m) (f (get π m))
-  }.
-
-  (** Here are some basic theorems about [lift] with any functor. *)
-
-  Theorem lift_mor (f g: bmem -> F bmem) (m: mem):
-    f (get π m) = g (get π m) ->
-    lift f m = lift g m.
-  Proof.
-    intros Hfg.
-    simpl.
-    apply f_equal.
-    assumption.
-  Qed.
-End LIFT.
-
-Section LIFTINSTANCES.
-  Context {mem bmem} {π: mem -> bmem} `{getb: !Getter π} `{setb: !Setter π}.
-
-  Global Instance lift_const A: Lift (bmem -> A) (mem -> A) :=
-    lens_lift (F := (fun _ => A)).
-  Global Instance lift_prod A: Lift (bmem -> bmem * A) (mem -> mem * A) :=
-    lens_lift.
-  Global Instance lift_powerset: Lift (bmem->bmem->Prop) (mem->mem->Prop) :=
-    lens_lift (F := (fun X => X -> Prop)).
-End LIFTINSTANCES.
-
 Section LIFTOPS.
   (** We can now use [lift] to define the operations of the comonadic
     memory states. *)
@@ -191,188 +141,6 @@ End LIFTOPS.
   we need some theorems about lift to help us rewrite our lifted goals
   to use the original theorems. *)
 
-(** ** Properties of [lift (F:=option)] *)
-
-Section LIFTOPTION.
-  Context {mem bmem π} `{Hgs: LensGetSet mem bmem π}.
-
-  Lemma lift_option_eq (f: bmem -> option bmem):
-    forall (wa wb: mem),
-      lift f wa = Some wb ->
-      f (get π wa) = Some (get π wb).
-  Proof.
-    unfold lift; simpl; intros.
-    destruct (f (get π wa)); try discriminate.
-    inversion H.
-    autorewrite with lens.
-    reflexivity.
-  Qed.
-
-  Lemma lift_option_eq_set_iff (f: bmem -> option bmem):
-    forall (wm: mem) (w': bmem),
-      lift f wm = Some (set π w' wm) <->
-      f (get π wm) = Some w'.
-  Proof.
-    simpl; intros.
-    split; destruct (f (get π wm)); try discriminate;
-    intro H; inversion H.
-    - apply f_equal.
-      apply lens_eq_set in H1.
-      assumption.
-    - reflexivity.
-  Qed.
-
-  Lemma lift_option_eq_set (f: bmem -> option bmem):
-    forall (wm: mem) (m': bmem),
-      f (get π wm) = Some m' ->
-      lift f wm = Some (set π m' wm).
-  Proof.
-    apply lift_option_eq_set_iff.
-  Qed.
-
-  Theorem lift_option_eq_same_context `{Hlss: !LensSetSet π}:
-    forall (f: bmem -> option bmem) (wm wm': mem),
-      lift f wm = Some wm' ->
-      same_context π wm wm'.
-  Proof.
-    intros f wm wm'.
-    unfold lift; simpl.
-    case (f (get π wm)).
-    * intros ? H; inversion H; subst.
-      symmetry.
-      apply lens_set_same_context.
-    * discriminate.
-  Qed.
-
-  Theorem lift_option_same_context_eq `{Hlsg: !LensSetGet π}:
-    forall (f: bmem -> option bmem) (wm wm': mem),
-      f (get π wm) = Some (get π wm') ->
-      same_context π wm wm' ->
-      lift f wm = Some wm'.
-  Proof.
-    intros f wm wm' Hc Hv.
-    simpl.
-    rewrite Hc; clear Hc.
-    f_equal.
-    rewrite Hv.
-    apply lens_set_get.
-  Qed.
-
-  Theorem lift_option_eq_preserves_context (f g: bmem -> option bmem):
-    forall (wm: mem) (wm': mem),
-      g (get π wm) = Some (get π wm') ->
-      lift f wm = Some wm' ->
-      lift g wm = Some wm'.
-  Proof.
-    intros wa wb Hg Hlf.
-    rewrite <- Hlf.
-    apply lift_mor.
-    rewrite Hg.
-    symmetry.
-    apply lift_option_eq.
-    assumption.
-  Qed.
-End LIFTOPTION.
-
-(** ** Properties of [lift (F := fun X => A * X)] *)
-
-Section LIFTPROD.
-  Context {mem bmem π} `{Hgs: LensGetSet mem bmem π} {A: Type}.
-
-  Theorem lift_prod_eq (f: bmem -> bmem * A) (wm wm': mem) (a: A):
-    lift f wm = (wm', a) ->
-    f (get π wm) = (get π wm', a).
-  Proof.
-    simpl.
-    destruct (f (get π wm)) as [m' a'].
-    intros H.
-    inversion H.
-    autorewrite with lens.
-    reflexivity.
-  Qed.
-
-  Theorem lift_prod_eq_set (f: bmem -> bmem * A) wm m' a:
-    f (get π wm) = (m', a) ->
-    lift f wm = (set π m' wm, a).
-  Proof.
-    intro H; simpl.
-    rewrite H; clear H; simpl.
-    reflexivity.
-  Qed.
-
-  Context `{Hlss: !LensSetSet π}.
-
-  Theorem lift_prod_eq_same_context (f: bmem -> bmem * A) (wm wm': mem) (a: A):
-    lift f wm = (wm', a) ->
-    same_context π wm wm'.
-  Proof.
-    simpl.
-    destruct (f (get π wm)).
-    intro H; inversion H; subst.
-    symmetry.
-    apply lens_set_same_context.
-  Qed.
-End LIFTPROD.
-
-Section LIFTREL.
-  Context {S V} `{Lens S V}.
-
-  (** Relations lifted with the powerset monad only relate memory
-    states with the same abstract data. *)
-  Global Instance lift_relation_same_context (R: relation V):
-    subrelation (lift R) (same_context π).
-  Proof.
-    unfold lift; simpl.
-    intros s1 s2 Hs.
-    inversion Hs.
-    autorewrite with lens.
-    reflexivity.
-  Qed.
-
-  (** They also only relate memory states whose underlying components
-    are related. *)
-  Global Instance lift_relation_unlift (R: relation V):
-    subrelation (lift R) (R @@ get π)%signature.
-  Proof.
-    unfold lift, RelCompFun; simpl.
-    intros s1 s2 Hs.
-    inversion Hs.
-    autorewrite with lens.
-    assumption.
-  Qed.
-
-  (** In fact, lift R is the conjunction of these two relations. *)
-  Lemma lift_relation_intro (R: V -> V -> Prop) (s1 s2: S):
-    same_context π s1 s2 ->
-    R (get π s1) (get π s2) ->
-    lift (Lift := lift_powerset) R s1 s2.
-  Proof.
-    intros Hc Hv.
-    unfold lift; simpl.
-    replace s2 with (set π (get π s2) s1).
-    * change (set π (get π s2) s1) with ((fun v => set π v s1) (get π s2)).
-      eapply powerset_fmap_intro.
-      assumption.
-    * rewrite Hc.
-      autorewrite with lens.
-      reflexivity.
-  Qed.
-End LIFTREL.
-
-(** Decision procedure for [same_context]: use the theorems above to
-  extract the [same_context] consequences of every hypothesis, use
-  [autorewrite with lens] to eliminate all occurences of [set] then
-  use [congruence]. *)
-
-Ltac decide_same_context :=
-  repeat match goal with
-    | [ H: lift ?f _ = Some _ |- _ ] => apply lift_option_eq_same_context in H
-    | [ H: lift ?f _ = (_, _) |- _ ] => apply lift_prod_eq_same_context in H
-    | [ H: lift ?R _ _ |- _ ] => apply lift_relation_same_context in H
-  end;
-  autorewrite with lens in *;
-  congruence.
-
 (** ** Lifting [Mem.MemoryModel] *)
 
 Section LIFTDERIVED.
@@ -409,9 +177,10 @@ Section LIFTDERIVED.
     revert wm.
     induction l as [ | [[b lo] hi] l IHl];
     intros; simpl in *.
-    * rewrite lens_set_get.
+    * lift_reduce.
       reflexivity.
-    * destruct (Mem.free (get π wm) b lo hi); [| reflexivity].
+    * lift_reduce.
+      destruct (Mem.free (get π wm) b lo hi); [| reflexivity].
       rewrite IHl.
       rewrite lens_get_set.
       destruct (Mem.free_list b0 l); [| reflexivity].
@@ -458,138 +227,8 @@ Hint Rewrite
   @lift_weak_valid_pointer
   using typeclasses eauto : lift.
 
-(** For the fields of [Mem.MemoryOps], which are defined in terms
-  of [lift] to begin with, we can use [simpl], making sure that
-  we stop once we reach [lift]: *)
-
-Arguments lift _ _ _ _ : simpl never.
-
-(** Once we've rewritten everything in terms of [lift], we can apply
-  some of the generic theorems we proved earlier. For the goal we
-  just add them as hints to the lift database. *)
-
-Hint Resolve
-  @lift_mor
-  @lift_option_eq
-  @lift_option_eq_set
-  @lift_prod_eq
-  @lift_prod_eq_set
-  @lift_relation_intro
-  : lift.
-
-Hint Extern 10 (same_context _ _ _) =>
-  decide_same_context
-  : lift.
-
-(** For the premises we need to apply them explicitely. *)
-
-Ltac lift_premise :=
-  match goal with
-    | [ H: lift ?f ?wm = Some ?b |- _ ] =>
-      eapply lift_option_eq in H
-    | [ H: lift ?f ?wm = Some (set ?m' ?wm) |- _ ] =>
-      eapply lift_option_eq_set in H
-    | [ H: lift ?f ?wm = (?m, ?x) |- _ ] =>
-      eapply lift_prod_eq in H
-    | [ H: lift ?f ?wm = (set ?m' ?wm, ?a) |- _ ] =>
-      eapply lift_prod_eq_set in H
-  end.
-
-Hint Extern 10 => progress (repeat lift_premise): lift.
-
-(** Next, we need to use the original theorem in order to prove the
-  lifted one. To do this we must reduce [lift] to obtain a goal
-  which is stated in terms of the original operations applied to
-  [(extract wm)]. This hint makes sure [eauto] can do that. *)
-
-Ltac lift_reduce :=
-  unfold lift in *; simpl in *;
-  autorewrite with lens in *.
-
 (** Replace [(extract Mem.empty)] by the underlying [Mem.empty]. *)
 Hint Rewrite @liftmem_get_empty using typeclasses eauto: lens.
-
-Hint Extern 10 => progress lift_reduce; now eauto: lift. 
-
-  (** This is the main tactic we use: it lifts a theorem [Hf] of
-    the underlying memory model by "peeling off" its structure
-    recursively to prove the lifted goal. The leaf goals are
-    handled with the caller-provided tactic [leaftac]. *)
-
-  (* FIXME: we could probably do away with the mem parameter to the
-    tactics below (just try both possibilities and see what works) *)
-
-  (* Premises are "translated" and used to specialize Hf *)
-  Ltac peel_intro mem recurse Hf x :=
-    intro x;
-    let T := type of x in
-    match type of Hf with
-      (* No transformation required, just pass it along. *)
-      | forall (y: T), _ =>
-	specialize (Hf x)
-
-      (* [mem] argument, use [extract] *)
-      | forall (m: mem), _ =>
-	specialize (Hf (get _ x))
-
-      (* Otherwise, recurse. *)
-      | forall (H: ?T'), _ =>
-	let H' := fresh H in
-	assert (H': T') by recurse x;
-	specialize (Hf H');
-	clear H'
-    end;
-    (*try clear x;*)
-    recurse Hf.
-
-  (* Existential: we must use [set] to augment any memory state
-    provided by Hf, but we can otherwise just pass everything along *)
-  Ltac peel_exists mem recurse Hf x :=
-    let Hf' := fresh Hf in
-    destruct Hf as [x Hf'];
-    let T := type of x in
-    match T with
-      | mem => eexists (set _ x _)
-      | _ => exists x
-    end;
-    recurse Hf'.
-
-  (* Conjunction: split and peel each side independently *)
-  Ltac peel_conj recurse Hf :=
-    let Hl := fresh Hf "l" in
-    let Hr := fresh Hf "r" in
-    destruct Hf as [Hl Hr];
-    split; [recurse Hl | recurse Hr].
-
-  Ltac peel Hf leaftac :=
-    let recurse Hf := peel Hf leaftac in
-    try match goal with
-      | _: LiftMemoryOps (bmem := ?bmem) _ |- forall (x: _), _ =>
-        let x := fresh x in peel_intro bmem recurse Hf x
-      | _: LiftMemoryOps (bmem := ?bmem) _ |- exists (x: _), _ =>
-        let x := fresh x in peel_exists bmem recurse Hf x
-      | _: LiftMemoryOps (bmem := ?bmem) _ |- { x: _ | _ } =>
-        let x := fresh x in peel_exists bmem recurse Hf x
-      | |- _ /\ _ =>
-        peel_conj recurse Hf
-      | |- ?T =>
-        leaftac
-    end.
-
-  (** We're now ready to define our leaf tactic, and use it in
-    conjunction with [peel] to solve the goals automatically. *)
-
-  Ltac lift_leaf :=
-    autorewrite with lift in *;
-    simpl in *;
-    eauto 10 with lift typeclass_instances.
-
-  Ltac lift_partial f :=
-    pose proof f as Hf;
-    peel Hf lift_leaf.
-
-  Ltac lift f :=
-    now lift_partial f.
 
 (** The theorems about lifted relations are stated in terms of [subrelation],
   so [eauto] needs some help with unification. *)
