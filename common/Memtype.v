@@ -953,6 +953,9 @@ ugly_workaround_depender: ugly_workaround_dependee
 Class MemoryInjections smem tmem `{inject_ops: InjectOps smem tmem} :=
 {
 
+memory_injections_source_memory_states :> MemoryStates smem;
+memory_injections_target_memory_states :> MemoryStates tmem;
+
 mi_freeblocks f m1 m2:
   inject f m1 m2 ->
   forall b, ~(valid_block m1 b) -> f b = None;
