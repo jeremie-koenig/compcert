@@ -1,0 +1,16 @@
+*.vo
+*.glob
+_build
+Makefile.local
+Makefile.config
+driver/Configuration.ml
+extraction/*.ml
+extraction/*.mli
+extraction/STAMP
+tools/ndfun
+tools/ndfun.cmi
+tools/ndfun.cmx
+tools/ndfun.o
+ia32/ConstpropOp.v
+ia32/SelectOp.v
+ccomp
