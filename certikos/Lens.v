@@ -156,6 +156,25 @@ Section GETSET.
   Qed.
 End GETSET.
 
+(** ** Consequences of [LensSetGet] *)
+
+Section SETGET.
+  Context {S V} `{HSV: LensSetGet S V}.
+
+  (* same_context ∧ (eq @@ get π) ⇔ eq *)
+  Lemma lens_same_context_eq s1 s2:
+    same_context π s1 s2 ->
+    get π s1 = get π s2 ->
+    s1 = s2.
+  Proof.
+    intros Hc Hv.
+    rewrite <- (lens_set_get s1).
+    rewrite <- (lens_set_get s2).
+    rewrite Hv.
+    apply Hc.
+  Qed.
+End SETGET.
+
 Hint Rewrite
     @lens_get_set
     @lens_set_get

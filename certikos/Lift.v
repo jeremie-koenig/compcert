@@ -29,7 +29,8 @@ Section LIFT.
   }.
 End LIFT.
 
-(** Typeclass resolution needs some help to unify the following. *)
+(** Typeclass resolution needs some help to figure out those functors
+  by unification. *)
 
 Section LIFTINSTANCES.
   Context {S V} `{HSV: Lens S V}.
@@ -43,7 +44,7 @@ Section LIFTINSTANCES.
 End LIFTINSTANCES.
 
 
-(** ** Lifting theorems *)
+(** ** The [lift_peel] tactic *)
 
 (** This is the main tactic we use: it lifts a theorem [Hf] of
   the underlying memory model by "peeling off" its structure
@@ -97,66 +98,57 @@ Ltac lift_peel Hf leaftac :=
       leaftac
   end.
 
-(** We're now ready to define our leaf tactic, and use it in
-  conjunction with [peel] to solve the goals automatically. *)
-
-Ltac lift_leaf :=
-  autorewrite with lift in *;
-  simpl in *;
-  eauto 10 with lift typeclass_instances.
-
-Ltac lift_partial f :=
-  pose proof f as Hf;
-  lift_peel Hf lift_leaf.
-
-Ltac lift f :=
-  now lift_partial f.
+(** Now the goal is to come up with an appropriate leaf tactic which
+  will be able to prove some theorems instanciated with the lifted
+  operations using the original version. *)
 
 
-(** *** Properties of [lift (F:=option)] *)
+(** ** Simplifying occurences of [lift] *)
+
+(** As a first step, in order to be able to apply general theorems
+  about it, we will want to make sure the goal and premises are all
+  stated in terms of [lift]. In order to do this, we use the rule
+  below to make sure that the [simpl] tactic stops whenever [lift] is
+  reached. Then [simpl] allows us to unfold typeclass methods which
+  are defined in terms of lift (the most common case). *)
+
+Arguments lift _ _ _ _ : simpl never.
+
+(** There are also derived operations (such as [free_list] for
+  instance), which are defined in terms of the typeclass methods.
+  In such cases, we usually want to prove that lifting such operations
+  is equivalent to applying them to a lifted typeclass instance.
+  Then we can rewrite them in terms of [lift] as well. Such proofs are
+  collected into the "lift" rewrite database. *)
+
+Ltac lift_simpl :=
+  simpl in *; (* will stop at [lift] *)
+  autorewrite with lift in *.
+
+(** Once everything is stated in terms of lift, futher rewriting rules
+  from this database can be applied. In particular, the theorems below
+  try to ensure that the goal and hypotheses are stated in terms of
+  [get] and [same_context] rather than in terms of [lift]. *)
 
 Section LIFTOPTION.
-  Context {S V} `{Hgs: LensGetSet S V}.
+  Context {S V} `{HSV: Lens S V}.
 
-  Lemma lift_option_eq (f: V -> option V):
-    forall (s s': S),
-      lift f s = Some s' ->
-      f (get π s) = Some (get π s').
+  Lemma lift_option_eq_unlift (f: V -> option V) (s s': S):
+    lift f s = Some s' ->
+    f (get π s) = Some (get π s').
   Proof.
-    unfold lift; simpl; intros.
+    unfold lift; simpl.
+    intros.
     destruct (f (get π s)); try discriminate.
     inversion H.
     autorewrite with lens.
     reflexivity.
   Qed.
 
-  Lemma lift_option_eq_set_iff (f: V -> option V) (s: S) (v': V):
-    lift f s = Some (set π v' s) <->
-    f (get π s) = Some v'.
+  Theorem lift_option_eq_same_context (f: V -> option V) (s s': S):
+    lift f s = Some s' ->
+    same_context π s s'.
   Proof.
-    simpl; intros.
-    split; destruct (f (get π s)); try discriminate;
-    intro H; inversion H.
-    - apply f_equal.
-      apply lens_eq_set in H1.
-      assumption.
-    - reflexivity.
-  Qed.
-
-  (* XXX *)
-  Lemma lift_option_eq_set (f: V -> option V) (s: S) (v': V):
-    f (get π s) = Some v' ->
-    lift f s = Some (set π v' s).
-  Proof.
-    apply lift_option_eq_set_iff.
-  Qed.
-
-  Theorem lift_option_eq_same_context `{Hlss: !LensSetSet π}:
-    forall (f: V -> option V) (s s': S),
-      lift f s = Some s' ->
-      same_context π s s'.
-  Proof.
-    intros f s s'.
     unfold lift; simpl.
     case (f (get π s)).
     * intros ? H; inversion H; subst.
@@ -165,57 +157,42 @@ Section LIFTOPTION.
     * discriminate.
   Qed.
 
-  Theorem lift_option_same_context_eq `{Hlsg: !LensSetGet π}:
-    forall (f: V -> option V) (s s': S),
-      f (get π s) = Some (get π s') ->
+  Theorem lift_option_eq_intro (f: V -> option V) (s s': S):
       same_context π s s' ->
+      f (get π s) = Some (get π s') ->
       lift f s = Some s'.
   Proof.
-    intros f s s' Hc Hv.
-    simpl.
-    rewrite Hc; clear Hc.
+    intros Hc Hv.
+    unfold lift; simpl.
+    rewrite Hv; clear Hv.
     f_equal.
-    rewrite Hv.
+    rewrite Hc.
     apply lens_set_get.
   Qed.
 
-  (* XXX *)
-  Theorem lift_mor `{FunctorOps} (f g: V -> F V) (s: S):
-    f (get π s) = g (get π s) ->
-    lift f s = lift g s.
+  Theorem lift_option_eq_iff f s s' `{!Lens π}:
+    lift f s = Some s' <->
+    f (get π s) = Some (get π s') /\ same_context π s s'.
   Proof.
-    intros Hfg.
-    simpl.
-    apply f_equal.
-    assumption.
-  Qed.
-
-  (* XXX *)
-  Theorem lift_option_eq_preserves_context (f g: V -> option V) (s s': S):
-    g (get π s) = Some (get π s') ->
-    lift f s = Some s' ->
-    lift g s = Some s'.
-  Proof.
-    intros Hg Hlf.
-    rewrite <- Hlf.
-    apply lift_mor.
-    rewrite Hg.
-    symmetry.
-    apply lift_option_eq.
-    assumption.
+    repeat split.
+    - apply lift_option_eq_unlift.
+      assumption.
+    - eapply lift_option_eq_same_context.
+      eassumption.
+    - intros [Hf Hc].
+      eapply lift_option_eq_intro;
+      assumption.
   Qed.
 End LIFTOPTION.
 
-(** *** Properties of [lift (F := fun X => A * X)] *)
-
 Section LIFTPROD.
-  Context {S V} `{Hgs: LensGetSet S V} {A: Type}.
+  Context {S V} `{Hgs: Lens S V} {A: Type}.
 
-  Theorem lift_prod_eq (f: V -> V * A) (s s': S) (a: A):
+  Theorem lift_prod_eq_unlift (f: V -> V * A) (s s': S) (a: A):
     lift f s = (s', a) ->
     f (get π s) = (get π s', a).
   Proof.
-    simpl.
+    unfold lift; simpl.
     destruct (f (get π s)) as [v' a'].
     intros H.
     inversion H.
@@ -223,49 +200,49 @@ Section LIFTPROD.
     reflexivity.
   Qed.
 
-  (* XXX *)
-  Theorem lift_prod_eq_set (f: V -> V * A) s v' a:
-    f (get π s) = (v', a) ->
-    lift f s = (set π v' s, a).
-  Proof.
-    intro H; simpl.
-    rewrite H; clear H; simpl.
-    reflexivity.
-  Qed.
-
-  Context `{Hlss: !LensSetSet π}.
-
   Theorem lift_prod_eq_same_context (f: V -> V * A) (s s': S) (a: A):
     lift f s = (s', a) ->
     same_context π s s'.
   Proof.
-    simpl.
+    unfold lift; simpl.
     destruct (f (get π s)).
     intro H; inversion H; subst.
     symmetry.
     apply lens_set_same_context.
   Qed.
-End LIFTPROD.
 
-(** *** Properties of [lift (F := fun X => X -> Prop)] *)
-
-Section LIFTREL.
-  Context {S V} `{Lens S V}.
-
-  (** Relations lifted with the powerset monad only relate memory
-    states with the same abstract data. *)
-  Global Instance lift_relation_same_context (R: relation V):
-    subrelation (lift R) (same_context π).
+  Theorem lift_prod_eq_intro (f: V -> V * A) (s s': S) (a: A):
+    same_context π s s' ->
+    f (get π s) = (get π s', a) ->
+    lift f s = (s', a).
   Proof.
     unfold lift; simpl.
-    intros s1 s2 Hs.
-    inversion Hs.
+    intros Hc Hv.
+    destruct (f (get π s)) as [v'].
+    inversion Hv; subst; clear Hv.
+    rewrite Hc; clear Hc.
     autorewrite with lens.
     reflexivity.
   Qed.
 
-  (** They also only relate memory states whose underlying components
-    are related. *)
+  Theorem lift_prod_eq_iff (f: V -> V * A) (s s': S) (a: A):
+    lift f s = (s', a) <->
+    f (get π s) = (get π s', a) /\ same_context π s s'.
+  Proof.
+    repeat split.
+    - apply lift_prod_eq_unlift.
+      assumption.
+    - eapply lift_prod_eq_same_context.
+      eassumption.
+    - intros [Hf Hc].
+      apply lift_prod_eq_intro;
+      assumption.
+  Qed.
+End LIFTPROD.
+
+Section LIFTREL.
+  Context {S V} `{Lens S V}.
+
   Global Instance lift_relation_unlift (R: relation V):
     subrelation (lift R) (R @@ get π)%signature.
   Proof.
@@ -276,7 +253,16 @@ Section LIFTREL.
     assumption.
   Qed.
 
-  (** In fact, lift R is the conjunction of these two relations. *)
+  Global Instance lift_relation_same_context (R: relation V):
+    subrelation (lift R) (same_context π).
+  Proof.
+    unfold lift; simpl.
+    intros s1 s2 Hs.
+    inversion Hs.
+    autorewrite with lens.
+    reflexivity.
+  Qed.
+
   Lemma lift_relation_intro (R: V -> V -> Prop) (s1 s2: S):
     same_context π s1 s2 ->
     R (get π s1) (get π s2) ->
@@ -292,66 +278,74 @@ Section LIFTREL.
       autorewrite with lens.
       reflexivity.
   Qed.
+
+  Lemma lift_relation_iff (R: V -> V -> Prop) (s1 s2: S):
+    lift R s1 s2 <->
+    R (get π s1) (get π s2) /\ same_context π s1 s2.
+  Proof.
+    repeat split.
+    - apply lift_relation_unlift.
+      assumption.
+    - eapply lift_relation_same_context.
+      eassumption.
+    - intros [Hv Hc].
+      apply lift_relation_intro;
+      assumption.
+  Qed.
 End LIFTREL.
 
-(** Decision procedure for [same_context]: use the theorems above to
-  extract the [same_context] consequences of every hypothesis, use
-  [autorewrite with lens] to eliminate all occurences of [set] then
-  use [congruence]. *)
+Hint Rewrite
+  @lift_option_eq_iff
+  @lift_prod_eq_iff
+  @lift_relation_iff
+  using typeclasses eauto : lift.
 
-Ltac decide_same_context :=
+
+(** ** Solving the residual goals *)
+
+(** The rewriting rules above likely leaves us with several conjunctions.
+  We destruct them to make sure that the components are readily available. *)
+
+Ltac split_conjuncts :=
   repeat match goal with
-    | [ H: lift ?f _ = Some _ |- _ ] => apply lift_option_eq_same_context in H
-    | [ H: lift ?f _ = (_, _) |- _ ] => apply lift_prod_eq_same_context in H
-    | [ H: lift ?R _ _        |- _ ] => apply lift_relation_same_context in H
-  end;
-  autorewrite with lens in *;
-  congruence.
+           | [ H: _ /\ _ |- _ ] =>
+             let Hl := fresh H "l" in
+             let Hr := fresh H "r" in
+             destruct H as [Hl Hr]
+         end.
 
-Hint Extern 10 (same_context _ _ _) => decide_same_context : lift.
+(** Hopefully, the residual goal can then easily be solved with
+  [eauto], given a few hints in the "lift" database which we use to
+  solve corner cases. The [congruence] tactic easily take care of
+  equivalence relations. *)
+Hint Extern 10 (eq _ _) =>
+  congruence : lift.
 
-(** For the fields of [Mem.MemoryOps], which are defined in terms
-  of [lift] to begin with, we can use [simpl], making sure that
-  we stop once we reach [lift]: *)
+(* Use the minimal priority, because we want to use [same_context] as
+  a side-condition for some immediate hints. *)
+Hint Extern 0 (same_context _ _ _) =>
+  congruence || reflexivity : lift.
 
-Arguments lift _ _ _ _ : simpl never.
-
-(** Once we've rewritten everything in terms of [lift], we can apply
-  some of the generic theorems we proved earlier. For the goal we
-  just add them as hints to the lift database. *)
-
-Hint Resolve
-  @lift_mor
-  @lift_option_eq
-  @lift_option_eq_set
-  @lift_prod_eq
-  @lift_prod_eq_set
-  @lift_relation_intro
-  : lift.
-
-(** For the premises we need to apply them explicitely. *)
-
-Ltac lift_premise :=
-  match goal with
-    | [ H: lift ?f ?wm = Some ?b |- _ ] =>
-      eapply lift_option_eq in H
-    | [ H: lift ?f ?wm = Some (set ?m' ?wm) |- _ ] =>
-      eapply lift_option_eq_set in H
-    | [ H: lift ?f ?wm = (?m, ?x) |- _ ] =>
-      eapply lift_prod_eq in H
-    | [ H: lift ?f ?wm = (set ?m' ?wm, ?a) |- _ ] =>
-      eapply lift_prod_eq_set in H
-  end.
-
-Hint Extern 10 => progress (repeat lift_premise): lift.
-
-(** Next, we need to use the original theorem in order to prove the
-  lifted one. To do this we must reduce [lift] to obtain a goal
-  which is stated in terms of the original operations applied to
-  [(extract wm)]. This hint makes sure [eauto] can do that. *)
-
-Ltac lift_reduce :=
+(** As a last resort, we unfold [lift] and try to normalize the
+  result. Hopefully we'll get something easily solvable. *)
+Ltac lift_unfold :=
   unfold lift in *; simpl in *;
   autorewrite with lens in *.
 
-Hint Extern 10 => progress lift_reduce; now eauto: lift. 
+(** We're now ready to define our leaf tactic, and use it in
+  conjunction with [peel] to solve the goals automatically. *)
+Ltac lift_auto :=
+  lift_simpl;
+  split_conjuncts;
+  eauto 10 with lift typeclass_instances;
+  lift_unfold;
+  eauto 10 with lift typeclass_instances.
+
+(** The [lift_partial] variant allows for some unsolved leaves. *)
+Ltac lift_partial f :=
+  pose proof f as Hf;
+  lift_peel Hf lift_auto.
+
+(** The [lift] variant demands 100% success *)
+Ltac lift f :=
+  now lift_partial f.

@@ -99,10 +99,10 @@ Class LiftModel {mem bmem} (π: mem -> bmem)
   lifthinj_context_inject_refl :> Reflexive liftmem_context_inject
 }.
 
-Section LIFTOPS.
-  (** We can now use [lift] to define the operations of the comonadic
-    memory states. *)
+(** Using all of this, we can build a set of memory operations on the
+  source type [mem] from the operations on the view type [bmem]. *)
 
+Section LIFTOPS.
   Global Instance liftmem_ops `{mem_liftops: LiftMemoryOps}:
     Mem.MemoryOps mem :=
   {
@@ -135,25 +135,12 @@ End LIFTOPS.
 
 (** * Lifting the properties *)
 
-(** Now we lift the properties listed in [Mem.MemoryModel]: given a theorem
-  about [mem], we need to prove the equivalent theorem about [W mem]
-  and the corresponding lifted operations it involves. To do this,
-  we need some theorems about lift to help us rewrite our lifted goals
-  to use the original theorems. *)
-
-(** ** Lifting [Mem.MemoryModel] *)
-
 Section LIFTDERIVED.
   Context `{HW: LiftMemoryStates}.
 
-  (** Now we must come up with a suitable leaf tactic.
-    The first step for proving a lifted theorem involving an
-    operation applied to a term [wm: W mem] is to rewrite it in
-    terms of [lift] applied to the underlying operation. *)
-
-  (** However for the derived operations we first need to show that
-    the [W mem] versions are indeed equivalent to lifting the [mem]
-    versions. *)
+  (** Show that the operations derived from the [Mem.MemoryOps]
+    instance above are equivalent to lifting the operations derived
+    from the original [Mem.MemoryOps]. *)
 
   Theorem lift_loadv chunk wm addr:
     Mem.loadv chunk wm addr =
@@ -176,11 +163,9 @@ Section LIFTDERIVED.
   Proof.
     revert wm.
     induction l as [ | [[b lo] hi] l IHl];
-    intros; simpl in *.
-    * lift_reduce.
-      reflexivity.
-    * lift_reduce.
-      destruct (Mem.free (get π wm) b lo hi); [| reflexivity].
+    intros; lift_simpl; lift_unfold.
+    * reflexivity.
+    * destruct (Mem.free (get π wm) b lo hi); [| reflexivity].
       rewrite IHl.
       rewrite lens_get_set.
       destruct (Mem.free_list b0 l); [| reflexivity].
@@ -227,29 +212,15 @@ Hint Rewrite
   @lift_weak_valid_pointer
   using typeclasses eauto : lift.
 
-(** Replace [(extract Mem.empty)] by the underlying [Mem.empty]. *)
-Hint Rewrite @liftmem_get_empty using typeclasses eauto: lens.
-
-(** The theorems about lifted relations are stated in terms of [subrelation],
-  so [eauto] needs some help with unification. *)
-Section LIFTEXTENDS.
-  Context `{Hlm: LiftMemoryStates}.
-
-  Lemma lift_extends_unlift (m1 m2: mem):
-    Mem.extends m1 m2 ->
-    Mem.extends (get π m1) (get π m2).
-  Proof.
-    simpl.
-    apply lift_relation_unlift.
-  Qed.
-End LIFTEXTENDS.
-
-Hint Resolve @lift_extends_unlift : lift.
+(** Replace [(get Mem.empty)] by the underlying [Mem.empty]. *)
+Hint Rewrite
+  @liftmem_get_empty
+  using typeclasses eauto: lens.
 
 Section LIFTMEM.
   Context mem bmem `{Hmem: LiftMemoryStates mem bmem}.
 
-  Hint Immediate lift_option_eq_preserves_context : lift.
+  Local Arguments fmap : simpl never.
 
   Global Instance liftmem_spec:
     Mem.MemoryStates bmem -> Mem.MemoryStates mem.
@@ -332,31 +303,8 @@ Section LIFTMEM.
     lift Mem.loadbytes_storebytes_same.
     lift Mem.loadbytes_storebytes_other.
     lift Mem.load_storebytes_other.
-    lift_partial Mem.storebytes_concat.
-      simpl in *; unfold lift in *; simpl in *.
-      destruct (Mem.storebytes (get π m) b ofs (bytes1 ++ bytes2));
-      destruct (Mem.storebytes (get π m) b ofs bytes1);
-      destruct (Mem.storebytes (get π m1) b (ofs + Z.of_nat (length bytes1)));
-      try discriminate.
-      inversion Hf;
-      inversion x;
-      inversion x0;
-      subst.
-      autorewrite with lens.
-      reflexivity.
-    lift_partial Mem.storebytes_split.
-      autorewrite with lift in *.
-      simpl in *.
-      unfold lift; simpl.
-      autorewrite with lens.
-      rewrite Hf0r.
-      autorewrite with lens.
-      unfold lift in *; simpl in *.
-      destruct (Mem.storebytes (get π m) b ofs (bytes1 ++ bytes2));
-        try discriminate.
-      inversion x.
-      autorewrite with lens.
-      reflexivity.
+    lift Mem.storebytes_concat.
+    lift Mem.storebytes_split.
     lift Mem.alloc_result.
     lift Mem.nextblock_alloc.
     lift Mem.valid_block_alloc.
@@ -421,98 +369,30 @@ Section LIFTMEM.
   Qed.
 End LIFTMEM.
 
-Section LIFTINJOPS.
+Section LIFTINJ.
   Context `{Hinj: LiftInjections}.
 
-  Global Instance liftmem_inj `{inj_liftops: LiftInjectOps}:
-    Mem.InjectOps smem tmem :=
+  Global Instance liftmem_inj: Mem.InjectOps smem tmem :=
   {
     inject i wm1 wm2 :=
       Mem.inject i (get σ wm1) (get τ wm2) /\
       liftmem_context_inject wm1 wm2
   }.
 
-  (* Injection in the larger structure implies injection for the
-    underlying original memory states. *)
-  Theorem lift_inject_unlift ι (m1: smem) (m2: tmem):
-    Mem.inject ι m1 m2 ->
-    Mem.inject ι (get σ m1) (get τ m2).
+  (** A version of [liftmem_inject_same_context] fine-tuned
+    for use with eauto *)
+  Lemma liftmem_inject_same_context_2 m1 n1 m2 n2:
+    liftmem_context_inject m1 m2 ->
+    same_context σ m1 n1 ->
+    same_context τ m2 n2 ->
+    liftmem_context_inject n1 n2.
   Proof.
-    intros [H1 _].
-    assumption.
+    intros H H1 H2.
+    eapply liftmem_inject_same_context;
+    eassumption.
   Qed.
 
-  (* Triangle diagrams evolving on the left *)
-  Theorem lift_inject_triangle_left ι1 m1 ι2 m1' m2:
-    same_context σ m1 m1' ->
-    Mem.inject ι1 m1 m2 ->
-    Mem.inject ι2 (get σ m1') (get τ m2) ->
-    Mem.inject ι2 m1' m2.
-  Proof.
-    intros Hsc [_ Hic] Him'.
-    split.
-    - assumption.
-    - rewrite <- Hsc.
-      assumption.
-  Qed.
-
-  (* Triangle diagrams evolving on the right *)
-  Theorem lift_inject_triangle_right ι1 m2 ι2 m1 m2':
-    same_context τ m2 m2' ->
-    Mem.inject ι1 m1 m2 ->
-    Mem.inject ι2 (get σ m1) (get τ m2') ->
-    Mem.inject ι2 m1 m2'.
-  Proof.
-    intros Hsc [_ Hic] Him'.
-    split.
-    - assumption.
-    - rewrite <- Hsc.
-      assumption.
-  Qed.
-
-  (* Square diagrams *)
-  Theorem lift_inject_square ι1 m1 m2 ι2 m1' m2':
-    same_context σ m1 m1' ->
-    same_context τ m2 m2' ->
-    Mem.inject ι1 m1 m2 ->
-    Mem.inject ι2 (get σ m1') (get τ m2') ->
-    Mem.inject ι2 m1' m2'.
-  Proof.
-    intros Hsc1 Hsc2 [_ Hic] Him'.
-    split; try assumption.
-    rewrite <- Hsc1.
-    rewrite <- Hsc2.
-    assumption.
-  Qed.
-End LIFTINJOPS.
-
-(* Do not simplify [Mem.inject] to solve our goals;
-  we use the tactics below instead. *)
-Arguments Mem.inject _ _ _ _ _ _ _ _ : simpl never.
-
-Hint Resolve lift_inject_unlift : lift.
-
-Ltac prove_premises :=
-  autorewrite with lens;
-  match goal with
-    | [ |- same_context _ _ _] =>
-      (eapply lift_option_eq_same_context; eassumption) ||
-      (eapply lift_prod_eq_same_context; eassumption) ||
-      reflexivity
-      (*eapply lift_same_context_set_r*)
-    | [ |- Mem.inject ?ι ?m1 ?m2] =>
-      eassumption 
-  end.
-
-Ltac lift_injection :=
-  (eapply lift_inject_triangle_left; prove_premises) ||
-  (eapply lift_inject_triangle_right; prove_premises) ||
-  (eapply lift_inject_square; prove_premises).
-
-Hint Extern 10 (Mem.inject _ _ _) => lift_injection : lift.
-
-Section LIFTINJ.
-  Context `{Hinj: LiftInjections}.
+  Hint Immediate liftmem_inject_same_context_2 : lift.
 
   Global Instance liftinj_spec:
     Mem.MemoryInjections bsmem btmem -> Mem.MemoryInjections smem tmem.
