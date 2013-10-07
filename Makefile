@@ -13,7 +13,7 @@
 include Makefile.config
 
 DIRS=lib common $(ARCH)/$(VARIANT) $(ARCH) backend cfrontend driver \
-  flocq/Core flocq/Prop flocq/Calc flocq/Appli certikos
+  flocq/Core flocq/Prop flocq/Calc flocq/Appli liblayers
 
 INCLUDES=$(patsubst %,-I %, $(DIRS))
 
@@ -106,9 +106,9 @@ CFRONTEND=Ctypes.v Cop.v Csyntax.v Csem.v Cstrategy.v Cexec.v \
 
 DRIVER=Compiler.v Complements.v
 
-# Certikos
+# liblayers
 
-CERTIKOS=\
+LIBLAYERS=\
   Lens.v \
   Functor.v \
   Monad.v \
@@ -123,7 +123,7 @@ CERTIKOS=\
 
 # All source files
 
-FILES=$(LIB) $(COMMON) $(BACKEND) $(CFRONTEND) $(DRIVER) $(FLOCQ) $(CERTIKOS)
+FILES=$(LIB) $(COMMON) $(BACKEND) $(CFRONTEND) $(DRIVER) $(FLOCQ) $(LIBLAYERS)
 
 # Symbolic links vs. copy
 

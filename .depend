@@ -147,15 +147,15 @@ flocq/Calc/Fcalc_round.vo flocq/Calc/Fcalc_round.glob flocq/Calc/Fcalc_round.v.b
 flocq/Calc/Fcalc_digits.vo flocq/Calc/Fcalc_digits.glob flocq/Calc/Fcalc_digits.v.beautified: flocq/Calc/Fcalc_digits.v flocq/Core/Fcore_Raux.vo flocq/Core/Fcore_defs.vo flocq/Core/Fcore_float_prop.vo flocq/Core/Fcore_digits.vo
 flocq/Appli/Fappli_IEEE_bits.vo flocq/Appli/Fappli_IEEE_bits.glob flocq/Appli/Fappli_IEEE_bits.v.beautified: flocq/Appli/Fappli_IEEE_bits.v flocq/Core/Fcore.vo flocq/Core/Fcore_digits.vo flocq/Calc/Fcalc_digits.vo flocq/Appli/Fappli_IEEE.vo
 flocq/Appli/Fappli_IEEE.vo flocq/Appli/Fappli_IEEE.glob flocq/Appli/Fappli_IEEE.v.beautified: flocq/Appli/Fappli_IEEE.v flocq/Core/Fcore.vo flocq/Core/Fcore_digits.vo flocq/Calc/Fcalc_digits.vo flocq/Calc/Fcalc_round.vo flocq/Calc/Fcalc_bracket.vo flocq/Calc/Fcalc_ops.vo flocq/Calc/Fcalc_div.vo flocq/Calc/Fcalc_sqrt.vo flocq/Prop/Fprop_relative.vo
-certikos/Lens.vo certikos/Lens.glob certikos/Lens.v.beautified: certikos/Lens.v
-certikos/Functor.vo certikos/Functor.glob certikos/Functor.v.beautified: certikos/Functor.v lib/Axioms.vo
-certikos/Monad.vo certikos/Monad.glob certikos/Monad.v.beautified: certikos/Monad.v certikos/Functor.vo
-certikos/Comonad.vo certikos/Comonad.glob certikos/Comonad.v.beautified: certikos/Comonad.v lib/Axioms.vo certikos/Functor.vo certikos/Lens.vo
-certikos/PowersetMonad.vo certikos/PowersetMonad.glob certikos/PowersetMonad.v.beautified: certikos/PowersetMonad.v lib/Axioms.vo certikos/Functor.vo certikos/Monad.vo
-certikos/Lift.vo certikos/Lift.glob certikos/Lift.v.beautified: certikos/Lift.v certikos/Lens.vo certikos/Functor.vo certikos/PowersetMonad.vo
-certikos/LiftMem.vo certikos/LiftMem.glob certikos/LiftMem.v.beautified: certikos/LiftMem.v lib/Coqlib.vo common/Values.vo common/Memory.vo certikos/Functor.vo certikos/Monad.vo certikos/Lens.vo certikos/Lift.vo
-certikos/LiftExtCall.vo certikos/LiftExtCall.glob certikos/LiftExtCall.v.beautified: certikos/LiftExtCall.v lib/Coqlib.vo common/AST.vo common/Memory.vo common/Globalenvs.vo common/Events.vo certikos/Lens.vo certikos/LiftMem.vo certikos/PowersetMonad.vo
-certikos/AbstractData.vo certikos/AbstractData.glob certikos/AbstractData.v.beautified: certikos/AbstractData.v common/AST.vo common/Memory.vo common/Globalenvs.vo certikos/Functor.vo certikos/Lens.vo certikos/LiftMem.vo
-certikos/AbstractPrimitives.vo certikos/AbstractPrimitives.glob certikos/AbstractPrimitives.v.beautified: certikos/AbstractPrimitives.v common/AST.vo common/Memory.vo common/Events.vo certikos/LiftExtCall.vo certikos/AbstractData.vo
-certikos/Layer.vo certikos/Layer.glob certikos/Layer.v.beautified: certikos/Layer.v common/Memory.vo common/AST.vo common/Events.vo certikos/AbstractData.vo certikos/AbstractPrimitives.vo certikos/LiftMem.vo certikos/LiftExtCall.vo
+liblayers/Lens.vo liblayers/Lens.glob liblayers/Lens.v.beautified: liblayers/Lens.v
+liblayers/Functor.vo liblayers/Functor.glob liblayers/Functor.v.beautified: liblayers/Functor.v lib/Axioms.vo
+liblayers/Monad.vo liblayers/Monad.glob liblayers/Monad.v.beautified: liblayers/Monad.v liblayers/Functor.vo
+liblayers/Comonad.vo liblayers/Comonad.glob liblayers/Comonad.v.beautified: liblayers/Comonad.v lib/Axioms.vo liblayers/Functor.vo liblayers/Lens.vo
+liblayers/PowersetMonad.vo liblayers/PowersetMonad.glob liblayers/PowersetMonad.v.beautified: liblayers/PowersetMonad.v lib/Axioms.vo liblayers/Functor.vo liblayers/Monad.vo
+liblayers/Lift.vo liblayers/Lift.glob liblayers/Lift.v.beautified: liblayers/Lift.v liblayers/Lens.vo liblayers/Functor.vo liblayers/PowersetMonad.vo
+liblayers/LiftMem.vo liblayers/LiftMem.glob liblayers/LiftMem.v.beautified: liblayers/LiftMem.v lib/Coqlib.vo common/Values.vo common/Memory.vo liblayers/Functor.vo liblayers/Monad.vo liblayers/Lens.vo liblayers/Lift.vo
+liblayers/LiftExtCall.vo liblayers/LiftExtCall.glob liblayers/LiftExtCall.v.beautified: liblayers/LiftExtCall.v lib/Coqlib.vo common/AST.vo common/Memory.vo common/Globalenvs.vo common/Events.vo liblayers/Lens.vo liblayers/LiftMem.vo liblayers/PowersetMonad.vo
+liblayers/AbstractData.vo liblayers/AbstractData.glob liblayers/AbstractData.v.beautified: liblayers/AbstractData.v common/AST.vo common/Memory.vo common/Globalenvs.vo liblayers/Functor.vo liblayers/Lens.vo liblayers/LiftMem.vo
+liblayers/AbstractPrimitives.vo liblayers/AbstractPrimitives.glob liblayers/AbstractPrimitives.v.beautified: liblayers/AbstractPrimitives.v common/AST.vo common/Memory.vo common/Events.vo liblayers/LiftExtCall.vo liblayers/AbstractData.vo
+liblayers/Layer.vo liblayers/Layer.glob liblayers/Layer.v.beautified: liblayers/Layer.v common/Memory.vo common/AST.vo common/Events.vo liblayers/AbstractData.vo liblayers/AbstractPrimitives.vo liblayers/LiftMem.vo liblayers/LiftExtCall.vo
 exportclight/Clightdefs.vo exportclight/Clightdefs.glob exportclight/Clightdefs.v.beautified: exportclight/Clightdefs.v lib/Integers.vo lib/Floats.vo common/AST.vo cfrontend/Ctypes.vo cfrontend/Cop.vo cfrontend/Clight.vo
