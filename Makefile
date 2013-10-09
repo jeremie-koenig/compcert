@@ -120,6 +120,8 @@ LIBLAYERS=\
   AbstractData.v \
   AbstractPrimitives.v \
   Layer.v \
+  MemWithTags.v \
+  MemWithTagsImpl.v \
 
 # All source files
 
