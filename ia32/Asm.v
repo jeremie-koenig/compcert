@@ -227,7 +227,7 @@ Notation "a # b" := (a b) (at level 1, only parsing).
 Notation "a # b <- c" := (Pregmap.set b c a) (at level 1, b at next level).
 
 Section WITHMEM.
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 
 Definition regset := Pregmap.t val.
 Definition genv := Genv.t fundef unit.

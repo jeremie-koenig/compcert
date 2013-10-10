@@ -784,3 +784,10 @@ Proof.
 Qed.
 
 End WITHEC.
+
+(** The whole compiler is parametrized by an [ExternalCalls] instance *)
+Class CompilerConfiguration
+  `{ec_ops: ExtCallOps} :=
+{
+  cc_ext_calls :> ExternalCalls mem external_function
+}.

@@ -25,7 +25,7 @@ Require Cminor.
 Require Import Smallstep.
 
 Section WITHMEM1.
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 
 (** Abstract syntax *)
 
@@ -238,7 +238,7 @@ with find_label_ls `{ef_ops: ExtFunOps} (lbl: label) (sl: lbl_stmt) (k: cont)
   end.
 
 Section WITHMEM2.
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 
 (** Evaluation of operator applications. *)
 

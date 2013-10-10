@@ -30,7 +30,7 @@ Require Import RTL.
 
 Section INLINING.
 
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 Variable prog: program.
 Variable tprog: program.
 Hypothesis TRANSF: transf_program prog = OK tprog.

@@ -337,7 +337,7 @@ End REDUCE.
 (** * The static analysis *)
 
 Section WITHMEM.
-Context `{Hec: Events.ExternalCalls}.
+Context `{Hcc: Events.CompilerConfiguration}.
 
 (** We now define a notion of satisfiability of a numbering.  This semantic
   notion plays a central role in the correctness proof (see [CSEproof]),
@@ -395,7 +395,7 @@ End WITHMEM.
 Module Numbering.
   Definition t := numbering.
   Definition ge (n1 n2: numbering) : Prop :=
-    forall `(Hec: Events.ExternalCalls) ge sp rs m, 
+    forall `(Hcc: Events.CompilerConfiguration) ge sp rs m, 
     numbering_satisfiable ge sp rs m n2 ->
     numbering_satisfiable ge sp rs m n1.
   Definition top := empty_numbering.

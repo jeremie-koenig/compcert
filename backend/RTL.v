@@ -29,7 +29,7 @@ Require Import Op.
 Require Import Registers.
 
 Section WITHMEM.
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 
 (** * Abstract syntax *)
 

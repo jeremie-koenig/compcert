@@ -31,7 +31,7 @@ Module LabelsetFacts := FSetFacts.Facts(Labelset).
 
 Section CLEANUP.
 
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 Variable prog: program.
 Let tprog := transf_program prog.
 Let ge := Genv.globalenv prog.

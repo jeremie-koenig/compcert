@@ -665,7 +665,7 @@ Ltac TailNoLabel :=
 
 Section STRAIGHTLINE.
 
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 Variable ge: genv.
 Variable fn: function.
 
@@ -781,7 +781,7 @@ End STRAIGHTLINE.
 
 Section MATCH_STACK.
 
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 Variable ge: Mach.genv.
 
 Inductive match_stack: list Mach.stackframe -> Prop :=

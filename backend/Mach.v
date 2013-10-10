@@ -185,7 +185,7 @@ Definition undef_op (op: operation) (rs: regset) :=
 Definition undef_setstack (rs: regset) := undef_move rs.
 
 Section WITHMEM.
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 
 Definition is_label (lbl: label) (instr: instruction) : bool :=
   match instr with

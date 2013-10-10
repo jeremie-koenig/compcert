@@ -29,7 +29,7 @@ Require Import Locations.
 Require Import Conventions.
 
 Section WITHMEM.
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 
 (** * Abstract syntax *)
 

@@ -31,7 +31,7 @@ Require Import Csyntax.
 Require Import Smallstep.
 
 Section WITHMEM.
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 
 (** * Operational semantics *)
 
