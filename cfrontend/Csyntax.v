@@ -24,7 +24,7 @@ Require Import Ctypes.
 Require Import Cop.
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** ** Expressions *)
 

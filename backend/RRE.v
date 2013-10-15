@@ -20,7 +20,7 @@ Require Import Conventions.
 Require Import Linear.
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** * Equations between slots and machine registers *)
 

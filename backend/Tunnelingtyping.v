@@ -21,7 +21,7 @@ Require Import Tunneling.
 Require Import Tunnelingproof.
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** Tunneling preserves typing. *)
 

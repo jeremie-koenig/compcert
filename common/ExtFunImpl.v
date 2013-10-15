@@ -14,7 +14,7 @@
 (* *********************************************************************)
 
 (** This file defines the main instance for the type class
-  [AST.ExternalFunctions]. *)
+  [AST.SyntaxConfiguration]. *)
 
 Require Import Coqlib.
 Require Import Integers.
@@ -118,6 +118,10 @@ Local Instance ef_ops: ExtFunOps external_function := {
   ef_reloads := ef_reloads
 }.
 
-Local Instance ef_spec: ExternalFunctions external_function := {
+Local Instance ef_proof: ExternalFunctions external_function := {
 }.
 
+Local Instance ef_spec: SyntaxConfiguration external_function := {
+  ugly_workaround_dependee := unit;
+  ugly_workaround_depender := tt
+}.

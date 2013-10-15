@@ -27,7 +27,7 @@ Require Import Reload.
 Require Import Reloadproof.
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** * Typing Linear constructors *)
 

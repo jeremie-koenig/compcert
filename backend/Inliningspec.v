@@ -25,7 +25,7 @@ Require Import RTL.
 Require Import Inlining.
 
 Section WITHEF1.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** ** Soundness of function environments. *)
 
@@ -188,7 +188,7 @@ Ltac monadInv H :=
 (** ** Relational specification of the translation of moves *)
 
 Section WITHEF2.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 Inductive tr_moves (c: code) : node -> list reg -> list reg -> node -> Prop :=
   | tr_moves_cons: forall pc1 src srcs dst dsts pc2 pc3,

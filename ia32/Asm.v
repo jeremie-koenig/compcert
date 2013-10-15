@@ -201,7 +201,7 @@ Inductive instruction `{ef_ops: ExtFunOps}: Type :=
   | Pannot(ef: external_function)(args: list annot_param).
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 Definition code := list instruction.
 Definition function := code.

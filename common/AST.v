@@ -473,3 +473,15 @@ Definition transf_partial_fundef (fd: fundef A): res (fundef B) :=
 
 End TRANSF_PARTIAL_FUNDEF.
 
+Class SyntaxConfiguration external_function
+  `{ef_ops: ExtFunOps external_function}: Prop :=
+{
+  syntax_external_functions :> ExternalFunctions external_function;
+
+  (* Prevent [intuition] from destructing instances of [SyntaxConfiguration],
+    so that the old proof scripts continue to work. *)
+  ugly_workaround_dependee: Type;
+  ugly_workaround_depender: ugly_workaround_dependee
+}.
+
+Arguments SyntaxConfiguration external_function {ef_ops}.

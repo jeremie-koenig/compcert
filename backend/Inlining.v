@@ -25,7 +25,7 @@ Require Import RTL.
 Ltac xomega := unfold Plt, Ple in *; zify; omega.
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** ** Environment of inlinable functions *)
 

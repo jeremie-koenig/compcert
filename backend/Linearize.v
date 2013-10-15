@@ -112,7 +112,7 @@ Parameter enumerate_aux: forall `{ExtFunOps}, LTL.function -> PMap.t bool -> lis
 Module Nodeset := FSetAVL.Make(OrderedPositive).
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** Build a [Nodeset.t] from a list of nodes, checking that the list
   contains no duplicates. *)

@@ -415,7 +415,7 @@ End Numbering.
 Module Solver := BBlock_solver(Numbering).
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** The transfer function for the dataflow analysis returns the numbering
   ``after'' execution of the instruction at [pc], as a function of the

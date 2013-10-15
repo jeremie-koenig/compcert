@@ -789,5 +789,6 @@ End WITHEC.
 Class CompilerConfiguration
   `{ec_ops: ExtCallOps} :=
 {
+  cc_syntax :> SyntaxConfiguration external_function;
   cc_ext_calls :> ExternalCalls mem external_function
 }.

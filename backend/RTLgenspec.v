@@ -129,7 +129,7 @@ Ltac monadInv H :=
 (** * Monotonicity properties of the state *)
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 Hint Resolve state_incr_refl: rtlg.
 

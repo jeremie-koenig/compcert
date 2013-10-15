@@ -50,7 +50,7 @@ Require Stacklayout.
   made explicit. *)
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 Definition label := positive.
 

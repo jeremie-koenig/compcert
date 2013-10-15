@@ -22,7 +22,7 @@ Require Import RRE.
 Require Import RREproof.
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 Remark wt_cons:
   forall f c i, wt_instr f i -> wt_code f c -> wt_code f (i::c).

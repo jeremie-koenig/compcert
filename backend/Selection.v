@@ -139,7 +139,7 @@ Definition expr_is_addrof_ident (e: Cminor.expr) : option ident :=
   end.
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 Definition classify_call (ge: Cminor.genv) (e: Cminor.expr) : call_kind :=
   match expr_is_addrof_ident e with

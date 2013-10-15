@@ -29,7 +29,7 @@ Open Scope string_scope.
 Module VSet := FSetAVL.Make(OrderedPositive).
 
 Section WITHEF1.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** The set of local variables that can be lifted to temporaries,
   because they are scalar and their address is not taken. *)
@@ -211,7 +211,7 @@ with addr_taken_lblstmt {external_function} `{ef_ops: ExtFunOps external_functio
   end.
 
 Section WITHEF2.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** The compilation environment for a function is the set of local variables
   that are scalars and whose addresses are not taken. *)
