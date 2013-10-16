@@ -30,14 +30,11 @@ Require Import Locations.
 Require Import LTL.
 Require Import Conventions.
 
-Section WITHMEM.
-Context `{Hcc: CompilerConfiguration}.
-
 (** * Abstract syntax *)
 
 Definition label := positive.
 
-Inductive instruction `{sc_ops: SyntaxConfigOps external_function}: Type :=
+Inductive instruction `{sc_ops: SyntaxConfigOps}: Type :=
   | Lgetstack: slot -> mreg -> instruction
   | Lsetstack: mreg -> slot -> instruction
   | Lop: operation -> list mreg -> mreg -> instruction
@@ -52,6 +49,9 @@ Inductive instruction `{sc_ops: SyntaxConfigOps external_function}: Type :=
   | Lcond: condition -> list mreg -> label -> instruction
   | Ljumptable: mreg -> list label -> instruction
   | Lreturn: instruction.
+
+Section WITHMEM.
+Context `{Hcc: CompilerConfiguration}.
 
 Definition code: Type := list instruction.
 

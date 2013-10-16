@@ -31,9 +31,6 @@ Require Import Smallstep.
 Require Import Ctypes.
 Require Import Cop.
 
-Section WITHMEM.
-Context `{Hcc: CompilerConfiguration}.
-
 (** * Abstract syntax *)
 
 (** ** Expressions *)
@@ -92,7 +89,7 @@ Definition typeof (e: expr) : type :=
 
 Definition label := ident.
 
-Inductive statement `{sc_ops: SyntaxConfigOps external_function} : Type :=
+Inductive statement `{sc_ops: SyntaxConfigOps} : Type :=
   | Sskip : statement                   (**r do nothing *)
   | Sassign : expr -> expr -> statement (**r assignment [lvalue = rvalue] *)
   | Sset : ident -> expr -> statement   (**r assignment [tempvar = rvalue] *)
@@ -108,9 +105,12 @@ Inductive statement `{sc_ops: SyntaxConfigOps external_function} : Type :=
   | Slabel : label -> statement -> statement
   | Sgoto : label -> statement
 
-with labeled_statements `{sc_ops: SyntaxConfigOps external_function} : Type := (**r cases of a [switch] *)
+with labeled_statements `{sc_ops: SyntaxConfigOps} : Type := (**r cases of a [switch] *)
   | LSdefault: statement -> labeled_statements
   | LScase: int -> statement -> labeled_statements -> labeled_statements.
+
+Section WITHMEM.
+Context `{Hcc: CompilerConfiguration}.
 
 (** The C loops are derived forms. *)
 
@@ -318,6 +318,101 @@ Fixpoint seq_of_labeled_statement (sl: labeled_statements) : statement :=
 
 End WITHMEM.
 
+(** ** Transition semantics for statements and functions *)
+
+(** Continuations *)
+
+Inductive cont `{sc_ops: SyntaxConfigOps}: Type :=
+  | Kstop: cont
+  | Kseq: statement -> cont -> cont       (**r [Kseq s2 k] = after [s1] in [s1;s2] *)
+  | Kloop1: statement -> statement -> cont -> cont (**r [Kloop1 s1 s2 k] = after [s1] in [Sloop s1 s2] *)
+  | Kloop2: statement -> statement -> cont -> cont (**r [Kloop1 s1 s2 k] = after [s2] in [Sloop s1 s2] *)
+  | Kswitch: cont -> cont       (**r catches [break] statements arising out of [switch] *)
+  | Kcall: option ident ->                  (**r where to store result *)
+           function ->                      (**r calling function *)
+           env ->                           (**r local env of calling function *)
+           temp_env ->                      (**r temporary env of calling function *)
+           cont -> cont.
+
+(** Pop continuation until a call or stop *)
+
+Fixpoint call_cont `{SyntaxConfigOps} (k: cont) : cont :=
+  match k with
+  | Kseq s k => call_cont k
+  | Kloop1 s1 s2 k => call_cont k
+  | Kloop2 s1 s2 k => call_cont k
+  | Kswitch k => call_cont k
+  | _ => k
+  end.
+
+Definition is_call_cont `{SyntaxConfigOps} (k: cont) : Prop :=
+  match k with
+  | Kstop => True
+  | Kcall _ _ _ _ _ => True
+  | _ => False
+  end.
+
+(** States *)
+
+Inductive state `{cc_ops: CompilerConfigOps}: Type :=
+  | State
+      (f: function)
+      (s: statement)
+      (k: cont)
+      (e: env)
+      (le: temp_env)
+      (m: mem) : state
+  | Callstate
+      (fd: fundef)
+      (args: list val)
+      (k: cont)
+      (m: mem) : state
+  | Returnstate
+      (res: val)
+      (k: cont)
+      (m: mem) : state.
+                 
+(** Find the statement and manufacture the continuation 
+  corresponding to a label *)
+
+Fixpoint find_label `{sc_ops: SyntaxConfigOps}
+                    (lbl: label) (s: statement) (k: cont)
+                    {struct s}: option (statement * cont) :=
+  match s with
+  | Ssequence s1 s2 =>
+      match find_label lbl s1 (Kseq s2 k) with
+      | Some sk => Some sk
+      | None => find_label lbl s2 k
+      end
+  | Sifthenelse a s1 s2 =>
+      match find_label lbl s1 k with
+      | Some sk => Some sk
+      | None => find_label lbl s2 k
+      end
+  | Sloop s1 s2 =>
+      match find_label lbl s1 (Kloop1 s1 s2 k) with
+      | Some sk => Some sk
+      | None => find_label lbl s2 (Kloop2 s1 s2 k)
+      end
+  | Sswitch e sl =>
+      find_label_ls lbl sl (Kswitch k)
+  | Slabel lbl' s' =>
+      if ident_eq lbl lbl' then Some(s', k) else find_label lbl s' k
+  | _ => None
+  end
+
+with find_label_ls `{sc_ops: SyntaxConfigOps}
+                    (lbl: label) (sl: labeled_statements) (k: cont)
+                    {struct sl}: option (statement * cont) :=
+  match sl with
+  | LSdefault s => find_label lbl s k
+  | LScase _ s sl' =>
+      match find_label lbl s (Kseq (seq_of_labeled_statement sl') k) with
+      | Some sk => Some sk
+      | None => find_label_ls lbl sl' k
+      end
+  end.
+
 Section SEMANTICS.
 
 Context `{Hcc: CompilerConfiguration}.
@@ -422,104 +517,6 @@ Inductive eval_exprlist: list expr -> typelist -> list val -> Prop :=
       eval_exprlist (a :: bl) (Tcons ty tyl) (v2 :: vl).
 
 End EXPR.
-
-(** ** Transition semantics for statements and functions *)
-
-(** Continuations *)
-
-Inductive cont {external_function}
-  `{ef_ops: !ExtFunOps external_function}
-  `{sc_ops: !SyntaxConfigOps external_function}: Type
- :=
-  | Kstop: cont
-  | Kseq: statement -> cont -> cont       (**r [Kseq s2 k] = after [s1] in [s1;s2] *)
-  | Kloop1: statement -> statement -> cont -> cont (**r [Kloop1 s1 s2 k] = after [s1] in [Sloop s1 s2] *)
-  | Kloop2: statement -> statement -> cont -> cont (**r [Kloop1 s1 s2 k] = after [s2] in [Sloop s1 s2] *)
-  | Kswitch: cont -> cont       (**r catches [break] statements arising out of [switch] *)
-  | Kcall: option ident ->                  (**r where to store result *)
-           function ->                      (**r calling function *)
-           env ->                           (**r local env of calling function *)
-           temp_env ->                      (**r temporary env of calling function *)
-           cont -> cont.
-
-(** Pop continuation until a call or stop *)
-
-Fixpoint call_cont (k: cont) : cont :=
-  match k with
-  | Kseq s k => call_cont k
-  | Kloop1 s1 s2 k => call_cont k
-  | Kloop2 s1 s2 k => call_cont k
-  | Kswitch k => call_cont k
-  | _ => k
-  end.
-
-Definition is_call_cont (k: cont) : Prop :=
-  match k with
-  | Kstop => True
-  | Kcall _ _ _ _ _ => True
-  | _ => False
-  end.
-
-(** States *)
-
-Inductive state `{mem_ops: Mem.MemoryOps mem}: Type :=
-  | State
-      (f: function)
-      (s: statement)
-      (k: cont)
-      (e: env)
-      (le: temp_env)
-      (m: mem) : state
-  | Callstate
-      (fd: fundef)
-      (args: list val)
-      (k: cont)
-      (m: mem) : state
-  | Returnstate
-      (res: val)
-      (k: cont)
-      (m: mem) : state.
-                 
-(** Find the statement and manufacture the continuation 
-  corresponding to a label *)
-
-Fixpoint find_label {external_function} `{sc_ops: SyntaxConfigOps external_function}
-                    (lbl: label) (s: statement) (k: cont)
-                    {struct s}: option (statement * cont) :=
-  match s with
-  | Ssequence s1 s2 =>
-      match find_label lbl s1 (Kseq s2 k) with
-      | Some sk => Some sk
-      | None => find_label lbl s2 k
-      end
-  | Sifthenelse a s1 s2 =>
-      match find_label lbl s1 k with
-      | Some sk => Some sk
-      | None => find_label lbl s2 k
-      end
-  | Sloop s1 s2 =>
-      match find_label lbl s1 (Kloop1 s1 s2 k) with
-      | Some sk => Some sk
-      | None => find_label lbl s2 (Kloop2 s1 s2 k)
-      end
-  | Sswitch e sl =>
-      find_label_ls lbl sl (Kswitch k)
-  | Slabel lbl' s' =>
-      if ident_eq lbl lbl' then Some(s', k) else find_label lbl s' k
-  | _ => None
-  end
-
-with find_label_ls {external_function} `{sc_ops: SyntaxConfigOps external_function}
-                    (lbl: label) (sl: labeled_statements) (k: cont)
-                    {struct sl}: option (statement * cont) :=
-  match sl with
-  | LSdefault s => find_label lbl s k
-  | LScase _ s sl' =>
-      match find_label lbl s (Kseq (seq_of_labeled_statement sl') k) with
-      | Some sk => Some sk
-      | None => find_label_ls lbl sl' k
-      end
-  end.
 
 (** Semantics for allocation of variables and binding of parameters at
   function entry.  Two semantics are supported: one where

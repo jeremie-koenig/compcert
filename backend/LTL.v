@@ -28,16 +28,13 @@ Require Import Op.
 Require Import Locations.
 Require Import Conventions.
 
-Section WITHMEM.
-Context `{Hcc: CompilerConfiguration}.
-
 (** * Abstract syntax *)
 
 (** LTL is close to RTL, but uses locations instead of pseudo-registers. *)
 
 Definition node := positive.
 
-Inductive instruction `{sc_ops: SyntaxConfigOps external_function}: Type :=
+Inductive instruction `{sc_ops: SyntaxConfigOps}: Type :=
   | Lnop: node -> instruction
   | Lop: operation -> list loc -> loc -> node -> instruction
   | Lload: memory_chunk -> addressing -> list loc -> loc -> node -> instruction
@@ -48,6 +45,9 @@ Inductive instruction `{sc_ops: SyntaxConfigOps external_function}: Type :=
   | Lcond: condition -> list loc -> node -> node -> instruction
   | Ljumptable: loc -> list node -> instruction
   | Lreturn: option loc -> instruction.
+
+Section WITHMEM.
+Context `{Hcc: CompilerConfiguration}.
 
 Definition code: Type := PTree.t instruction.
 

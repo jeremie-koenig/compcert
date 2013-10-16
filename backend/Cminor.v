@@ -27,9 +27,6 @@ Require Import Globalenvs.
 Require Import Smallstep.
 Require Import Switch.
 
-Section WITHMEM.
-Context `{Hcc: CompilerConfiguration}.
-
 (** * Abstract syntax *)
 
 (** Cminor is a low-level imperative language structured in expressions,
@@ -98,7 +95,7 @@ Inductive expr : Type :=
 
 Definition label := ident.
 
-Inductive stmt `{sc_ops: SyntaxConfigOps external_function} : Type :=
+Inductive stmt `{sc_ops: SyntaxConfigOps} : Type :=
   | Sskip: stmt
   | Sassign : ident -> expr -> stmt
   | Sstore : memory_chunk -> expr -> expr -> stmt
@@ -114,6 +111,9 @@ Inductive stmt `{sc_ops: SyntaxConfigOps external_function} : Type :=
   | Sreturn: option expr -> stmt
   | Slabel: label -> stmt -> stmt
   | Sgoto: label -> stmt.
+
+Section WITHMEM.
+Context `{Hcc: CompilerConfiguration}.
 
 (** Functions are composed of a signature, a list of parameter names,
   a list of local variables, and a  statement representing

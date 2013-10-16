@@ -28,9 +28,6 @@ Require Import Op.
 Require Import Locations.
 Require Import LTL.
 
-Section WITHMEM.
-Context `{Hcc: CompilerConfiguration}.
-
 (** * Abstract syntax *)
 
 Definition label := positive.
@@ -42,7 +39,7 @@ Definition label := positive.
   transfer control to the given code label.  Labels are explicitly
   inserted in the instruction list as pseudo-instructions [Llabel]. *)
 
-Inductive instruction `{sc_ops: SyntaxConfigOps external_function}: Type :=
+Inductive instruction `{sc_ops: SyntaxConfigOps}: Type :=
   | Lop: operation -> list loc -> loc -> instruction
   | Lload: memory_chunk -> addressing -> list loc -> loc -> instruction
   | Lstore: memory_chunk -> addressing -> list loc -> loc -> instruction
@@ -54,6 +51,9 @@ Inductive instruction `{sc_ops: SyntaxConfigOps external_function}: Type :=
   | Lcond: condition -> list loc -> label -> instruction
   | Ljumptable: loc -> list label -> instruction
   | Lreturn: option loc -> instruction.
+
+Section WITHMEM.
+Context `{Hcc: CompilerConfiguration}.
 
 Definition code: Type := list instruction.
 

@@ -23,9 +23,6 @@ Require Import AST.
 Require Import Ctypes.
 Require Import Cop.
 
-Section WITHEF.
-Context `{Hsc: SyntaxConfiguration}.
-
 (** ** Expressions *)
 
 (** Compcert C expressions are almost identical to those of C.
@@ -34,7 +31,7 @@ Context `{Hsc: SyntaxConfiguration}.
   the [&&] and [||] operators.  All expressions are annotated with
   their types. *)
 
-Inductive expr `{sc_ops: SyntaxConfigOps external_function} : Type :=
+Inductive expr `{sc_ops: SyntaxConfigOps} : Type :=
   | Eval (v: val) (ty: type)                                  (**r constant *)
   | Evar (x: ident) (ty: type)                                (**r variable *)
   | Efield (l: expr) (f: ident) (ty: type)
@@ -66,9 +63,12 @@ Inductive expr `{sc_ops: SyntaxConfigOps external_function} : Type :=
                        (**r memory location, result of evaluating a l-value *)
   | Eparen (r: expr) (ty: type)                   (**r marked subexpression *)
 
-with exprlist `{sc_ops: SyntaxConfigOps external_function} : Type :=
+with exprlist `{sc_ops: SyntaxConfigOps} : Type :=
   | Enil
   | Econs (r1: expr) (rl: exprlist).
+
+Section WITHEF.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** Expressions are implicitly classified into l-values and r-values,
 ranged over by [l] and [r], respectively, in the grammar above.

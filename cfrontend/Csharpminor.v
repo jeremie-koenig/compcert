@@ -24,9 +24,6 @@ Require Import Globalenvs.
 Require Cminor.
 Require Import Smallstep.
 
-Section WITHMEM1.
-Context `{Hcc: CompilerConfiguration}.
-
 (** Abstract syntax *)
 
 (** Csharpminor is a low-level imperative language structured in expressions,
@@ -57,7 +54,7 @@ Inductive expr : Type :=
 
 Definition label := ident.
 
-Inductive stmt `{sc_ops: SyntaxConfigOps external_function} : Type :=
+Inductive stmt `{sc_ops: SyntaxConfigOps} : Type :=
   | Sskip: stmt
   | Sset : ident -> expr -> stmt
   | Sstore : memory_chunk -> expr -> expr -> stmt
@@ -73,9 +70,12 @@ Inductive stmt `{sc_ops: SyntaxConfigOps external_function} : Type :=
   | Slabel: label -> stmt -> stmt
   | Sgoto: label -> stmt
 
-with lbl_stmt `{sc_ops: SyntaxConfigOps external_function} : Type :=
+with lbl_stmt `{sc_ops: SyntaxConfigOps} : Type :=
   | LSdefault: stmt -> lbl_stmt
   | LScase: int -> stmt -> lbl_stmt -> lbl_stmt.
+
+Section WITHMEM1.
+Context `{Hcc: CompilerConfiguration}.
 
 (** Functions are composed of a return type, a list of parameter names,
   a list of local variables with their sizes, a list of temporary variables,

@@ -28,9 +28,6 @@ Require Import Smallstep.
 Require Import Op.
 Require Import Registers.
 
-Section WITHMEM.
-Context `{Hcc: CompilerConfiguration}.
-
 (** * Abstract syntax *)
 
 (** RTL is organized as instructions, functions and programs.
@@ -47,7 +44,7 @@ Context `{Hcc: CompilerConfiguration}.
 
 Definition node := positive.
 
-Inductive instruction `{sc_ops: !SyntaxConfigOps external_function}: Type :=
+Inductive instruction `{sc_ops: SyntaxConfigOps}: Type :=
   | Inop: node -> instruction
       (** No operation -- just branch to the successor. *)
   | Iop: operation -> list reg -> reg -> node -> instruction
@@ -90,6 +87,9 @@ Inductive instruction `{sc_ops: !SyntaxConfigOps external_function}: Type :=
       (** [Ireturn] terminates the execution of the current function
           (it has no successor).  It returns the value of the given
           register, or [Vundef] if none is given. *)
+
+Section WITHMEM.
+Context `{Hcc: CompilerConfiguration}.
 
 Definition code: Type := PTree.t instruction.
 

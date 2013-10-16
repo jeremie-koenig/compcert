@@ -49,16 +49,13 @@ Require Stacklayout.
   distinction between the caller's frame and the callee's frame is
   made explicit. *)
 
-Section WITHEF.
-Context `{Hsc: SyntaxConfiguration}.
-
 Definition label := positive.
 
 Inductive annot_param: Type :=
   | APreg: mreg -> annot_param
   | APstack: memory_chunk -> Z -> annot_param.
 
-Inductive instruction `{sc_ops: SyntaxConfigOps external_function}: Type :=
+Inductive instruction `{sc_ops: SyntaxConfigOps}: Type :=
   | Mgetstack: int -> typ -> mreg -> instruction
   | Msetstack: mreg -> int -> typ -> instruction
   | Mgetparam: int -> typ -> mreg -> instruction
@@ -74,6 +71,9 @@ Inductive instruction `{sc_ops: SyntaxConfigOps external_function}: Type :=
   | Mcond: condition -> list mreg -> label -> instruction
   | Mjumptable: mreg -> list label -> instruction
   | Mreturn: instruction.
+
+Section WITHEF.
+Context `{Hsc: SyntaxConfiguration}.
 
 Definition code := list instruction.
 
