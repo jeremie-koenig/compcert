@@ -431,7 +431,7 @@ Context `{Hsc: SyntaxConfiguration}.
   Finally, the remaining instructions modify neither registers nor
   the memory, so we keep the numbering unchanged. *)
 
-Definition transfer `{ExtFunOps} (f: function) (pc: node) (before: numbering) :=
+Definition transfer `{SyntaxConfigOps} (f: function) (pc: node) (before: numbering) :=
   match f.(fn_code)!pc with
   | None => before
   | Some i =>
@@ -464,7 +464,7 @@ Definition transfer `{ExtFunOps} (f: function) (pc: node) (before: numbering) :=
   which produces sub-optimal solutions quickly.  The result is
   a mapping from program points to numberings. *)
 
-Definition analyze `{ExtFunOps} (f: RTL.function): option (PMap.t numbering) :=
+Definition analyze `{SyntaxConfigOps} (f: RTL.function): option (PMap.t numbering) :=
   Solver.fixpoint (successors f) (transfer f) f.(fn_entrypoint).
 
 (** * Code transformation *)

@@ -190,7 +190,7 @@ Definition approx_reg (app: D.t) (r: reg) :=
 Definition approx_regs (app: D.t) (rl: list reg):=
   List.map (approx_reg app) rl.
 
-Definition transfer `{ef_ops: ExtFunOps} (gapp: global_approx) (f: function) (pc: node) (before: D.t) :=
+Definition transfer `{sc_ops: SyntaxConfigOps} (gapp: global_approx) (f: function) (pc: node) (before: D.t) :=
   match f.(fn_code)!pc with
   | None => before
   | Some i =>
@@ -220,7 +220,7 @@ Definition transfer `{ef_ops: ExtFunOps} (gapp: global_approx) (f: function) (pc
 
 Module DS := Dataflow_Solver(D)(NodeSetForward).
 
-Definition analyze `{ef_ops: ExtFunOps} (gapp: global_approx) (f: RTL.function): PMap.t D.t :=
+Definition analyze `{sc_ops: SyntaxConfigOps} (gapp: global_approx) (f: RTL.function): PMap.t D.t :=
   match DS.fixpoint (successors f) (transfer gapp f) 
                     ((f.(fn_entrypoint), D.top) :: nil) with
   | None => PMap.init D.top

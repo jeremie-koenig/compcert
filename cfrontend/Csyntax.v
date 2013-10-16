@@ -34,7 +34,7 @@ Context `{Hsc: SyntaxConfiguration}.
   the [&&] and [||] operators.  All expressions are annotated with
   their types. *)
 
-Inductive expr `{ef_ops: ExtFunOps external_function} : Type :=
+Inductive expr `{sc_ops: SyntaxConfigOps external_function} : Type :=
   | Eval (v: val) (ty: type)                                  (**r constant *)
   | Evar (x: ident) (ty: type)                                (**r variable *)
   | Efield (l: expr) (f: ident) (ty: type)
@@ -66,7 +66,7 @@ Inductive expr `{ef_ops: ExtFunOps external_function} : Type :=
                        (**r memory location, result of evaluating a l-value *)
   | Eparen (r: expr) (ty: type)                   (**r marked subexpression *)
 
-with exprlist `{ef_ops: ExtFunOps external_function} : Type :=
+with exprlist `{sc_ops: SyntaxConfigOps external_function} : Type :=
   | Enil
   | Econs (r1: expr) (rl: exprlist).
 

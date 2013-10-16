@@ -71,7 +71,7 @@ Fixpoint reg_list_dead
   (since it computes a useless result), thus its arguments need not
   be live ``before''. *)
 
-Definition transfer `{ef_ops: ExtFunOps}
+Definition transfer `{sf_ops: SyntaxConfigOps}
             (f: RTL.function) (pc: node) (after: Regset.t) : Regset.t :=
   match f.(fn_code)!pc with
   | None =>

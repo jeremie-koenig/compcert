@@ -47,7 +47,7 @@ Context `{Hcc: CompilerConfiguration}.
 
 Definition node := positive.
 
-Inductive instruction `{ef_ops: ExtFunOps external_function}: Type :=
+Inductive instruction `{sc_ops: SyntaxConfigOps external_function}: Type :=
   | Inop: node -> instruction
       (** No operation -- just branch to the successor. *)
   | Iop: operation -> list reg -> reg -> node -> instruction

@@ -29,7 +29,7 @@ Require Import LTLin.
 Module Labelset := FSetAVL.Make(OrderedPositive).
 
 Section WITHEF.
-Context `{ef_ops: AST.ExtFunOps}.
+Context `{sc_ops: AST.SyntaxConfigOps}.
 
 (** Compute the set of labels that are mentioned in branch instructions. *)
 

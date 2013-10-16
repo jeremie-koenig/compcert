@@ -160,7 +160,7 @@ Fixpoint select_switch (n: int) (sl: labeled_statements)
 (** Turn a labeled statement into a sequence *)
 
 Fixpoint seq_of_labeled_statement
-                 {external_function} `{ef_ops: ExtFunOps external_function}
+                 {external_function} `{sc_ops: SyntaxConfigOps external_function}
                  (sl: labeled_statements) : statement :=
   match sl with
   | LSdefault s => s
@@ -444,7 +444,7 @@ End EXPR.
     after the statement or expression under consideration has
     evaluated completely. *)
 
-Inductive cont {external_function} `{ef_ops: ExtFunOps external_function}: Type :=
+Inductive cont {external_function} `{sc_ops: SyntaxConfigOps external_function}: Type :=
   | Kstop: cont
   | Kdo: cont -> cont       (**r [Kdo k] = after [x] in [x;] *)
   | Kseq: statement -> cont -> cont    (**r [Kseq s2 k] = after [s1] in [s1;s2] *)
@@ -527,7 +527,7 @@ Inductive state `{mem_ops: Mem.MemoryOps mem}: Type :=
 (** Find the statement and manufacture the continuation 
   corresponding to a label. *)
 
-Fixpoint find_label {external_function} `{ef_ops: ExtFunOps external_function}
+Fixpoint find_label {external_function} `{sc_ops: SyntaxConfigOps external_function}
                     (lbl: label) (s: statement) (k: cont) 
                     {struct s}: option (statement * cont) :=
   match s with
@@ -561,7 +561,7 @@ Fixpoint find_label {external_function} `{ef_ops: ExtFunOps external_function}
   | _ => None
   end
 
-with find_label_ls {external_function} `{ef_ops: ExtFunOps external_function}
+with find_label_ls {external_function} `{sc_ops: SyntaxConfigOps external_function}
                     (lbl: label) (sl: labeled_statements) (k: cont) 
                     {struct sl}: option (statement * cont) :=
   match sl with

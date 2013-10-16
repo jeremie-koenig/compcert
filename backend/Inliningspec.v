@@ -134,7 +134,7 @@ End WITHEF1.
 
 (** ** Working with the state monad *)
 
-Remark bind_inversion `{ef_ops: ExtFunOps}:
+Remark bind_inversion `{sc_ops: SyntaxConfigOps}:
   forall (A B: Type) (f: mon A) (g: A -> mon B) 
          (y: B) (s1 s3: state) (i: sincr s1 s3),
   bind f g s1 = R y s3 i ->

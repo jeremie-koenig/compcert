@@ -42,7 +42,7 @@ Require Import RTLgen.
   both monadic computations [a] and [b] succeeded.
 *)
 
-Remark bind_inversion `{ef_ops: ExtFunOps}:
+Remark bind_inversion `{sc_ops: SyntaxConfigOps}:
   forall (A B: Type) (f: mon A) (g: A -> mon B) 
          (y: B) (s1 s3: state) (i: state_incr s1 s3),
   bind f g s1 = OK y s3 i ->
@@ -56,7 +56,7 @@ Proof.
   exists s0; auto.
 Qed.
 
-Remark bind2_inversion `{ef_ops: ExtFunOps}:
+Remark bind2_inversion `{sc_ops: SyntaxConfigOps}:
   forall (A B C: Type) (f: mon (A*B)) (g: A -> B -> mon C)
          (z: C) (s1 s3: state) (i: state_incr s1 s3),
   bind2 f g s1 = OK z s3 i ->

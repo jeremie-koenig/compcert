@@ -58,7 +58,7 @@ Inductive annot_param: Type :=
   | APreg: mreg -> annot_param
   | APstack: memory_chunk -> Z -> annot_param.
 
-Inductive instruction `{ef_ops: ExtFunOps external_function}: Type :=
+Inductive instruction `{sc_ops: SyntaxConfigOps external_function}: Type :=
   | Mgetstack: int -> typ -> mreg -> instruction
   | Msetstack: mreg -> int -> typ -> instruction
   | Mgetparam: int -> typ -> mreg -> instruction

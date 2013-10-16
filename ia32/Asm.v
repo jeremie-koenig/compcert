@@ -112,7 +112,7 @@ Inductive annot_param : Type :=
   | APreg: preg -> annot_param
   | APstack: memory_chunk -> Z -> annot_param.
 
-Inductive instruction `{ef_ops: ExtFunOps}: Type :=
+Inductive instruction `{sc_ops: SyntaxConfigOps}: Type :=
   (** Moves *)
   | Pmov_rr (rd: ireg) (r1: ireg)       (**r [mov] (32-bit int) *)
   | Pmov_ri (rd: ireg) (n: int)

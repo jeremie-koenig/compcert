@@ -57,7 +57,7 @@ Definition make_cast (a: expr) (tto: type) : expr :=
 
 (** Rewriting of expressions and statements. *)
 
-Fixpoint simpl_expr {external_function} `{ef_ops: ExtFunOps external_function}
+Fixpoint simpl_expr {external_function} `{sc_ops: SyntaxConfigOps external_function}
                     (cenv: compilenv) (a: expr) : expr :=
   match a with
   | Econst_int _ _ => a
@@ -88,7 +88,7 @@ Definition check_opttemp (cenv: compilenv) (optid: option ident) : res unit :=
 
 End WITHEF1.
 
-Fixpoint simpl_stmt {external_function} `{ef_ops: ExtFunOps external_function}
+Fixpoint simpl_stmt {external_function} `{sc_ops: SyntaxConfigOps external_function}
                     (cenv: compilenv) (s: statement) : res statement :=
   match s with
   | Sskip => OK Sskip
@@ -132,7 +132,7 @@ Fixpoint simpl_stmt {external_function} `{ef_ops: ExtFunOps external_function}
   | Sgoto lbl => OK (Sgoto lbl)
   end
 
-with simpl_lblstmt {external_function} `{ef_ops: ExtFunOps external_function}
+with simpl_lblstmt {external_function} `{sc_ops: SyntaxConfigOps external_function}
                    (cenv: compilenv) (ls: labeled_statements) : res labeled_statements :=
   match ls with
   | LSdefault s =>
@@ -147,7 +147,7 @@ with simpl_lblstmt {external_function} `{ef_ops: ExtFunOps external_function}
 (** Function parameters that are not lifted to temporaries must be
   stored in the corresponding local variable at function entry. *)
 
-Fixpoint store_params {external_function} `{ef_ops: ExtFunOps external_function}
+Fixpoint store_params {external_function} `{sc_ops: SyntaxConfigOps external_function}
                       (cenv: compilenv) (params: list (ident * type))
                       (s: statement): statement :=
   match params with
@@ -182,7 +182,7 @@ Fixpoint addr_taken_exprlist (l: list expr) : VSet.t :=
   | a :: l' => VSet.union (addr_taken_expr a) (addr_taken_exprlist l')
   end.
 
-Fixpoint addr_taken_stmt {external_function} `{ef_ops: ExtFunOps external_function}
+Fixpoint addr_taken_stmt {external_function} `{sc_ops: SyntaxConfigOps external_function}
                          (s: statement) : VSet.t :=
   match s with
   | Sskip => VSet.empty
@@ -203,7 +203,7 @@ Fixpoint addr_taken_stmt {external_function} `{ef_ops: ExtFunOps external_functi
   | Sgoto lbl => VSet.empty
   end
 
-with addr_taken_lblstmt {external_function} `{ef_ops: ExtFunOps external_function}
+with addr_taken_lblstmt {external_function} `{sc_ops: SyntaxConfigOps external_function}
                         (ls: labeled_statements) : VSet.t :=
   match ls with
   | LSdefault s => addr_taken_stmt s

@@ -99,7 +99,7 @@ Function store_arg (chunk: memory_chunk) (e: expr) : expr :=
   | _ => e
   end.
 
-Definition make_store `{ef_ops: ExtFunOps} (chunk: memory_chunk) (e1 e2: expr): stmt :=
+Definition make_store `{sc_ops: SyntaxConfigOps} (chunk: memory_chunk) (e1 e2: expr): stmt :=
   Sstore chunk e1 (store_arg chunk e2).
 
 Definition make_stackaddr (ofs: Z): expr :=
@@ -307,13 +307,13 @@ Fixpoint shift_exit (e: exit_env) (n: nat) {struct e} : nat :=
   | true :: e', S m => S (shift_exit e' m)
   end.
 
-Fixpoint switch_table `{ef_ops: ExtFunOps} (ls: lbl_stmt) (k: nat) {struct ls} : list (int * nat) :=
+Fixpoint switch_table `{sc_ops: SyntaxConfigOps} (ls: lbl_stmt) (k: nat) {struct ls} : list (int * nat) :=
   match ls with
   | LSdefault _ => nil
   | LScase ni _ rem => (ni, k) :: switch_table rem (S k)
   end.
 
-Fixpoint switch_env `{ef_ops: ExtFunOps} (ls: lbl_stmt) (e: exit_env) {struct ls}: exit_env :=
+Fixpoint switch_env `{sc_ops: SyntaxConfigOps} (ls: lbl_stmt) (e: exit_env) {struct ls}: exit_env :=
   match ls with
   | LSdefault _ => e
   | LScase _ _ ls' => false :: switch_env ls' e
@@ -322,7 +322,7 @@ Fixpoint switch_env `{ef_ops: ExtFunOps} (ls: lbl_stmt) (e: exit_env) {struct ls
 (** Translation of statements.  The nonobvious part is
   the translation of [switch] statements, outlined above. *)
 
-Fixpoint transl_stmt `{ef_ops: ExtFunOps}
+Fixpoint transl_stmt `{sc_ops: SyntaxConfigOps}
                      (cenv: compilenv) (xenv: exit_env) (s: Csharpminor.stmt)
                      {struct s}: res stmt :=
   match s with
@@ -375,7 +375,7 @@ Fixpoint transl_stmt `{ef_ops: ExtFunOps}
       OK (Sgoto lbl)
   end
 
-with transl_lblstmt `{ef_ops: ExtFunOps}
+with transl_lblstmt `{sc_ops: SyntaxConfigOps}
                     (cenv: compilenv) (xenv: exit_env) (ls: Csharpminor.lbl_stmt) (body: stmt)
                     {struct ls}: res stmt :=
   match ls with
@@ -425,7 +425,7 @@ End VarOrder.
 
 Module VarSort := Mergesort.Sort(VarOrder).
 
-Definition build_compilenv `{ef_ops: ExtFunOps} (f: Csharpminor.function) : compilenv * Z :=
+Definition build_compilenv `{sc_ops: SyntaxConfigOps} (f: Csharpminor.function) : compilenv * Z :=
   assign_variables (PTree.empty Z, 0) (VarSort.sort (Csharpminor.fn_vars f)).
 
 (** * Translation of functions *)

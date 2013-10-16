@@ -57,7 +57,7 @@ Inductive expr : Type :=
 
 Definition label := ident.
 
-Inductive stmt `{ef_ops: ExtFunOps external_function} : Type :=
+Inductive stmt `{sc_ops: SyntaxConfigOps external_function} : Type :=
   | Sskip: stmt
   | Sset : ident -> expr -> stmt
   | Sstore : memory_chunk -> expr -> expr -> stmt
@@ -73,7 +73,7 @@ Inductive stmt `{ef_ops: ExtFunOps external_function} : Type :=
   | Slabel: label -> stmt -> stmt
   | Sgoto: label -> stmt
 
-with lbl_stmt `{ef_ops: ExtFunOps external_function} : Type :=
+with lbl_stmt `{sc_ops: SyntaxConfigOps external_function} : Type :=
   | LSdefault: stmt -> lbl_stmt
   | LScase: int -> stmt -> lbl_stmt -> lbl_stmt.
 
@@ -171,14 +171,14 @@ End WITHMEM1.
 
 (** Pop continuation until a call or stop *)
 
-Fixpoint call_cont `{ef_ops: ExtFunOps} (k: cont) : cont :=
+Fixpoint call_cont `{sc_ops: SyntaxConfigOps} (k: cont) : cont :=
   match k with
   | Kseq s k => call_cont k
   | Kblock k => call_cont k
   | _ => k
   end.
 
-Definition is_call_cont `{ef_ops: ExtFunOps} (k: cont) : Prop :=
+Definition is_call_cont `{sc_ops: SyntaxConfigOps} (k: cont) : Prop :=
   match k with
   | Kstop => True
   | Kcall _ _ _ _ _ => True
@@ -187,13 +187,13 @@ Definition is_call_cont `{ef_ops: ExtFunOps} (k: cont) : Prop :=
 
 (** Resolve [switch] statements. *)
 
-Fixpoint select_switch `{ef_ops: ExtFunOps} (n: int) (sl: lbl_stmt) {struct sl} : lbl_stmt :=
+Fixpoint select_switch `{sc_ops: SyntaxConfigOps} (n: int) (sl: lbl_stmt) {struct sl} : lbl_stmt :=
   match sl with
   | LSdefault _ => sl
   | LScase c s sl' => if Int.eq c n then sl else select_switch n sl'
   end.
 
-Fixpoint seq_of_lbl_stmt `{ef_ops: ExtFunOps} (sl: lbl_stmt) : stmt :=
+Fixpoint seq_of_lbl_stmt `{sc_ops: SyntaxConfigOps} (sl: lbl_stmt) : stmt :=
   match sl with
   | LSdefault s => s
   | LScase c s sl' => Sseq s (seq_of_lbl_stmt sl')
@@ -202,7 +202,7 @@ Fixpoint seq_of_lbl_stmt `{ef_ops: ExtFunOps} (sl: lbl_stmt) : stmt :=
 (** Find the statement and manufacture the continuation 
   corresponding to a label *)
 
-Fixpoint find_label `{ef_ops: ExtFunOps} (lbl: label) (s: stmt) (k: cont)
+Fixpoint find_label `{sc_ops: SyntaxConfigOps} (lbl: label) (s: stmt) (k: cont)
                     {struct s}: option (stmt * cont) :=
   match s with
   | Sseq s1 s2 =>
@@ -226,7 +226,7 @@ Fixpoint find_label `{ef_ops: ExtFunOps} (lbl: label) (s: stmt) (k: cont)
   | _ => None
   end
 
-with find_label_ls `{ef_ops: ExtFunOps} (lbl: label) (sl: lbl_stmt) (k: cont)
+with find_label_ls `{sc_ops: SyntaxConfigOps} (lbl: label) (sl: lbl_stmt) (k: cont)
                    {struct sl}: option (stmt * cont) :=
   match sl with
   | LSdefault s => find_label lbl s k

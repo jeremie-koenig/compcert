@@ -37,7 +37,7 @@ Context `{Hcc: CompilerConfiguration}.
 
 Definition label := positive.
 
-Inductive instruction `{ef_ops: ExtFunOps external_function}: Type :=
+Inductive instruction `{sc_ops: SyntaxConfigOps external_function}: Type :=
   | Lgetstack: slot -> mreg -> instruction
   | Lsetstack: mreg -> slot -> instruction
   | Lop: operation -> list mreg -> mreg -> instruction

@@ -42,7 +42,7 @@ Definition label := positive.
   transfer control to the given code label.  Labels are explicitly
   inserted in the instruction list as pseudo-instructions [Llabel]. *)
 
-Inductive instruction `{ef_ops: ExtFunOps external_function}: Type :=
+Inductive instruction `{sc_ops: SyntaxConfigOps external_function}: Type :=
   | Lop: operation -> list loc -> loc -> instruction
   | Lload: memory_chunk -> addressing -> list loc -> loc -> instruction
   | Lstore: memory_chunk -> addressing -> list loc -> loc -> instruction
