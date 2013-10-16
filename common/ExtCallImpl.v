@@ -957,7 +957,7 @@ Proof.
   apply extcall_annot_ok.
 Qed.
 
-Local Existing Instances ef_spec ef_proof ef_ops.
+Local Existing Instances ef_spec ef_proof ef_ops sc_ops.
 
 Local Instance ec_ops: ExtCallOps mem external_function := {
   external_call := external_call
@@ -966,6 +966,8 @@ Local Instance ec_ops: ExtCallOps mem external_function := {
 Local Instance ec_proof: ExternalCalls mem external_function := {
   external_call_spec := external_call_spec
 }.
+
+Local Instance cc_ops: CompilerConfigOps := {}.
 
 Local Instance ec_spec: CompilerConfiguration := {}.
 

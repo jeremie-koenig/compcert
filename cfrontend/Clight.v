@@ -92,7 +92,7 @@ Definition typeof (e: expr) : type :=
 
 Definition label := ident.
 
-Inductive statement `{ef_ops: ExtFunOps external_function} : Type :=
+Inductive statement `{sc_ops: SyntaxConfigOps external_function} : Type :=
   | Sskip : statement                   (**r do nothing *)
   | Sassign : expr -> expr -> statement (**r assignment [lvalue = rvalue] *)
   | Sset : ident -> expr -> statement   (**r assignment [tempvar = rvalue] *)
@@ -108,7 +108,7 @@ Inductive statement `{ef_ops: ExtFunOps external_function} : Type :=
   | Slabel : label -> statement -> statement
   | Sgoto : label -> statement
 
-with labeled_statements `{ef_ops: ExtFunOps external_function} : Type := (**r cases of a [switch] *)
+with labeled_statements `{sc_ops: SyntaxConfigOps external_function} : Type := (**r cases of a [switch] *)
   | LSdefault: statement -> labeled_statements
   | LScase: int -> statement -> labeled_statements -> labeled_statements.
 
@@ -427,7 +427,10 @@ End EXPR.
 
 (** Continuations *)
 
-Inductive cont {external_function} `{ef_ops: ExtFunOps external_function}: Type :=
+Inductive cont {external_function}
+  `{ef_ops: !ExtFunOps external_function}
+  `{sc_ops: !SyntaxConfigOps external_function}: Type
+ :=
   | Kstop: cont
   | Kseq: statement -> cont -> cont       (**r [Kseq s2 k] = after [s1] in [s1;s2] *)
   | Kloop1: statement -> statement -> cont -> cont (**r [Kloop1 s1 s2 k] = after [s1] in [Sloop s1 s2] *)
@@ -480,7 +483,7 @@ Inductive state `{mem_ops: Mem.MemoryOps mem}: Type :=
 (** Find the statement and manufacture the continuation 
   corresponding to a label *)
 
-Fixpoint find_label {external_function} `{ef_ops: ExtFunOps external_function}
+Fixpoint find_label {external_function} `{sc_ops: SyntaxConfigOps external_function}
                     (lbl: label) (s: statement) (k: cont)
                     {struct s}: option (statement * cont) :=
   match s with
@@ -506,7 +509,7 @@ Fixpoint find_label {external_function} `{ef_ops: ExtFunOps external_function}
   | _ => None
   end
 
-with find_label_ls {external_function} `{ef_ops: ExtFunOps external_function}
+with find_label_ls {external_function} `{sc_ops: SyntaxConfigOps external_function}
                     (lbl: label) (sl: labeled_statements) (k: cont)
                     {struct sl}: option (statement * cont) :=
   match sl with

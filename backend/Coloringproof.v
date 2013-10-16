@@ -27,7 +27,7 @@ Require Import Coloring.
 
 Section WITHEF.
 Require Import ExtFunImpl.
-Existing Instances ef_ops ef_spec.
+Existing Instances ef_ops sc_ops ef_spec.
 
 (** * Correctness of the interference graph *)
 

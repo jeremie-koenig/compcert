@@ -117,7 +117,7 @@ Module DS := Backward_Dataflow_Solver(RegsetLat)(NodeSetBackward).
 
 Section WITHEF.
 Require Import ExtFunImpl.
-Existing Instances ef_ops ef_spec.
+Existing Instances ef_ops sc_ops ef_spec.
 
 Definition analyze (f: RTL.function): option (PMap.t Regset.t) :=
   DS.fixpoint (successors f)  (transfer f) nil.

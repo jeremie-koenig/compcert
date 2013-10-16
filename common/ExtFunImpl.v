@@ -112,10 +112,13 @@ Definition ef_reloads (ef: external_function) : bool :=
   | _ => true
   end.
 
-Local Instance sc_ops: SyntaxConfigOps external_function := {
+Local Instance ef_ops: ExtFunOps external_function := {
   ef_sig := ef_sig;
   ef_inline := ef_inline;
   ef_reloads := ef_reloads
+}.
+
+Local Instance sc_ops: SyntaxConfigOps external_function := {
 }.
 
 Local Instance ef_proof: ExternalFunctions external_function := {

@@ -36,7 +36,7 @@ Require Import Allocation.
 
 Section WITHEF.
 Require Import ExtFunImpl.
-Existing Instances ef_ops ef_spec.
+Existing Instances ef_ops sc_ops ef_spec.
 
 (** * Properties of allocated locations *)
 
@@ -120,7 +120,7 @@ Module RegsetP := Properties(Regset).
 
 Section WITHMEM.
 Require Import ExtFunImpl ExtCallImpl.
-Existing Instances ef_ops ef_spec ec_ops ec_spec.
+Existing Instances ef_ops sc_ops ef_spec ec_ops cc_ops ec_spec.
 Context `{Hmem: Mem.MemoryModel}.
 
 Section AGREE.

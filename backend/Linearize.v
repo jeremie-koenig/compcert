@@ -90,13 +90,13 @@ Open Scope error_monad_scope.
 
 Module DS := Dataflow_Solver(LBoolean)(NodeSetForward).
 
-Definition reachable_aux `{ExtFunOps} (f: LTL.function) : option (PMap.t bool) :=
+Definition reachable_aux `{SyntaxConfigOps} (f: LTL.function) : option (PMap.t bool) :=
   DS.fixpoint
     (successors f)
     (fun pc r => r)
     ((f.(fn_entrypoint), true) :: nil).
 
-Definition reachable `{ExtFunOps} (f: LTL.function) : PMap.t bool :=
+Definition reachable `{SyntaxConfigOps} (f: LTL.function) : PMap.t bool :=
   match reachable_aux f with  
   | None => PMap.init true
   | Some rs => rs
@@ -105,7 +105,7 @@ Definition reachable `{ExtFunOps} (f: LTL.function) : PMap.t bool :=
 (** We then enumerate the nodes of reachable instructions.
   This task is performed by external, untrusted Caml code. *)
 
-Parameter enumerate_aux: forall `{ExtFunOps}, LTL.function -> PMap.t bool -> list node.
+Parameter enumerate_aux: forall `{SyntaxConfigOps}, LTL.function -> PMap.t bool -> list node.
 
 (** Now comes the a posteriori validation of a node enumeration. *)
 

@@ -59,7 +59,7 @@ Notation " 'check' A ; B" := (if A then B else nil)
 
 Section WITHEF.
 Require Import ExtFunImpl ExtCallImpl.
-Existing Instances ef_ops ef_spec ec_ops ec_spec.
+Existing Instances ef_ops sc_ops ef_spec ec_ops cc_ops ec_spec.
 
 Definition is_val (a: expr) : option (val * type) :=
   match a with

@@ -93,7 +93,7 @@ Require Import InterfGraph.
 
 Section WITHEF.
 Require Import ExtFunImpl.
-Existing Instances ef_ops ef_spec.
+Existing Instances ef_ops sc_ops ef_spec.
 
 Definition add_interf_live
     (filter: reg -> bool) (res: reg) (live: Regset.t) (g: graph): graph :=

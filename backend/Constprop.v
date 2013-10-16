@@ -271,7 +271,7 @@ Section WITHEF.
 (** For now, [builtin_strength_reduction] below uses the concrete
   [external_function], therefore we cannot generalize it. *)
 Require Import ExtFunImpl.
-Existing Instances ef_ops ef_spec.
+Existing Instances ef_ops sc_ops ef_spec.
 
 Definition const_for_result (a: approx) : option operation :=
   match a with

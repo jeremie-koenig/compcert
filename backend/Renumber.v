@@ -30,7 +30,7 @@ Require Import RTL.
   these nodes are dead code. *)
 
 Section WITHEF.
-Context `{ef_ops: AST.ExtFunOps}.
+Context `{sc_ops: AST.SyntaxConfigOps}.
 
 Section RENUMBER.
 

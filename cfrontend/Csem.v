@@ -444,7 +444,10 @@ End EXPR.
     after the statement or expression under consideration has
     evaluated completely. *)
 
-Inductive cont {external_function} `{sc_ops: SyntaxConfigOps external_function}: Type :=
+Inductive cont {external_function}
+  `{ef_ops: !ExtFunOps external_function}
+  `{sc_ops: !SyntaxConfigOps external_function}: Type
+ :=
   | Kstop: cont
   | Kdo: cont -> cont       (**r [Kdo k] = after [x] in [x;] *)
   | Kseq: statement -> cont -> cont    (**r [Kseq s2 k] = after [s1] in [s1;s2] *)

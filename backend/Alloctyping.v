@@ -35,7 +35,7 @@ Require Import Conventions.
   well-typed. *)
 
 Require Import ExtFunImpl.
-Local Existing Instances ef_ops ef_spec.
+Local Existing Instances ef_ops sc_ops ef_spec.
 
 Section TYPING_FUNCTION.
 
