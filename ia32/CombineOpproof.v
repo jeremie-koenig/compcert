@@ -24,7 +24,7 @@ Require Import CSE.
 
 Section COMBINE.
 
-Context `{Hec: Events.ExternalCalls}.
+Context `{Hcc: Events.CompilerConfiguration}.
 Variable ge: genv.
 Variable sp: val.
 Variable m: mem.

@@ -36,7 +36,7 @@ Module NodesetFacts := FSetFacts.Facts(Nodeset).
 
 Section LINEARIZATION.
 
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 Variable prog: LTL.program.
 Variable tprog: LTLin.program.
 

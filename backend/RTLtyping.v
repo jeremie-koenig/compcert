@@ -27,7 +27,7 @@ Require Import RTL.
 Require Import Conventions.
 
 Section WITHMEM.
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 
 (** * The type system *)
 

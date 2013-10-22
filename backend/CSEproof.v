@@ -332,7 +332,7 @@ End ValnumEq.
 Module VMap := EMap(ValnumEq).
 
 Section WITHMEM.
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 
 Section SATISFIABILITY.
 

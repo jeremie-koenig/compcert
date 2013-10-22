@@ -963,9 +963,11 @@ Local Instance ec_ops: ExtCallOps mem external_function := {
   external_call := external_call
 }.
 
-Local Instance ec_spec: ExternalCalls mem external_function := {
+Local Instance ec_proof: ExternalCalls mem external_function := {
   external_call_spec := external_call_spec
 }.
+
+Local Instance ec_spec: CompilerConfiguration := {}.
 
 End WITHMEM.
 

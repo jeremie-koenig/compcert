@@ -30,7 +30,7 @@ Require Import Cop.
 Require Import Clight.
 
 Section WITHMEM.
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 
 Section BIGSTEP.
 

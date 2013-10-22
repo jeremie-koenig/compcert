@@ -73,7 +73,7 @@ Inductive stmt `{ef_ops: ExtFunOps} : Type :=
   | Sgoto: label -> stmt.
 
 Section WITHMEM.
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 
 Record function : Type := mkfunction {
   fn_sig: signature;

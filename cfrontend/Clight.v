@@ -32,7 +32,7 @@ Require Import Ctypes.
 Require Import Cop.
 
 Section WITHMEM.
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 
 (** * Abstract syntax *)
 
@@ -320,7 +320,7 @@ End WITHMEM.
 
 Section SEMANTICS.
 
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 Variable ge: genv.
 
 (** [type_of_global b] returns the type of the global variable or function
@@ -672,7 +672,7 @@ Inductive final_state: state -> int -> Prop :=
 End SEMANTICS.
 
 Section WITHMEM'.
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 
 (** The two semantics for function parameters.  First, parameters as local variables. *)
 

@@ -28,7 +28,7 @@ Require Import Smallstep.
 Require Import Switch.
 
 Section WITHMEM.
-Context `{Hec: ExternalCalls}.
+Context `{Hcc: CompilerConfiguration}.
 
 (** * Abstract syntax *)
 
