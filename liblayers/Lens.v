@@ -175,6 +175,51 @@ Section SETGET.
   Qed.
 End SETGET.
 
+(** ** Orthogonal lenses *)
+
+(** We say that two lenses on [S] are orthogonal when they give us
+  access to two independent parts of the larger structure [S],
+  ie. modifying one will not affect the other. The property
+  [lens_ortho_setr_setl] below is sufficient to express this.
+
+  Note that for any two orthogonal lenses [π] and [ρ], you should
+  never declare instances of both [OrthogonalLenses π ρ] and
+  [OrthogonalLenses ρ π], since that would produce a loop in the
+  [autorewrite] rules, which use [ortho_lenses_set_set]. *)
+
+Class Orthogonal {S U V} (π: S -> U) (ρ: S -> V)
+  `{πs: !Setter π}
+  `{ρs: !Setter ρ}: Prop :=
+{
+  lens_ortho_setr_setl u v s:
+    set ρ v (set π u s) = set π u (set ρ v s)
+}.
+
+Section ORTHOGONAL_LENSES.
+  Context {S U V} (π: S -> U) (ρ: S -> V).
+  Context `{Hπ: Lens _ _ π}.
+  Context `{Hρ: Lens _ _ ρ}.
+  Context `{Hπρ: !Orthogonal π ρ}.
+
+  Lemma lens_ortho_getl_setr s v:
+    get π (set ρ v s) = get π s.
+  Proof.
+    rewrite <- (lens_set_get (π := π) s) at 1.
+    rewrite lens_ortho_setr_setl.
+    rewrite lens_get_set.
+    reflexivity.
+  Qed.
+
+  Lemma lens_ortho_getr_setl s u:
+    get ρ (set π u s) = get ρ s.
+  Proof.
+    rewrite <- (lens_set_get (π := ρ) s) at 1.
+    rewrite <- lens_ortho_setr_setl.
+    rewrite lens_get_set.
+    reflexivity.
+  Qed.
+End ORTHOGONAL_LENSES.
+
 Hint Rewrite
     @lens_get_set
     @lens_set_get
@@ -183,6 +228,9 @@ Hint Rewrite
     @lens_eq_set
     @lens_set_same_context
     @lens_modify_same_context
+    @lens_ortho_setr_setl
+    @lens_ortho_getl_setr
+    @lens_ortho_getr_setl
   using typeclasses eauto : lens.
 
 
