@@ -20,6 +20,12 @@ tools/ndfun.o
 ia32/ConstpropOp.v
 ia32/SelectOp.v
 ccomp
+ccomp.prof
+ccomp.byte
+cchecklink
+cchecklink.byte
+clightgen
+clightgen.byte
 doc/coq2html
 doc/coq2html.cmi
 doc/coq2html.cmx
