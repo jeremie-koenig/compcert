@@ -98,14 +98,12 @@ End THEORY.
 
 (** Given a comonad [W], we can define lens operations, where we get
   a substructure of type [A] in a structure of type [W A]. However,
-  [LensGetPut] does not follow from the comonad laws. *)
+  [LensSetGet] does not follow from the comonad laws. *)
 
 Section LENS.
   Context (W: Type -> Type) `{HW: Comonad W} (A: Type).
 
-  Global Instance comonad_get: Getter (V:=A) extract := {}.
-
-  Global Instance comonad_set: Setter (V:=A) extract := {
+  Global Instance comonad_lensops: LensOps (V:=A) extract := {
     set := put
   }.
 

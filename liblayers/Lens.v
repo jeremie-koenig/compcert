@@ -13,11 +13,8 @@ Require Import Coq.Setoids.Setoid.
   something such. (This is an obvious software engineering quirk
   with the way Coq generates identifier.) *)
 
-Class Getter {S V: Type} (π: S -> V) := {
-  get: S -> V := π
-}.
-
-Class Setter {S V: Type} (π: S -> V) := {
+Class LensOps {S V: Type} (π: S -> V) := {
+  get: S -> V := π;
   set: V -> S -> S
 }.
 
@@ -25,29 +22,27 @@ Arguments get {S V} π {_} _.
 Arguments set {S V} π {_} _ _.
 
 Class LensSetGet {S V} π
-  `{lens_get: Getter S V π}
-  `{lens_set: Setter S V π} :=
+  `{lens_ops: LensOps S V π} :=
 {
   lens_set_get s:
     set π (get π s) s = s
 }.
 
 Class LensGetSet {S V} π
-  `{lens_get: Getter S V π}
-  `{lens_set: Setter S V π} :=
+  `{lens_ops: LensOps S V π} :=
 {
   lens_get_set v s:
     get π (set π v s) = v
 }.
 
 Class LensSetSet {S V} π
-  `{lens_set: Setter S V π} :=
+  `{lens_set: LensOps S V π} :=
 {
   lens_set_set u v s:
     set π u (set π v s) = set π u s
 }.
 
-Class Lens {S V} π `{lens_get: Getter S V π} `{lens_set: Setter S V π} := {
+Class Lens {S V} π `{lens_ops: LensOps S V π} := {
   lens_lens_set_get :> LensSetGet π;
   lens_lens_get_set :> LensGetSet π;
   lens_lens_set_set :> LensSetSet π
@@ -58,7 +53,7 @@ Class Lens {S V} π `{lens_get: Getter S V π} `{lens_set: Setter S V π} := {
 
 (** ** Getters are measures, cf. [Coq.Classes.RelationPairs] *)
 
-Instance lens_get_measure {S V} `{Getter S V}:
+Instance lens_get_measure {S V} `{LensOps S V}:
   Measure (get π).
 
 (** ** The [modify] operation *)
@@ -76,12 +71,12 @@ Section MODIFY.
   Qed.
 End MODIFY.
 
-Arguments modify {S V} π {_ _} _ _.
+Arguments modify {S V} π {_} _ _.
 
 (** ** The [same_context] relation *)
 
 Section SAMECONTEXT.
-  Context {S V π} `{lens_get: Getter S V π} `{HSV: LensSetSet S V π}.
+  Context {S V π} `{lens_ops: LensOps S V π} `{HSV: LensSetSet S V π}.
 
   Definition same_context: relation S :=
     fun s t => forall v, set π v s = set π v t.
@@ -188,8 +183,8 @@ End SETGET.
   [autorewrite] rules, which use [ortho_lenses_set_set]. *)
 
 Class Orthogonal {S U V} (π: S -> U) (ρ: S -> V)
-  `{πs: !Setter π}
-  `{ρs: !Setter ρ}: Prop :=
+  `{πs: !LensOps π}
+  `{ρs: !LensOps ρ}: Prop :=
 {
   lens_ortho_setr_setl u v s:
     set ρ v (set π u s) = set π u (set ρ v s)
@@ -239,9 +234,7 @@ Hint Rewrite
 (** ** Product *)
 
 Section PROD.
-  Global Instance fst_get A B: Getter (@fst A B) := {}.
-
-  Global Instance fst_set A B: Setter (@fst A B) := {
+  Global Instance fst_lensops A B: LensOps (@fst A B) := {
     set a x := (a, snd x)
   }.
 
@@ -250,9 +243,7 @@ Section PROD.
     split; split; intuition.
   Qed.
 
-  Global Instance snd_get A B: Getter (@snd A B) := {}.
-
-  Global Instance snd_set A B: Setter (@snd A B) := {
+  Global Instance snd_lensops A B: LensOps (@snd A B) := {
     set b x := (fst x, b)
   }.
 
@@ -268,9 +259,7 @@ Section COMPOSE.
   Context {A B C} (π: A -> B) (ρ: B -> C) `{Hπ: Lens _ _ π} `{Hρ: Lens _ _ ρ}.
   Import Program.Basics.
 
-  Instance compose_get: Getter (compose ρ π) := {}.
-
-  Instance compose_set: Setter (compose ρ π) := {
+  Instance compose_lensops: LensOps (compose ρ π) := {
     set c a := modify π (set ρ c) a
   }.
 

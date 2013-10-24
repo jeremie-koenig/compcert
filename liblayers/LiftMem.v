@@ -25,8 +25,7 @@ Require Export Lift.
 
 Class LiftMemoryOps {mem bmem: Type} (π: mem -> bmem)
   `{bmem_ops: Mem.MemoryOps bmem}
-  `{bmem_get: !Getter π}
-  `{bmem_set: !Setter π} :=
+  `{bmem_set: !LensOps π} :=
 {
   liftmem_empty: mem
 }.
