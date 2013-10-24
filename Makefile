@@ -126,6 +126,7 @@ all:
 ifeq ($(CCHECKLINK),true)
 	$(MAKE) cchecklink
 endif
+	$(MAKE) test
 
 proof: $(FILES:.v=.vo)
 
@@ -151,6 +152,13 @@ ccomp.byte: extraction/STAMP driver/Configuration.ml
 runtime:
 	$(MAKE) -C runtime
 
+test: test/STAMP
+
+test/STAMP: ccomp
+	$(MAKE) -C test clean
+	$(MAKE) -C test
+	touch $@
+
 cchecklink: driver/Configuration.ml
 	$(OCAMLBUILD) $(OCB_OPTIONS_CHECKLINK) Validator.native \
         && rm -f cchecklink && $(SLN) _build/checklink/Validator.native cchecklink
@@ -167,7 +175,7 @@ clightgen.byte: extraction/STAMP driver/Configuration.ml exportclight/Clightdefs
 	$(OCAMLBUILD) $(OCB_OPTIONS_CLIGHTGEN) Clightgen.d.byte \
         && rm -f clightgen.byte && $(SLN) _build/exportclight/Clightgen.d.byte clightgen.byte
 
-.PHONY: proof extraction runtime
+.PHONY: proof extraction runtime test
 
 documentation: doc/coq2html $(FILES)
 	mkdir -p doc/html
@@ -236,8 +244,8 @@ clean:
 	rm -f extraction/STAMP extraction/*.ml extraction/*.mli
 	rm -f tools/ndfun
 	$(MAKE) -C runtime clean
-	$(MAKE) -C test/cminor clean
-	$(MAKE) -C test/c clean
+	rm -f test/STAMP
+	$(MAKE) -C test clean
 
 distclean:
 	$(MAKE) clean

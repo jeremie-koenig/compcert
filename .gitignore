@@ -31,3 +31,4 @@ test/compression/lzss
 test/compression/lzw
 test/raytracer/render
 test/spass/spass
+test/STAMP
