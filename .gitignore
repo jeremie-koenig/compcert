@@ -1,5 +1,11 @@
 *.vo
 *.glob
+*.o
+*.s
+*.parsed.c
+*.light.c
+*.compcert.c
+*.compcert
 _build
 Makefile.local
 Makefile.config
@@ -20,3 +26,8 @@ doc/coq2html.cmx
 doc/coq2html.ml
 doc/coq2html.o
 doc/html
+test/compression/arcode
+test/compression/lzss
+test/compression/lzw
+test/raytracer/render
+test/spass/spass
