@@ -167,7 +167,7 @@ clightgen.byte: extraction/STAMP driver/Configuration.ml exportclight/Clightdefs
 	$(OCAMLBUILD) $(OCB_OPTIONS_CLIGHTGEN) Clightgen.d.byte \
         && rm -f clightgen.byte && $(SLN) _build/exportclight/Clightgen.d.byte clightgen.byte
 
-.PHONY: proof extraction ccomp ccomp.prof ccomp.byte runtime cchecklink cchecklink.byte clightgen clightgen.byte
+.PHONY: proof extraction runtime
 
 documentation: doc/coq2html $(FILES)
 	mkdir -p doc/html
