@@ -14,3 +14,9 @@ tools/ndfun.o
 ia32/ConstpropOp.v
 ia32/SelectOp.v
 ccomp
+doc/coq2html
+doc/coq2html.cmi
+doc/coq2html.cmx
+doc/coq2html.ml
+doc/coq2html.o
+doc/html
