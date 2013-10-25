@@ -91,7 +91,6 @@ let string_of_preg = function
 
 let string_of_external_function e =
   match e with
-    | EF_builtin(name, sg) -> "EF_builtin"
     | EF_vload(chunk) -> "EF_vload"
     | EF_vstore(chunk) -> "EF_vstore"
     | EF_vload_global(_, _, _) -> "EF_vload_global"

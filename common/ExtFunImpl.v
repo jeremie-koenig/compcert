@@ -24,9 +24,6 @@ Inductive external_function : Type :=
   | EF_external (name: ident) (sg: signature)
      (** A system call or library function.  Produces an event
          in the trace. *)
-  | EF_builtin (name: ident) (sg: signature)
-     (** A compiler built-in function.  Behaves like an external, but
-         can be inlined by the compiler. *)
   | EF_vload (chunk: memory_chunk)
      (** A volatile read operation.  If the adress given as first argument
          points within a volatile global variable, generate an
@@ -73,7 +70,6 @@ Inductive external_function : Type :=
 Definition ef_sig (ef: external_function): signature :=
   match ef with
   | EF_external name sg => sg
-  | EF_builtin name sg => sg
   | EF_vload chunk => mksignature (Tint :: nil) (Some (type_of_chunk chunk))
   | EF_vstore chunk => mksignature (Tint :: type_of_chunk chunk :: nil) None
   | EF_vload_global chunk _ _ => mksignature nil (Some (type_of_chunk chunk))
@@ -91,7 +87,6 @@ Definition ef_sig (ef: external_function): signature :=
 Definition ef_inline (ef: external_function) : bool :=
   match ef with
   | EF_external name sg => false
-  | EF_builtin name sg => true
   | EF_vload chunk => true
   | EF_vstore chunk => true
   | EF_vload_global chunk id ofs => true
@@ -114,7 +109,6 @@ Definition ef_reloads (ef: external_function) : bool :=
 
 Local Instance ef_ops: ExtFunOps external_function := {
   ef_sig := ef_sig;
-  ef_inline := ef_inline;
   ef_reloads := ef_reloads
 }.
 

@@ -503,7 +503,6 @@ Definition do_external (ef: external_function):
        world -> list val -> mem -> option (world * trace * val * mem) :=
   match ef with
   | EF_external name sg => do_ef_external name sg
-  | EF_builtin name sg => do_ef_external name sg
   | EF_vload chunk => do_ef_volatile_load chunk
   | EF_vstore chunk => do_ef_volatile_store chunk
   | EF_vload_global chunk id ofs => do_ef_volatile_load_global chunk id ofs
@@ -549,8 +548,6 @@ Proof with try congruence.
   destruct ef; simpl.
 (* EF_external *)
   auto. 
-(* EF_builtin *)
-  auto.
 (* EF_vload *)
   auto.
 (* EF_vstore *)
@@ -617,8 +614,6 @@ Proof.
 
   destruct ef; simpl in *.
 (* EF_external *)
-  auto.
-(* EF_builtin *)
   auto.
 (* EF_vload *)
   auto.

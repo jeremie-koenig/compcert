@@ -414,7 +414,6 @@ Qed.
 
 Class ExtFunOps (external_function: Type) := {
   ef_sig: external_function -> signature;
-  ef_inline: external_function -> bool;
   ef_reloads: external_function -> bool
 }.
 

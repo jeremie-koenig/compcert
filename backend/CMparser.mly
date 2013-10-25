@@ -37,8 +37,6 @@ let mkef sg toks =
   match toks with
   | [EFT_tok "extern"; EFT_string s] ->
       EF_external(intern_string s, sg)
-  | [EFT_tok "builtin"; EFT_string s] ->
-      EF_builtin(intern_string s, sg)
   | [EFT_tok "volatile"; EFT_tok "load"; EFT_chunk c] ->
       EF_vload c
   | [EFT_tok "volatile"; EFT_tok "store"; EFT_chunk c] ->

@@ -165,7 +165,6 @@ Lemma classify_call_correct:
   match classify_call ge a with
   | Call_default => True
   | Call_imm id => exists b, Genv.find_symbol ge id = Some b /\ v = Vptr b Int.zero
-  | Call_builtin ef => fd = External ef
   end.
 Proof.
   unfold classify_call; intros. 
@@ -173,10 +172,7 @@ Proof.
   exploit expr_is_addrof_ident_correct; eauto. intros EQ; subst a.
   inv H. inv H2. 
   destruct (Genv.find_symbol ge id) as [b|] eqn:?. 
-  rewrite Genv.find_funct_find_funct_ptr in H0. 
-  rewrite H0. 
-  destruct fd. exists b; auto. 
-  destruct (ef_inline e0). auto. exists b; auto.
+  eauto.
   simpl in H0. discriminate.
   auto.
 Qed.
@@ -488,7 +484,7 @@ Proof.
   (* Scall *)
   exploit sel_exprlist_correct; eauto. intros [vargs' [C D]].
   exploit classify_call_correct; eauto. 
-  destruct (classify_call ge a) as [ | id | ef].
+  destruct (classify_call ge a) as [ | id].
   (* indirect *)
   exploit sel_expr_correct; eauto. intros [vf' [A B]].
   left; econstructor; split.
@@ -503,21 +499,16 @@ Proof.
   eapply functions_translated; eauto. subst vf; auto. 
   apply sig_function_translated.
   constructor; auto. constructor; auto.
-  (* turned into Sbuiltin *)
-  intros EQ. subst fd. 
-  right; split. omega. split. auto. 
-  econstructor; eauto.
   (* Stailcall *)
   exploit Mem.free_parallel_extends; eauto. intros [m2' [P Q]].
   exploit sel_expr_correct; eauto. intros [vf' [A B]].
   exploit sel_exprlist_correct; eauto. intros [vargs' [C D]].
   left; econstructor; split.
   exploit classify_call_correct; eauto. 
-  destruct (classify_call ge a) as [ | id | ef]; intros. 
+  destruct (classify_call ge a) as [ | id]; intros. 
   econstructor; eauto. econstructor; eauto. eapply functions_translated; eauto. apply sig_function_translated.
   destruct H2 as [b [U V]].
   econstructor; eauto. econstructor; eauto. rewrite symbols_preserved; eauto. eapply functions_translated; eauto. subst vf; auto. apply sig_function_translated.
-  econstructor; eauto. econstructor; eauto. eapply functions_translated; eauto. apply sig_function_translated.
   constructor; auto. apply call_cont_commut; auto.
   (* Sbuiltin *)
   exploit sel_exprlist_correct; eauto. intros [vargs' [P Q]].

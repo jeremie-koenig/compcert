@@ -31,7 +31,6 @@ let name_of_chunk = function
 
 let name_of_external = function
   | EF_external(name, sg) -> sprintf "extern %S" (extern_atom name)
-  | EF_builtin(name, sg) -> sprintf "builtin %S" (extern_atom name)
   | EF_vload chunk -> sprintf "volatile load %s" (name_of_chunk chunk)
   | EF_vstore chunk -> sprintf "volatile store %s" (name_of_chunk chunk)
   | EF_vload_global(chunk, id, ofs) ->

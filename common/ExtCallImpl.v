@@ -925,7 +925,6 @@ This predicate is used in the semantics of all CompCert languages. *)
 Definition external_call (ef: external_function): extcall_sem :=
   match ef with
   | EF_external name sg  => extcall_io_sem name sg
-  | EF_builtin name sg   => extcall_io_sem name sg
   | EF_vload chunk       => volatile_load_sem chunk
   | EF_vstore chunk      => volatile_store_sem chunk
   | EF_vload_global chunk id ofs => volatile_load_global_sem chunk id ofs
@@ -943,7 +942,6 @@ Theorem external_call_spec:
   extcall_properties (external_call ef) (ef_sig ef).
 Proof.
   intros. unfold external_call, ef_sig. destruct ef.
-  apply extcall_io_ok.
   apply extcall_io_ok.
   apply volatile_load_ok.
   apply volatile_store_ok.
