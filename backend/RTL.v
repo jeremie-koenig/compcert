@@ -27,6 +27,7 @@ Require Import Globalenvs.
 Require Import Smallstep.
 Require Import Op.
 Require Import Registers.
+Require Import Builtins.
 
 (** * Abstract syntax *)
 
@@ -70,7 +71,7 @@ Inductive instruction `{sc_ops: SyntaxConfigOps}: Type :=
   | Itailcall: signature -> reg + ident -> list reg -> instruction
       (** [Itailcall sig fn args] performs a function invocation
           in tail-call position.  *)
-  | Ibuiltin: external_function -> list reg -> reg -> node -> instruction
+  | Ibuiltin: builtin_function -> list reg -> reg -> node -> instruction
       (** [Ibuiltin ef args dest succ] calls the built-in function
           identified by [ef], giving it the values of [args] as arguments.
           It stores the return value in [dest] and branches to [succ]. *)
@@ -358,13 +359,13 @@ Proof.
   assert (t1 = E0 -> exists s2, step (Genv.globalenv p) s t2 s2).
     intros. subst. inv H0. exists s1; auto.
   inversion H; subst; auto.
-  exploit external_call_receptive; eauto. intros [vres2 [m2 EC2]]. 
+  exploit (external_call_receptive ef); eauto. intros [vres2 [m2 EC2]]. 
   exists (State s0 f sp pc' (rs#res <- vres2) m2). eapply exec_Ibuiltin; eauto.
   exploit external_call_receptive; eauto. intros [vres2 [m2 EC2]]. 
   exists (Returnstate s0 vres2 m2). econstructor; eauto.
 (* trace length *)
   red; intros; inv H; simpl; try omega.
-  eapply external_call_trace_length; eauto.
+  eapply (external_call_trace_length ef); eauto.
   eapply external_call_trace_length; eauto.
 Qed.
 

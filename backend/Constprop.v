@@ -25,6 +25,7 @@ Require Import RTL.
 Require Import Lattice.
 Require Import Kildall.
 Require Import ConstpropOp.
+Require Import Builtins.
 
 (** * Static analysis *)
 
@@ -267,11 +268,7 @@ Definition transf_ros (app: D.t) (ros: reg + ident) : reg + ident :=
 Parameter generate_float_constants : unit -> bool.
 
 Section WITHEF.
-
-(** For now, [builtin_strength_reduction] below uses the concrete
-  [external_function], therefore we cannot generalize it. *)
-Require Import ExtFunImpl.
-Existing Instances ef_ops sc_ops ef_spec.
+Context `{Hsc: SyntaxConfiguration}.
 
 Definition const_for_result (a: approx) : option operation :=
   match a with
@@ -321,7 +318,7 @@ Function annot_strength_reduction
   end.
 
 Function builtin_strength_reduction
-      (app: D.t) (ef: external_function) (args: list reg) :=
+      (app: D.t) (ef: builtin_function) (args: list reg) :=
   match ef, args with
   | EF_vload chunk, r1 :: nil =>
       match approx_reg app r1 with

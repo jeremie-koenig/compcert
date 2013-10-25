@@ -503,7 +503,7 @@ Proof.
 (* builtin *)
   TransfInstr.
   assert (Val.lessdef_list (rs##args) (rs'##args)). apply regset_get_list; auto. 
-  exploit external_call_mem_extends; eauto.
+  exploit (external_call_mem_extends ef); eauto.
   intros [v' [m'1 [A [B [C D]]]]].
   left. exists (State s' (transf_function f) (Vptr sp0 Int.zero) pc' (rs'#res <- v') m'1); split.
   eapply exec_Ibuiltin; eauto.

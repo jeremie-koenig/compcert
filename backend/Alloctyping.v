@@ -34,8 +34,8 @@ Require Import Conventions.
   given a well-typed RTL input, it produces LTL code that is
   well-typed. *)
 
-Require Import ExtFunImpl.
-Local Existing Instances ef_ops sc_ops ef_spec.
+Section WITHEF.
+Context `{Hsc: SyntaxConfiguration}.
 
 Section TYPING_FUNCTION.
 
@@ -205,3 +205,5 @@ Proof.
   intros [f0 [IN TRANSF]].
   apply wt_transf_fundef with f0; auto.
 Qed.
+
+End WITHEF.

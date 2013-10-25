@@ -29,6 +29,7 @@ Require Import Ctypes.
 Require Import Cop.
 Require Import Csyntax.
 Require Import Smallstep.
+Require Import Builtins.
 
 Section WITHMEM.
 Context `{Hcc: CompilerConfiguration}.
@@ -809,7 +810,7 @@ Proof.
   assert (ASSIGN: forall chunk m b ofs t v m', assign_loc ge chunk m b ofs v t m' -> (length t <= 1)%nat).
     intros. inv H0; simpl; try omega. inv H3; simpl; try omega.
   inv H; simpl; try omega. inv H0; eauto; simpl; try omega.
-  eapply external_call_trace_length; eauto.
+  eapply (external_call_trace_length ef); eauto.
   inv H; simpl; try omega. eapply external_call_trace_length; eauto.
 Qed.
 

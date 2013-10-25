@@ -22,6 +22,7 @@ Require Import Values.
 Require Import AST.
 Require Import Ctypes.
 Require Import Cop.
+Require Import Builtins.
 
 (** ** Expressions *)
 
@@ -57,7 +58,7 @@ Inductive expr `{sc_ops: SyntaxConfigOps} : Type :=
   | Ecomma (r1 r2: expr) (ty: type)       (**r sequence expression [r1, r2] *)
   | Ecall (r1: expr) (rargs: exprlist) (ty: type)
                                              (**r function call [r1(rargs)] *)
-  | Ebuiltin (ef: external_function) (tyargs: typelist) (rargs: exprlist) (ty: type)
+  | Ebuiltin (ef: builtin_function) (tyargs: typelist) (rargs: exprlist) (ty: type)
                                                  (**r builtin function call *)
   | Eloc (b: block) (ofs: int) (ty: type)
                        (**r memory location, result of evaluating a l-value *)

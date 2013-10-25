@@ -31,11 +31,10 @@ Require Import Ctypes.
 Require Import Cop.
 Require Import Csyntax.
 Require Import Csem.
+Require Import Builtins.
 
 Section WITHMEM.
-Require Import ExtFunImpl ExtCallImpl.
-Existing Instances ef_ops sc_ops ef_spec ec_ops cc_ops ec_spec.
-Context `{Hmem: Mem.MemoryModel}.
+Context `{Hcc: CompilerConfiguration}.
 
 Section STRATEGY.
 
@@ -1552,8 +1551,8 @@ Proof.
   econstructor; econstructor. left; eapply step_postincr_stuck with (v1 := v1'); eauto. 
   rewrite Heqo; auto.
   (* builtin *)
-  exploit external_call_trace_length; eauto. destruct t1; simpl; intros. 
-  exploit external_call_receptive; eauto. intros [vres2 [m2 EC2]]. 
+  exploit (external_call_trace_length ef); eauto. destruct t1; simpl; intros. 
+  exploit (external_call_receptive ef); eauto. intros [vres2 [m2 EC2]]. 
   econstructor; econstructor. left; eapply step_builtin; eauto.
   omegaContradiction.
   (* external calls *)
@@ -1583,7 +1582,7 @@ Proof.
   (* postincr stuck *)
   exploit deref_loc_trace; eauto. destruct t; auto. destruct t; tauto.
   (* builtins *)
-  exploit external_call_trace_length; eauto.
+  exploit (external_call_trace_length ef); eauto.
   destruct t; simpl; auto. destruct t; simpl; auto. intros; omegaContradiction.
   (* external calls *)
   exploit external_call_trace_length; eauto.

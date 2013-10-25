@@ -25,6 +25,7 @@ Require Import Smallstep.
 Require Import Locations.
 Require Import Stacklayout.
 Require Import Conventions.
+Require Import Builtins.
 
 (** * Abstract syntax *)
 
@@ -197,8 +198,8 @@ Inductive instruction `{sc_ops: SyntaxConfigOps}: Type :=
   | Plabel(l: label)
   | Pallocframe(sz: Z)(ofs_ra ofs_link: int)
   | Pfreeframe(sz: Z)(ofs_ra ofs_link: int)
-  | Pbuiltin(ef: external_function)(args: list preg)(res: preg)
-  | Pannot(ef: external_function)(args: list annot_param).
+  | Pbuiltin(ef: builtin_function)(args: list preg)(res: preg)
+  | Pannot(ef: builtin_function)(args: list annot_param).
 
 Section WITHEF.
 Context `{Hsc: SyntaxConfiguration}.
@@ -855,21 +856,21 @@ Ltac Equalities :=
   discriminate.
   discriminate.
   inv H11. 
-  exploit external_call_determ. eexact H4. eexact H11. intros [A B].
+  exploit (external_call_determ ef0). eexact H4. eexact H11. intros [A B].
   split. auto. intros. destruct B; auto. subst. auto.
   inv H12.
   assert (vargs0 = vargs) by (eapply annot_arguments_determ; eauto). subst vargs0.
-  exploit external_call_determ. eexact H5. eexact H13. intros [A B].
+  exploit (external_call_determ ef0). eexact H5. eexact H13. intros [A B].
   split. auto. intros. destruct B; auto. subst. auto.
   assert (args0 = args) by (eapply extcall_arguments_determ; eauto). subst args0.
-  exploit external_call_determ. eexact H3. eexact H8. intros [A B].
+  exploit (external_call_determ ef). eexact H3. eexact H8. intros [A B].
   split. auto. intros. destruct B; auto. subst. auto.
 (* trace length *)
   red; intros; inv H; simpl.
   omega.
-  eapply external_call_trace_length; eauto.
-  eapply external_call_trace_length; eauto.
-  eapply external_call_trace_length; eauto.
+  eapply (external_call_trace_length ef); eauto.
+  eapply (external_call_trace_length ef); eauto.
+  eapply (external_call_trace_length ef); eauto.
 (* initial states *)
   inv H; inv H0. f_equal. congruence.
 (* final no step *)

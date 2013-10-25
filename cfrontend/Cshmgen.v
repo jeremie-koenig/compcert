@@ -30,6 +30,7 @@ Require Import Cop.
 Require Import Clight.
 Require Import Cminor.
 Require Import Csharpminor.
+Require Import Builtins.
 
 Open Local Scope string_scope.
 Open Local Scope error_monad_scope.

@@ -24,6 +24,7 @@ Require Import Op.
 Require Import Globalenvs.
 Require Import Switch.
 Require Import Smallstep.
+Require Import Builtins.
 
 (** * Abstract syntax *)
 
@@ -61,7 +62,7 @@ Inductive stmt `{sc_ops: SyntaxConfigOps} : Type :=
   | Sstore : memory_chunk -> addressing -> exprlist -> expr -> stmt
   | Scall : option ident -> signature -> expr + ident -> exprlist -> stmt
   | Stailcall: signature -> expr + ident -> exprlist -> stmt
-  | Sbuiltin : option ident -> external_function -> exprlist -> stmt
+  | Sbuiltin : option ident -> builtin_function -> exprlist -> stmt
   | Sseq: stmt -> stmt -> stmt
   | Sifthenelse: condition -> exprlist -> stmt -> stmt -> stmt
   | Sloop: stmt -> stmt

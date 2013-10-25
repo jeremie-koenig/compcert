@@ -1879,6 +1879,7 @@ Qed.
 (** Invariance by external calls. *)
 
 Lemma match_stack_change_extcall:
+  forall `{Hec: ExternalCalls _ (mem_ops := _) (inj_ops := _) (mm_ops := mm_ops)},
   forall ec args m1 res t m2 args' m1' res' t' m2' j j',
   external_call ec ge args m1 t res m2 ->
   external_call ec ge args' m1' t' res' m2' ->
@@ -2558,7 +2559,7 @@ Proof.
   apply wt_return_regs; auto. eapply match_stacks_wt_locset; eauto. eapply agree_wt_ls; eauto.
 
   (* Lbuiltin *)
-  exploit external_call_mem_inject; eauto. 
+  exploit (external_call_mem_inject ef); eauto. 
     eapply match_stacks_preserves_globals; eauto.
     eapply agree_reglist; eauto. 
   intros [j' [res' [m1' [A [B [C [D [E [F G]]]]]]]]].
@@ -2567,16 +2568,16 @@ Proof.
   eapply external_call_symbols_preserved; eauto.
   exact symbols_preserved. exact varinfo_preserved.
   econstructor; eauto with coqlib.
-  eapply match_stack_change_extcall; eauto.
+  eapply (match_stack_change_extcall ef); eauto.
   apply Zlt_le_weak. change (Mem.valid_block m sp0). eapply agree_valid_linear; eauto.
   apply Zlt_le_weak. change (Mem.valid_block m'0 sp'). eapply agree_valid_mach; eauto.
   apply agree_regs_set_reg; auto. apply agree_regs_undef_temps; auto. eapply agree_regs_inject_incr; eauto.
   apply agree_frame_set_reg; auto. apply agree_frame_undef_temps; auto.
   eapply agree_frame_inject_incr; eauto. 
   apply agree_frame_extcall_invariant with m m'0; auto.
-  eapply external_call_valid_block; eauto.
-  intros. eapply external_call_max_perm; eauto. eapply agree_valid_linear; eauto.
-  eapply external_call_valid_block; eauto.
+  eapply (external_call_valid_block ef); eauto.
+  intros. eapply (external_call_max_perm ef); eauto. eapply agree_valid_linear; eauto.
+  eapply (external_call_valid_block ef); eauto.
   eapply agree_valid_mach; eauto.
   inv WTI. simpl; rewrite H4. eapply external_call_well_typed; eauto.
 
@@ -2584,7 +2585,7 @@ Proof.
   inv WTI.
   exploit transl_annot_params_correct; eauto.
   intros [vargs' [P Q]]. 
-  exploit external_call_mem_inject; eauto. 
+  exploit (external_call_mem_inject ef); eauto. 
     eapply match_stacks_preserves_globals; eauto.
   intros [j' [res' [m1' [A [B [C [D [E [F G]]]]]]]]].
   econstructor; split.
@@ -2592,15 +2593,15 @@ Proof.
   eapply external_call_symbols_preserved; eauto.
   exact symbols_preserved. exact varinfo_preserved.
   econstructor; eauto with coqlib.
-  eapply match_stack_change_extcall; eauto.
+  eapply (match_stack_change_extcall ef); eauto.
   apply Zlt_le_weak. change (Mem.valid_block m sp0). eapply agree_valid_linear; eauto.
   apply Zlt_le_weak. change (Mem.valid_block m'0 sp'). eapply agree_valid_mach; eauto.
   eapply agree_regs_inject_incr; eauto.
   eapply agree_frame_inject_incr; eauto. 
   apply agree_frame_extcall_invariant with m m'0; auto.
-  eapply external_call_valid_block; eauto.
-  intros. eapply external_call_max_perm; eauto. eapply agree_valid_linear; eauto.
-  eapply external_call_valid_block; eauto.
+  eapply (external_call_valid_block ef); eauto.
+  intros. eapply (external_call_max_perm ef); eauto. eapply agree_valid_linear; eauto.
+  eapply (external_call_valid_block ef); eauto.
   eapply agree_valid_mach; eauto.
 
   (* Llabel *)

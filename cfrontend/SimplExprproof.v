@@ -30,12 +30,11 @@ Require Import Cstrategy.
 Require Import Clight.
 Require Import SimplExpr.
 Require Import SimplExprspec.
+Require Import Builtins.
 
 Section PRESERVATION.
 
-Require Import ExtFunImpl ExtCallImpl.
-Existing Instances ef_ops sc_ops ef_spec ec_ops cc_ops ec_spec.
-Context `{Hmem: Mem.MemoryModel}.
+Context `{Hcc: CompilerConfiguration}.
 Variable prog: Csyntax.program.
 Variable tprog: Clight.program.
 Hypothesis TRANSL: transl_program prog = OK tprog.
@@ -756,10 +755,10 @@ Lemma step_makeif:
              E0 (State f (if b then s1 else s2) k e le m).
 Proof.
   intros. functional induction (makeif a s1 s2).
-  exploit eval_simpl_expr_sound; eauto. rewrite e0. intro EQ; subst v. 
-  rewrite e1 in H0. inv H0. constructor.
-  exploit eval_simpl_expr_sound; eauto. rewrite e0. intro EQ; subst v. 
-  rewrite e1 in H0. inv H0. constructor.
+  exploit eval_simpl_expr_sound; eauto. rewrite e1. intro EQ; subst v. 
+  rewrite e2 in H0. inv H0. constructor.
+  exploit eval_simpl_expr_sound; eauto. rewrite e1. intro EQ; subst v. 
+  rewrite e2 in H0. inv H0. constructor.
   apply star_one. eapply step_ifthenelse; eauto. 
   apply star_one. eapply step_ifthenelse; eauto. 
 Qed.

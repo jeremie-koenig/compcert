@@ -23,6 +23,7 @@ Require Import Events.
 Require Import Globalenvs.
 Require Cminor.
 Require Import Smallstep.
+Require Import Builtins.
 
 (** Abstract syntax *)
 
@@ -59,7 +60,7 @@ Inductive stmt `{sc_ops: SyntaxConfigOps} : Type :=
   | Sset : ident -> expr -> stmt
   | Sstore : memory_chunk -> expr -> expr -> stmt
   | Scall : option ident -> signature -> expr -> list expr -> stmt
-  | Sbuiltin : option ident -> external_function -> list expr -> stmt
+  | Sbuiltin : option ident -> builtin_function -> list expr -> stmt
   | Sseq: stmt -> stmt -> stmt
   | Sifthenelse: expr -> stmt -> stmt -> stmt
   | Sloop: stmt -> stmt

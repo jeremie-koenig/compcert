@@ -23,6 +23,7 @@ Require Import Ctypes.
 Require Import Cop.
 Require Import Csyntax.
 Require Import Clight.
+Require Import Builtins.
 
 Open Local Scope string_scope.
 
@@ -91,8 +92,7 @@ Definition gensym (ty: type): mon ident :=
         (Ple_succ (gen_next g)).
 
 Section WITHEF.
-Require Import ExtFunImpl.
-Existing Instances ef_ops sc_ops ef_spec.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** Construct a sequence from a list of statements.  To facilitate the
    proof, the sequence is nested to the left and starts with a [Sskip]. *)

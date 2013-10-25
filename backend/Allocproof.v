@@ -35,8 +35,7 @@ Require Import Coloringproof.
 Require Import Allocation.
 
 Section WITHEF.
-Require Import ExtFunImpl.
-Existing Instances ef_ops sc_ops ef_spec.
+Context `{Hcc: CompilerConfiguration}.
 
 (** * Properties of allocated locations *)
 
@@ -119,9 +118,7 @@ Require Import LTL.
 Module RegsetP := Properties(Regset).
 
 Section WITHMEM.
-Require Import ExtFunImpl ExtCallImpl.
-Existing Instances ef_ops sc_ops ef_spec ec_ops cc_ops ec_spec.
-Context `{Hmem: Mem.MemoryModel}.
+Context `{Hcc: CompilerConfiguration}.
 
 Section AGREE.
 

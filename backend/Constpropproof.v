@@ -29,12 +29,11 @@ Require Import Kildall.
 Require Import ConstpropOp.
 Require Import Constprop.
 Require Import ConstpropOpproof.
+Require Import Builtins.
 
 Section PRESERVATION.
 
-Require Import ExtFunImpl ExtCallImpl.
-Existing Instances ef_ops sc_ops ef_spec ec_ops cc_ops ec_spec.
-Context `{Hmem: Mem.MemoryModel}.
+Context `{Hcc: CompilerConfiguration}.
 Variable prog: program.
 Let tprog := transf_program prog.
 Let ge := Genv.globalenv prog.
@@ -260,6 +259,7 @@ Proof.
 Qed.
 
 Lemma mem_match_approx_extcall:
+  forall `{Hec: ExternalCalls _ (mem_ops := _) (inj_ops := _) (mm_ops := mm_ops)},
   forall ef vargs m t vres m',
   mem_match_approx m ->
   external_call ef ge vargs m t vres m' ->
@@ -780,17 +780,17 @@ Opaque builtin_strength_reduction.
   TransfInstr.
   destruct (builtin_strength_reduction (analyze gapp f)#pc ef args) as [ef' args'].
   intros P Q.
-  exploit external_call_mem_extends; eauto. 
+  exploit (external_call_mem_extends ef'); eauto. 
   instantiate (1 := rs'##args'). apply regs_lessdef_regs; auto.
   intros [v' [m2' [A [B [C D]]]]].
   left; econstructor; econstructor; split.
   eapply exec_Ibuiltin. eauto. 
-  eapply external_call_symbols_preserved; eauto.
+  eapply (external_call_symbols_preserved ef'); eauto.
   exact symbols_preserved. exact varinfo_preserved.
   eapply match_states_succ; eauto. simpl; auto.
   unfold transfer; rewrite H. 
   apply regs_match_approx_update; auto. simpl; auto.
-  eapply mem_match_approx_extcall; eauto. 
+  eapply (mem_match_approx_extcall ef'); eauto. 
   apply set_reg_lessdef; auto.
 
   (* Icond, preserved *)

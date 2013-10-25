@@ -24,13 +24,12 @@ Require Import Cop.
 Require Import Csyntax.
 Require Import Clight.
 Require Import SimplExpr.
+Require Import Events.
 
 Section SPEC.
 
 Local Open Scope gensym_monad_scope.
-Require Import ExtFunImpl.
-Existing Instances ef_ops sc_ops ef_spec.
-Context `{Hmem: Mem.MemoryModel}.
+Context `{Hcc: CompilerConfiguration}.
 
 (** * Relational specification of the translation. *)
 

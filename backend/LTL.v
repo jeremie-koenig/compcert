@@ -27,6 +27,7 @@ Require Import Smallstep.
 Require Import Op.
 Require Import Locations.
 Require Import Conventions.
+Require Import Builtins.
 
 (** * Abstract syntax *)
 
@@ -41,7 +42,7 @@ Inductive instruction `{sc_ops: SyntaxConfigOps}: Type :=
   | Lstore: memory_chunk -> addressing -> list loc -> loc -> node -> instruction
   | Lcall: signature -> loc + ident -> list loc -> loc -> node -> instruction
   | Ltailcall: signature -> loc + ident -> list loc -> instruction
-  | Lbuiltin: external_function -> list loc -> loc -> node -> instruction
+  | Lbuiltin: builtin_function -> list loc -> loc -> node -> instruction
   | Lcond: condition -> list loc -> node -> node -> instruction
   | Ljumptable: loc -> list node -> instruction
   | Lreturn: option loc -> instruction.

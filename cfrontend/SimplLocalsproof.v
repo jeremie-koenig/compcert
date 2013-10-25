@@ -2085,7 +2085,7 @@ Proof.
 
 (* builtin *)
   exploit eval_simpl_exprlist; eauto with compat. intros [CASTED [tvargs [C D]]].
-  exploit external_call_mem_inject; eauto. apply match_globalenvs_preserves_globals; eauto with compat.
+  exploit (external_call_mem_inject ef); eauto. apply match_globalenvs_preserves_globals; eauto with compat.
   intros [j' [tvres [tm' [P [Q [R [S [T [U V]]]]]]]]].
   econstructor; split.
   apply plus_one. econstructor; eauto. eapply external_call_symbols_preserved; eauto. 
@@ -2095,8 +2095,8 @@ Proof.
   eapply match_envs_extcall; eauto. 
   eapply match_cont_extcall; eauto.
   inv MENV; omega. inv MENV; omega. 
-  eapply Zle_trans; eauto. eapply external_call_nextblock; eauto.
-  eapply Zle_trans; eauto. eapply external_call_nextblock; eauto.
+  eapply Zle_trans; eauto. eapply (external_call_nextblock ef); eauto.
+  eapply Zle_trans; eauto. eapply (external_call_nextblock ef); eauto.
 
 (* sequence *)
   econstructor; split. apply plus_one. econstructor.

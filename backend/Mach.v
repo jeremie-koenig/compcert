@@ -28,6 +28,7 @@ Require Import Smallstep.
 Require Import Op.
 Require Import Locations.
 Require Import Conventions.
+Require Import Builtins.
 Require Stacklayout.
 
 (** * Abstract syntax *)
@@ -64,8 +65,8 @@ Inductive instruction `{sc_ops: SyntaxConfigOps}: Type :=
   | Mstore: memory_chunk -> addressing -> list mreg -> mreg -> instruction
   | Mcall: signature -> mreg + ident -> instruction
   | Mtailcall: signature -> mreg + ident -> instruction
-  | Mbuiltin: external_function -> list mreg -> mreg -> instruction
-  | Mannot: external_function -> list annot_param -> instruction
+  | Mbuiltin: builtin_function -> list mreg -> mreg -> instruction
+  | Mannot: builtin_function -> list annot_param -> instruction
   | Mlabel: label -> instruction
   | Mgoto: label -> instruction
   | Mcond: condition -> list mreg -> label -> instruction

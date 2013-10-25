@@ -30,6 +30,7 @@ Require Cminor.
 Require Import Op.
 Require Import CminorSel.
 Require Import SelectOp.
+Require Import Builtins.
 
 Open Local Scope cminorsel_scope.
 
@@ -48,9 +49,9 @@ Definition load (chunk: memory_chunk) (e1: expr) :=
   | (mode, args) => Eload chunk mode args
   end.
 
-Definition store `{sc_ops: SyntaxConfigOps} (chunk: memory_chunk) (e1 e2: expr) :=
+Definition store `{sc_ops: SyntaxConfigOps} (chunk: memory_chunk) (e1 e2: expr): stmt :=
   match addressing chunk e1 with
-  | (mode, args) => Sstore (ef_ops := ef_ops) chunk mode args e2
+  | (mode, args) => Sstore chunk mode args e2
   end.
 
 (** Instruction selection for operator applications.  Most of the work

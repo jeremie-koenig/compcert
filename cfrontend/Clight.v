@@ -30,6 +30,7 @@ Require Import Globalenvs.
 Require Import Smallstep.
 Require Import Ctypes.
 Require Import Cop.
+Require Import Builtins.
 
 (** * Abstract syntax *)
 
@@ -94,7 +95,7 @@ Inductive statement `{sc_ops: SyntaxConfigOps} : Type :=
   | Sassign : expr -> expr -> statement (**r assignment [lvalue = rvalue] *)
   | Sset : ident -> expr -> statement   (**r assignment [tempvar = rvalue] *)
   | Scall: option ident -> expr -> list expr -> statement (**r function call *)
-  | Sbuiltin: option ident -> external_function -> typelist -> list expr -> statement (**r builtin invocation *)
+  | Sbuiltin: option ident -> builtin_function -> typelist -> list expr -> statement (**r builtin invocation *)
   | Ssequence : statement -> statement -> statement  (**r sequence *)
   | Sifthenelse : expr  -> statement -> statement -> statement (**r conditional *)
   | Sloop: statement -> statement -> statement (**r infinite loop *)
@@ -718,14 +719,14 @@ Proof.
     intros. subst. inv H0. exists s1; auto.
   inversion H; subst; auto.
   (* builtin *)
-  exploit external_call_receptive; eauto. intros [vres2 [m2 EC2]]. 
+  exploit (external_call_receptive ef); eauto. intros [vres2 [m2 EC2]]. 
   econstructor; econstructor; eauto.
   (* external *)
   exploit external_call_receptive; eauto. intros [vres2 [m2 EC2]]. 
   exists (Returnstate vres2 k m2). econstructor; eauto.
 (* trace length *)
   red; intros. inv H; simpl; try omega.
-  eapply external_call_trace_length; eauto.
+  eapply (external_call_trace_length ef); eauto.
   eapply external_call_trace_length; eauto.
 Qed.
 

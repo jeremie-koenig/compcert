@@ -27,6 +27,7 @@ Require Import CminorSel.
 Require Import SelectOp.
 Require Import Selection.
 Require Import SelectOpproof.
+Require Import Builtins.
 
 Open Local Scope cminorsel_scope.
 
@@ -383,24 +384,7 @@ Inductive match_states: Cminor.state -> CminorSel.state -> Prop :=
       Mem.extends m m' ->
       match_states
         (Cminor.Returnstate v k m)
-        (Returnstate v' k' m')
-  | match_builtin_1: forall ef args args' optid f sp e k m al e' k' m',
-      match_cont k k' ->
-      Val.lessdef_list args args' ->
-      env_lessdef e e' ->
-      Mem.extends m m' ->
-      eval_exprlist tge sp e' m' nil al args' ->
-      match_states
-        (Cminor.Callstate (External ef) args (Cminor.Kcall optid f sp e k) m)
-        (State (sel_function ge f) (Sbuiltin optid ef al) k' sp e' m')
-  | match_builtin_2: forall v v' optid f sp e k m e' m' k',
-      match_cont k k' ->
-      Val.lessdef v v' ->
-      env_lessdef e e' ->
-      Mem.extends m m' ->
-      match_states
-        (Cminor.Returnstate v (Cminor.Kcall optid f sp e k) m)
-        (State (sel_function ge f) Sskip k' sp (set_optvar optid v' e') m').
+        (Returnstate v' k' m').
 
 Remark call_cont_commut:
   forall k k', match_cont k k' -> match_cont (Cminor.call_cont k) (call_cont k').
@@ -512,7 +496,7 @@ Proof.
   constructor; auto. apply call_cont_commut; auto.
   (* Sbuiltin *)
   exploit sel_exprlist_correct; eauto. intros [vargs' [P Q]].
-  exploit external_call_mem_extends; eauto. 
+  exploit (external_call_mem_extends ef); eauto. 
   intros [vres' [m2 [A [B [C D]]]]].
   left; econstructor; split.
   econstructor. eauto. eapply external_call_symbols_preserved; eauto.
@@ -579,21 +563,11 @@ Proof.
   econstructor. eapply external_call_symbols_preserved; eauto.
   exact symbols_preserved. exact varinfo_preserved.
   constructor; auto.
-  (* external call turned into a Sbuiltin *)
-  exploit external_call_mem_extends; eauto. 
-  intros [vres' [m2 [A [B [C D]]]]].
-  left; econstructor; split.
-  econstructor. eauto. eapply external_call_symbols_preserved; eauto.
-  exact symbols_preserved. exact varinfo_preserved.
-  constructor; auto.
   (* return *)
   inv H2. 
   left; econstructor; split. 
   econstructor. 
   constructor; auto. destruct optid; simpl; auto. apply set_var_lessdef; auto.
-  (* return of an external call turned into a Sbuiltin *)
-  right; split. omega. split. auto. constructor; auto. 
-  destruct optid; simpl; auto. apply set_var_lessdef; auto.
 Qed.
 
 Lemma sel_initial_states:

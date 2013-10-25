@@ -36,9 +36,7 @@ Open Local Scope error_monad_scope.
 
 Section TRANSLATION.
 
-Context `{Hmem: Mem.MemoryModel}.
-Require Import ExtFunImpl ExtCallImpl.
-Existing Instances ef_ops sc_ops ef_spec ec_ops cc_ops ec_spec.
+Context `{Hcc: CompilerConfiguration}.
 
 Variable prog: Csharpminor.program.
 Variable tprog: program.
@@ -2571,7 +2569,7 @@ Proof.
   exploit transl_exprlist_correct; eauto.
   intros [tvargs [EVAL2 VINJ2]].
   exploit match_callstack_match_globalenvs; eauto. intros [hi' MG].
-  exploit external_call_mem_inject; eauto. 
+  exploit (external_call_mem_inject ef); eauto. 
   eapply inj_preserves_globals; eauto.
   intros [f' [vres' [tm' [EC [VINJ [MINJ' [UNMAPPED [OUTOFREACH [INCR SEPARATED]]]]]]]]].
   left; econstructor; split.
@@ -2583,10 +2581,10 @@ Proof.
                  (Mem.nextblock m') (Mem.nextblock tm')).
     apply match_callstack_incr_bound with (Mem.nextblock m) (Mem.nextblock tm).
     eapply match_callstack_external_call; eauto.
-    intros. eapply external_call_max_perm; eauto.
+    intros. eapply (external_call_max_perm ef); eauto.
     omega. omega. 
-    eapply external_call_nextblock; eauto.
-    eapply external_call_nextblock; eauto.
+    eapply (external_call_nextblock ef); eauto.
+    eapply (external_call_nextblock ef); eauto.
   econstructor; eauto.
 Opaque PTree.set.
   unfold set_optvar. destruct optid; simpl. 

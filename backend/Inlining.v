@@ -340,7 +340,7 @@ Definition inline_tail_function (ctx: context) (id: ident) (f: function)
 (** The instruction generated for a [Ireturn] instruction found in an
   inlined function body. *)
 
-Definition inline_return (ctx: context) (or: option reg) (retinfo: node * reg) :=
+Definition inline_return (ctx: context) (or: option reg) (retinfo: node * reg): instruction :=
   match retinfo, or with
   | (retpc, retreg), Some r => Iop (ef_ops := ef_ops) Omove (sreg ctx r :: nil) retreg retpc
   | (retpc, retreg), None   => Inop retpc

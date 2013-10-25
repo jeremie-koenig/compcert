@@ -29,6 +29,7 @@ Require Import Op.
 Require Import Locations.
 Require Import LTL.
 Require Import Conventions.
+Require Import Builtins.
 
 (** * Abstract syntax *)
 
@@ -42,8 +43,8 @@ Inductive instruction `{sc_ops: SyntaxConfigOps}: Type :=
   | Lstore: memory_chunk -> addressing -> list mreg -> mreg -> instruction
   | Lcall: signature -> mreg + ident -> instruction
   | Ltailcall: signature -> mreg + ident -> instruction
-  | Lbuiltin: external_function -> list mreg -> mreg -> instruction
-  | Lannot: external_function -> list loc -> instruction
+  | Lbuiltin: builtin_function -> list mreg -> mreg -> instruction
+  | Lannot: builtin_function -> list loc -> instruction
   | Llabel: label -> instruction
   | Lgoto: label -> instruction
   | Lcond: condition -> list mreg -> label -> instruction
