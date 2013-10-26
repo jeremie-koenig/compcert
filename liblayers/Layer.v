@@ -36,11 +36,6 @@ Section EFPLUS.
         | inl ef => ef_sig ef
         | inr ef => ef_sig ef
       end;
-    ef_inline ef :=
-      match ef with
-        | inl ef => ef_inline ef
-        | inr ef => ef_inline ef
-      end;
     ef_reloads ef :=
       match ef with
         | inl ef => ef_reloads ef

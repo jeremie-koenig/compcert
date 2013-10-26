@@ -31,7 +31,6 @@ Section EXTCALLS.
 
   Global Instance prim_ef_ops: ExtFunOps prim := {
     ef_sig p := prim_sig p;
-    ef_inline p := false;
     ef_reloads p := false
   }.
 
