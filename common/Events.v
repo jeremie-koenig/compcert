@@ -800,3 +800,6 @@ Class CompilerConfiguration mem external_function
   cc_syntax :> SyntaxConfiguration external_function;
   cc_ext_calls :> ExternalCalls mem external_function
 }.
+
+Arguments CompilerConfigOps mem external_function {_ _ _ _ _ _}.
+Arguments CompilerConfiguration mem external_function {_ _ _ _ _ _ _}.
