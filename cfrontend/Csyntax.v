@@ -32,7 +32,7 @@ Require Import BuiltinFunctions.
   the [&&] and [||] operators.  All expressions are annotated with
   their types. *)
 
-Inductive expr `{sc_ops: SyntaxConfigOps} : Type :=
+Inductive expr : Type :=
   | Eval (v: val) (ty: type)                                  (**r constant *)
   | Evar (x: ident) (ty: type)                                (**r variable *)
   | Efield (l: expr) (f: ident) (ty: type)
@@ -64,12 +64,9 @@ Inductive expr `{sc_ops: SyntaxConfigOps} : Type :=
                        (**r memory location, result of evaluating a l-value *)
   | Eparen (r: expr) (ty: type)                   (**r marked subexpression *)
 
-with exprlist `{sc_ops: SyntaxConfigOps} : Type :=
+with exprlist : Type :=
   | Enil
   | Econs (r1: expr) (rl: exprlist).
-
-Section WITHEF.
-Context `{Hsc: SyntaxConfiguration}.
 
 (** Expressions are implicitly classified into l-values and r-values,
 ranged over by [l] and [r], respectively, in the grammar above.
@@ -192,9 +189,12 @@ Definition var_names (vars: list(ident * type)) : list ident :=
 (** Functions can either be defined ([Internal]) or declared as
   external functions ([External]). *)
 
-Inductive fundef : Type :=
+Inductive fundef `{sc_ops: SyntaxConfigOps} : Type :=
   | Internal: function -> fundef
   | External: external_function -> typelist -> type -> fundef.
+
+Section WITHEF.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** The type of a function definition. *)
 

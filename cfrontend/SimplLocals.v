@@ -28,9 +28,6 @@ Open Scope string_scope.
 
 Module VSet := FSetAVL.Make(OrderedPositive).
 
-Section WITHEF1.
-Context `{Hsc: SyntaxConfiguration}.
-
 (** The set of local variables that can be lifted to temporaries,
   because they are scalar and their address is not taken. *)
 
@@ -85,10 +82,7 @@ Definition check_opttemp (cenv: compilenv) (optid: option ident) : res unit :=
   | None => OK tt
   end.
 
-End WITHEF1.
-
-Fixpoint simpl_stmt `{sc_ops: SyntaxConfigOps}
-                    (cenv: compilenv) (s: statement) : res statement :=
+Fixpoint simpl_stmt (cenv: compilenv) (s: statement) : res statement :=
   match s with
   | Sskip => OK Sskip
   | Sassign a1 a2 =>
@@ -131,8 +125,7 @@ Fixpoint simpl_stmt `{sc_ops: SyntaxConfigOps}
   | Sgoto lbl => OK (Sgoto lbl)
   end
 
-with simpl_lblstmt `{sc_ops: SyntaxConfigOps}
-                   (cenv: compilenv) (ls: labeled_statements) : res labeled_statements :=
+with simpl_lblstmt (cenv: compilenv) (ls: labeled_statements) : res labeled_statements :=
   match ls with
   | LSdefault s =>
       do s' <- simpl_stmt cenv s;
@@ -146,8 +139,7 @@ with simpl_lblstmt `{sc_ops: SyntaxConfigOps}
 (** Function parameters that are not lifted to temporaries must be
   stored in the corresponding local variable at function entry. *)
 
-Fixpoint store_params `{sc_ops: SyntaxConfigOps}
-                      (cenv: compilenv) (params: list (ident * type))
+Fixpoint store_params (cenv: compilenv) (params: list (ident * type))
                       (s: statement): statement :=
   match params with
   | nil => s
@@ -181,8 +173,7 @@ Fixpoint addr_taken_exprlist (l: list expr) : VSet.t :=
   | a :: l' => VSet.union (addr_taken_expr a) (addr_taken_exprlist l')
   end.
 
-Fixpoint addr_taken_stmt `{sc_ops: SyntaxConfigOps}
-                         (s: statement) : VSet.t :=
+Fixpoint addr_taken_stmt (s: statement) : VSet.t :=
   match s with
   | Sskip => VSet.empty
   | Sassign a b => VSet.union (addr_taken_expr a) (addr_taken_expr b)
@@ -202,15 +193,11 @@ Fixpoint addr_taken_stmt `{sc_ops: SyntaxConfigOps}
   | Sgoto lbl => VSet.empty
   end
 
-with addr_taken_lblstmt `{sc_ops: SyntaxConfigOps}
-                        (ls: labeled_statements) : VSet.t :=
+with addr_taken_lblstmt (ls: labeled_statements) : VSet.t :=
   match ls with
   | LSdefault s => addr_taken_stmt s
   | LScase n s ls' => VSet.union (addr_taken_stmt s) (addr_taken_lblstmt ls')
   end.
-
-Section WITHEF2.
-Context `{Hsc: SyntaxConfiguration}.
 
 (** The compilation environment for a function is the set of local variables
   that are scalars and whose addresses are not taken. *)
@@ -248,6 +235,9 @@ Definition transf_function (f: function) : res function :=
 
 (** Whole-program transformation *)
 
+Section WITHEF.
+Context `{Hsc: SyntaxConfiguration}.
+
 Definition transf_fundef (fd: fundef) : res fundef :=
   match fd with
   | Internal f => do tf <- transf_function f; OK (Internal tf)
@@ -257,5 +247,5 @@ Definition transf_fundef (fd: fundef) : res fundef :=
 Definition transf_program (p: program) : res program :=
   AST.transform_partial_program transf_fundef p.
 
-End WITHEF2.
+End WITHEF.
 

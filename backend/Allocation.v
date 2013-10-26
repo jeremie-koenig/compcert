@@ -71,7 +71,7 @@ Fixpoint reg_list_dead
   (since it computes a useless result), thus its arguments need not
   be live ``before''. *)
 
-Definition transfer `{sf_ops: SyntaxConfigOps}
+Definition transfer
             (f: RTL.function) (pc: node) (after: Regset.t) : Regset.t :=
   match f.(fn_code)!pc with
   | None =>
@@ -114,9 +114,6 @@ Definition transfer `{sf_ops: SyntaxConfigOps}
 
 Module RegsetLat := LFSet(Regset).
 Module DS := Backward_Dataflow_Solver(RegsetLat)(NodeSetBackward).
-
-Section WITHEF.
-Context `{Hsc: SyntaxConfiguration}.
 
 Definition analyze (f: RTL.function): option (PMap.t Regset.t) :=
   DS.fixpoint (successors f)  (transfer f) nil.
@@ -209,6 +206,9 @@ Definition transf_function (f: RTL.function) : res LTL.function :=
         end
     end
   end.
+
+Section WITHEF.
+Context `{Hsc: SyntaxConfiguration}.
 
 Definition transf_fundef (fd: RTL.fundef) : res LTL.fundef :=
   AST.transf_partial_fundef transf_function fd.

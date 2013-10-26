@@ -20,6 +20,7 @@ open AST
 open ExtFunImpl
 open Memdata
 open Asm
+open BuiltinFunctions
 
 module StringSet = Set.Make(String)
 

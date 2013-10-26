@@ -28,9 +28,6 @@ Require Import LTLin.
 
 Module Labelset := FSetAVL.Make(OrderedPositive).
 
-Section WITHEF.
-Context `{sc_ops: AST.SyntaxConfigOps}.
-
 (** Compute the set of labels that are mentioned in branch instructions. *)
 
 Definition add_label_branched_to (ls: Labelset.t) (i: instruction) :=
@@ -69,6 +66,9 @@ Definition transf_function (f: function) : function :=
      (fn_params f)
      (fn_stacksize f)
      (cleanup_labels (fn_code f)).
+
+Section WITHEF.
+Context `{Hsc: AST.SyntaxConfiguration}.
 
 Definition transf_fundef (f: fundef) : fundef :=
   AST.transf_fundef transf_function f.

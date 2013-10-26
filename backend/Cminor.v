@@ -96,7 +96,7 @@ Inductive expr : Type :=
 
 Definition label := ident.
 
-Inductive stmt `{sc_ops: SyntaxConfigOps} : Type :=
+Inductive stmt : Type :=
   | Sskip: stmt
   | Sassign : ident -> expr -> stmt
   | Sstore : memory_chunk -> expr -> expr -> stmt

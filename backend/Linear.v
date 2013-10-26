@@ -35,7 +35,7 @@ Require Import BuiltinFunctions.
 
 Definition label := positive.
 
-Inductive instruction `{sc_ops: SyntaxConfigOps}: Type :=
+Inductive instruction: Type :=
   | Lgetstack: slot -> mreg -> instruction
   | Lsetstack: mreg -> slot -> instruction
   | Lop: operation -> list mreg -> mreg -> instruction

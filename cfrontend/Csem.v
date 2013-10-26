@@ -523,15 +523,11 @@ Inductive state `{mem_ops: Mem.MemoryOps mem}: Type :=
       (k: cont)
       (m: mem) : state
   | Stuckstate.                         (**r undefined behavior occurred *)
-
-End SEMANTICS.
-End WITHMEM.
                  
 (** Find the statement and manufacture the continuation 
   corresponding to a label. *)
 
-Fixpoint find_label `{sc_ops: SyntaxConfigOps}
-                    (lbl: label) (s: statement) (k: cont) 
+Fixpoint find_label (lbl: label) (s: statement) (k: cont) 
                     {struct s}: option (statement * cont) :=
   match s with
   | Ssequence s1 s2 =>
@@ -564,8 +560,7 @@ Fixpoint find_label `{sc_ops: SyntaxConfigOps}
   | _ => None
   end
 
-with find_label_ls `{sc_ops: SyntaxConfigOps}
-                    (lbl: label) (sl: labeled_statements) (k: cont) 
+with find_label_ls (lbl: label) (sl: labeled_statements) (k: cont) 
                     {struct sl}: option (statement * cont) :=
   match sl with
   | LSdefault s => find_label lbl s k
@@ -575,13 +570,6 @@ with find_label_ls `{sc_ops: SyntaxConfigOps}
       | None => find_label_ls lbl sl' k
       end
   end.
-
-Section WITHMEM2.
-Context `{Hcc: CompilerConfiguration}.
-
-Section SEMANTICS.
-
-Variable ge: genv.
 
 (** We separate the transition rules in two groups:
 - one group that deals with reductions over expressions;
@@ -593,25 +581,25 @@ the second group of rules can be reused as is. *)
 Inductive estep: state -> trace -> state -> Prop :=
 
   | step_lred: forall C f a k e m a' m',
-      lred ge e a m a' m' ->
+      lred e a m a' m' ->
       context LV RV C ->
       estep (ExprState f (C a) k e m)
          E0 (ExprState f (C a') k e m')
 
   | step_rred: forall C f a k e m t a' m',
-      rred ge a m t a' m' ->
+      rred a m t a' m' ->
       context RV RV C ->
       estep (ExprState f (C a) k e m)
           t (ExprState f (C a') k e m')
 
   | step_call: forall C f a k e m fd vargs ty,
-      callred ge a fd vargs ty ->
+      callred a fd vargs ty ->
       context RV RV C ->
       estep (ExprState f (C a) k e m)
          E0 (Callstate fd vargs (Kcall f e C ty k) m)
 
   | step_stuck: forall C f a k e m K,
-      context K RV C -> ~(imm_safe ge e K a m) ->
+      context K RV C -> ~(imm_safe e K a m) ->
       estep (ExprState f (C a) k e m)
          E0 Stuckstate.
 
@@ -814,4 +802,4 @@ Proof.
   inv H; simpl; try omega. eapply external_call_trace_length; eauto.
 Qed.
 
-End WITHMEM2.
+End WITHMEM.

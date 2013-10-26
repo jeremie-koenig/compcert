@@ -35,7 +35,7 @@ Require Import BuiltinFunctions.
 
 Definition node := positive.
 
-Inductive instruction `{sc_ops: SyntaxConfigOps}: Type :=
+Inductive instruction: Type :=
   | Lnop: node -> instruction
   | Lop: operation -> list loc -> loc -> node -> instruction
   | Lload: memory_chunk -> addressing -> list loc -> loc -> node -> instruction

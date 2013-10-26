@@ -14,5 +14,5 @@ open Camlcoq
 
 (* To be considered: heuristics based on size of function? *)
 
-let should_inline (ef_ops: 'a AST.coq_ExtFunOps) (id: AST.ident) (f: 'a RTL.coq_function) =
+let should_inline (id: AST.ident) (f: RTL.coq_function) =
   C2C.atom_is_inline id

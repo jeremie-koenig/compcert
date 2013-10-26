@@ -56,7 +56,7 @@ Inductive annot_param: Type :=
   | APreg: mreg -> annot_param
   | APstack: memory_chunk -> Z -> annot_param.
 
-Inductive instruction `{sc_ops: SyntaxConfigOps}: Type :=
+Inductive instruction: Type :=
   | Mgetstack: int -> typ -> mreg -> instruction
   | Msetstack: mreg -> int -> typ -> instruction
   | Mgetparam: int -> typ -> mreg -> instruction

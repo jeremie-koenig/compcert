@@ -45,7 +45,7 @@ Require Import BuiltinFunctions.
 
 Definition node := positive.
 
-Inductive instruction `{sc_ops: SyntaxConfigOps}: Type :=
+Inductive instruction: Type :=
   | Inop: node -> instruction
       (** No operation -- just branch to the successor. *)
   | Iop: operation -> list reg -> reg -> node -> instruction

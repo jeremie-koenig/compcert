@@ -29,9 +29,6 @@ Require Import RTL.
   we also eliminate CFG nodes that are not reachable from the entry point:
   these nodes are dead code. *)
 
-Section WITHEF.
-Context `{sc_ops: AST.SyntaxConfigOps}.
-
 Section RENUMBER.
 
 Variable pnum: PTree.t positive.   (**r a postorder numbering *)
@@ -75,6 +72,9 @@ Definition transf_function (f: function) : function :=
     f.(fn_stacksize)
     (renum_cfg pnum f.(fn_code))
     (renum_pc pnum f.(fn_entrypoint)).
+
+Section WITHEF.
+Context `{Hsc: AST.SyntaxConfiguration}.
 
 Definition transf_fundef (fd: fundef) : fundef :=
   AST.transf_fundef transf_function fd.

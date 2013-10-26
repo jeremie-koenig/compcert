@@ -49,7 +49,7 @@ Definition load (chunk: memory_chunk) (e1: expr) :=
   | (mode, args) => Eload chunk mode args
   end.
 
-Definition store `{sc_ops: SyntaxConfigOps} (chunk: memory_chunk) (e1 e2: expr): stmt :=
+Definition store (chunk: memory_chunk) (e1 e2: expr): stmt :=
   match addressing chunk e1 with
   | (mode, args) => Sstore chunk mode args e2
   end.
@@ -127,7 +127,7 @@ Fixpoint sel_exprlist (al: list Cminor.expr) : exprlist :=
 (** Recognition of immediate calls and calls to built-in functions
     that should be inlined *)
 
-Inductive call_kind `{sc_ops: SyntaxConfigOps} : Type :=
+Inductive call_kind : Type :=
   | Call_default
   | Call_imm (id: ident).
 

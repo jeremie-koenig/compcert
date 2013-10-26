@@ -172,7 +172,7 @@ Definition padding (frm to: Z) : list init_data :=
 
 End WITHMEM.
 
-Fixpoint transl_init `{sc_ops: SyntaxConfigOps} `{mem_ops: Mem.MemoryOps}
+Fixpoint transl_init `{mem_ops: Mem.MemoryOps}
                      (ty: type) (i: initializer)
                      {struct i} : res (list init_data) :=
   match i, ty with
@@ -194,7 +194,7 @@ Fixpoint transl_init `{sc_ops: SyntaxConfigOps} `{mem_ops: Mem.MemoryOps}
       Error (msg "wrong type for compound initializer")
   end
 
-with transl_init_array `{sc_ops: SyntaxConfigOps} `{mem_ops: Mem.MemoryOps}
+with transl_init_array `{mem_ops: Mem.MemoryOps}
                        (ty: type) (il: initializer_list) (sz: Z)
                        {struct il} : res (list init_data) :=
   match il with
@@ -208,7 +208,7 @@ with transl_init_array `{sc_ops: SyntaxConfigOps} `{mem_ops: Mem.MemoryOps}
       OK (d1 ++ d2)
   end
 
-with transl_init_struct `{sc_ops: SyntaxConfigOps} `{mem_ops: Mem.MemoryOps}
+with transl_init_struct `{mem_ops: Mem.MemoryOps}
                         (id: ident) (ty: type)
                         (fl: fieldlist) (il: initializer_list) (pos: Z)
                         {struct il} : res (list init_data) :=
@@ -224,7 +224,7 @@ with transl_init_struct `{sc_ops: SyntaxConfigOps} `{mem_ops: Mem.MemoryOps}
       Error (msg "wrong number of elements in struct initializer")
   end
 
-with transl_init_union `{sc_ops: SyntaxConfigOps} `{mem_ops: Mem.MemoryOps}
+with transl_init_union `{mem_ops: Mem.MemoryOps}
                        (id: ident) (ty ty1: type) (il: initializer_list)
                        {struct il} : res (list init_data) :=
   match il with

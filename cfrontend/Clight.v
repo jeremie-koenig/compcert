@@ -90,7 +90,7 @@ Definition typeof (e: expr) : type :=
 
 Definition label := ident.
 
-Inductive statement `{sc_ops: SyntaxConfigOps} : Type :=
+Inductive statement : Type :=
   | Sskip : statement                   (**r do nothing *)
   | Sassign : expr -> expr -> statement (**r assignment [lvalue = rvalue] *)
   | Sset : ident -> expr -> statement   (**r assignment [tempvar = rvalue] *)
@@ -106,12 +106,9 @@ Inductive statement `{sc_ops: SyntaxConfigOps} : Type :=
   | Slabel : label -> statement -> statement
   | Sgoto : label -> statement
 
-with labeled_statements `{sc_ops: SyntaxConfigOps} : Type := (**r cases of a [switch] *)
+with labeled_statements : Type := (**r cases of a [switch] *)
   | LSdefault: statement -> labeled_statements
   | LScase: int -> statement -> labeled_statements -> labeled_statements.
-
-Section WITHMEM.
-Context `{Hcc: CompilerConfiguration}.
 
 (** The C loops are derived forms. *)
 
@@ -145,9 +142,12 @@ Definition var_names (vars: list(ident * type)) : list ident :=
 (** Functions can either be defined ([Internal]) or declared as
   external functions ([External]). *)
 
-Inductive fundef : Type :=
+Inductive fundef `{sc_ops: SyntaxConfigOps} : Type :=
   | Internal: function -> fundef
   | External: external_function -> typelist -> type -> fundef.
+
+Section WITHMEM.
+Context `{Hcc: CompilerConfiguration}.
 
 (** The type of a function definition. *)
 
@@ -323,7 +323,7 @@ End WITHMEM.
 
 (** Continuations *)
 
-Inductive cont `{sc_ops: SyntaxConfigOps}: Type :=
+Inductive cont: Type :=
   | Kstop: cont
   | Kseq: statement -> cont -> cont       (**r [Kseq s2 k] = after [s1] in [s1;s2] *)
   | Kloop1: statement -> statement -> cont -> cont (**r [Kloop1 s1 s2 k] = after [s1] in [Sloop s1 s2] *)
@@ -337,7 +337,7 @@ Inductive cont `{sc_ops: SyntaxConfigOps}: Type :=
 
 (** Pop continuation until a call or stop *)
 
-Fixpoint call_cont `{SyntaxConfigOps} (k: cont) : cont :=
+Fixpoint call_cont (k: cont) : cont :=
   match k with
   | Kseq s k => call_cont k
   | Kloop1 s1 s2 k => call_cont k
@@ -346,7 +346,7 @@ Fixpoint call_cont `{SyntaxConfigOps} (k: cont) : cont :=
   | _ => k
   end.
 
-Definition is_call_cont `{SyntaxConfigOps} (k: cont) : Prop :=
+Definition is_call_cont (k: cont) : Prop :=
   match k with
   | Kstop => True
   | Kcall _ _ _ _ _ => True
@@ -376,8 +376,7 @@ Inductive state `{cc_ops: CompilerConfigOps}: Type :=
 (** Find the statement and manufacture the continuation 
   corresponding to a label *)
 
-Fixpoint find_label `{sc_ops: SyntaxConfigOps}
-                    (lbl: label) (s: statement) (k: cont)
+Fixpoint find_label (lbl: label) (s: statement) (k: cont)
                     {struct s}: option (statement * cont) :=
   match s with
   | Ssequence s1 s2 =>
@@ -402,8 +401,7 @@ Fixpoint find_label `{sc_ops: SyntaxConfigOps}
   | _ => None
   end
 
-with find_label_ls `{sc_ops: SyntaxConfigOps}
-                    (lbl: label) (sl: labeled_statements) (k: cont)
+with find_label_ls  (lbl: label) (sl: labeled_statements) (k: cont)
                     {struct sl}: option (statement * cont) :=
   match sl with
   | LSdefault s => find_label lbl s k

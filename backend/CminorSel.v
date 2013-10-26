@@ -56,7 +56,7 @@ Infix ":::" := Econs (at level 60, right associativity) : cminorsel_scope.
   arguments), and the [Sstore] construct uses a machine-dependent
   addressing mode. *)
 
-Inductive stmt `{sc_ops: SyntaxConfigOps} : Type :=
+Inductive stmt : Type :=
   | Sskip: stmt
   | Sassign : ident -> expr -> stmt
   | Sstore : memory_chunk -> addressing -> exprlist -> expr -> stmt
