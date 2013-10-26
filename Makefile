@@ -65,7 +65,7 @@ COMMON=Errors.v AST.v Events.v Globalenvs.v Memdata.v Memtype.v Memory.v \
   Values.v Smallstep.v Behaviors.v Switch.v Determinism.v Memimpl.v \
   ExtFunImpl.v \
   ExtCallImpl.v \
-  Builtins.v \
+  BuiltinFunctions.v \
 
 # Back-end modules (in backend/, $(ARCH)/, $(ARCH)/$(VARIANT))
 

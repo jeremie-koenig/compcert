@@ -27,7 +27,7 @@ Require Import CminorSel.
 Require Import SelectOp.
 Require Import Selection.
 Require Import SelectOpproof.
-Require Import Builtins.
+Require Import BuiltinFunctions.
 
 Open Local Scope cminorsel_scope.
 

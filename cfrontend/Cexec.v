@@ -31,7 +31,7 @@ Require Import Cop.
 Require Import Csyntax.
 Require Import Csem.
 Require Cstrategy.
-Require Import Builtins.
+Require Import BuiltinFunctions.
 
 (** Error monad with options or lists *)
 

@@ -837,7 +837,7 @@ Proof.
     FL. FL. 
   destruct s0; FL; FL; FL.
   destruct s0; FL; FL; FL.
-  destruct (Builtins.bf_reloads b). FL. FL. FL.
+  destruct (BuiltinFunctions.bf_reloads b). FL. FL. FL.
   destruct o; FL.
 Qed.
 
@@ -1294,7 +1294,7 @@ Proof.
 
   (* Lbuiltin *)
   ExploitWT; inv WTI.
-  case_eq (Builtins.bf_reloads ef); intro RELOADS.
+  case_eq (BuiltinFunctions.bf_reloads ef); intro RELOADS.
   exploit add_reloads_correct; simpl in *.
     instantiate (1 := args). apply arity_ok_enough. rewrite H3. destruct H5. auto. congruence. auto.
   intros [ls2 [A [B C]]].

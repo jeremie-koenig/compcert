@@ -22,7 +22,7 @@ Require Import Values.
 Require Import AST.
 Require Import Ctypes.
 Require Import Cop.
-Require Import Builtins.
+Require Import BuiltinFunctions.
 
 (** ** Expressions *)
 

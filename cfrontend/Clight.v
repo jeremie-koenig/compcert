@@ -30,7 +30,7 @@ Require Import Globalenvs.
 Require Import Smallstep.
 Require Import Ctypes.
 Require Import Cop.
-Require Import Builtins.
+Require Import BuiltinFunctions.
 
 (** * Abstract syntax *)
 

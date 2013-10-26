@@ -29,7 +29,7 @@ Require Import Op.
 Require Import Locations.
 Require Import LTL.
 Require Import Conventions.
-Require Import Builtins.
+Require Import BuiltinFunctions.
 
 (** * Abstract syntax *)
 

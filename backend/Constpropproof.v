@@ -29,7 +29,7 @@ Require Import Kildall.
 Require Import ConstpropOp.
 Require Import Constprop.
 Require Import ConstpropOpproof.
-Require Import Builtins.
+Require Import BuiltinFunctions.
 
 Section PRESERVATION.
 

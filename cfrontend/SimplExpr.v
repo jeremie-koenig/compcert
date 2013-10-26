@@ -23,7 +23,7 @@ Require Import Ctypes.
 Require Import Cop.
 Require Import Csyntax.
 Require Import Clight.
-Require Import Builtins.
+Require Import BuiltinFunctions.
 
 Open Local Scope string_scope.
 

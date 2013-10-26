@@ -23,7 +23,7 @@ Require Import Events.
 Require Import Globalenvs.
 Require Cminor.
 Require Import Smallstep.
-Require Import Builtins.
+Require Import BuiltinFunctions.
 
 (** Abstract syntax *)
 

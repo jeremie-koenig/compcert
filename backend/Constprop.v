@@ -25,7 +25,7 @@ Require Import RTL.
 Require Import Lattice.
 Require Import Kildall.
 Require Import ConstpropOp.
-Require Import Builtins.
+Require Import BuiltinFunctions.
 
 (** * Static analysis *)
 

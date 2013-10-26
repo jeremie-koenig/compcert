@@ -30,7 +30,7 @@ Require Cminor.
 Require Import Op.
 Require Import CminorSel.
 Require Import SelectOp.
-Require Import Builtins.
+Require Import BuiltinFunctions.
 
 Open Local Scope cminorsel_scope.
 

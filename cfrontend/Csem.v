@@ -29,7 +29,7 @@ Require Import Ctypes.
 Require Import Cop.
 Require Import Csyntax.
 Require Import Smallstep.
-Require Import Builtins.
+Require Import BuiltinFunctions.
 
 Section WITHMEM.
 Context `{Hcc: CompilerConfiguration}.

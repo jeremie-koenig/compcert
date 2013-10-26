@@ -22,7 +22,7 @@ Require Import RTLtyping.
 Require Import Locations.
 Require Import Conventions.
 Require Import InterfGraph.
-Require Import Builtins.
+Require Import BuiltinFunctions.
 
 (** * Construction of the interference graph *)
 

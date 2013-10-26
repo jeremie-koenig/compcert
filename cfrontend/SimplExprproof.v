@@ -30,7 +30,7 @@ Require Import Cstrategy.
 Require Import Clight.
 Require Import SimplExpr.
 Require Import SimplExprspec.
-Require Import Builtins.
+Require Import BuiltinFunctions.
 
 Section PRESERVATION.
 

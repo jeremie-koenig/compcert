@@ -26,7 +26,7 @@ Require Import Memory.
 Require Import Globalenvs.
 Require Import Smallstep.
 Require Import Switch.
-Require Import Builtins.
+Require Import BuiltinFunctions.
 
 (** * Abstract syntax *)
 

@@ -27,7 +27,7 @@ Require Import Globalenvs.
 Require Import Smallstep.
 Require Import Op.
 Require Import Registers.
-Require Import Builtins.
+Require Import BuiltinFunctions.
 
 (** * Abstract syntax *)
 

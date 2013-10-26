@@ -25,7 +25,7 @@ Require Import Smallstep.
 Require Import Locations.
 Require Import Stacklayout.
 Require Import Conventions.
-Require Import Builtins.
+Require Import BuiltinFunctions.
 
 (** * Abstract syntax *)
 

@@ -291,7 +291,7 @@ Proof.
     rewrite loc_arguments_type; auto.
   destruct ros. destruct H2 as [A [B C]]. auto 10 with reloadty. 
   auto 10 with reloadty.
-  destruct (Builtins.bf_reloads ef) eqn:?.
+  destruct (BuiltinFunctions.bf_reloads ef) eqn:?.
   simpl ef_reloads in *.
   assert (arity_ok (sig_args (ef_sig ef)) = true) by intuition congruence.
   assert (map mreg_type (regs_for args) = map Loc.type args).
