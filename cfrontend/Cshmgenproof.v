@@ -31,9 +31,7 @@ Require Import Csharpminor.
 Require Import Cshmgen.
 
 Section WITHMEM.
-Require Import ExtFunImpl ExtCallImpl.
-Existing Instances ef_ops sc_ops ef_spec ec_ops cc_ops ec_spec.
-Context `{Hmem: Mem.MemoryModel}.
+Context `{Hcc: CompilerConfiguration}.
 
 (** * Properties of operations over types *)
 

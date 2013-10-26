@@ -36,8 +36,7 @@ Open Local Scope string_scope.
 Open Local Scope error_monad_scope.
 
 Section WITHEF.
-Require Import ExtFunImpl.
-Existing Instances ef_ops sc_ops ef_spec.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** * Csharpminor constructors *)
 
@@ -290,6 +289,8 @@ Definition transl_binop (op: Cop.binary_operation)
   | Cop.Oge => make_cmp Cge a ta b tb
   end.
 
+End WITHEF.
+
 (** * Translation of expressions *)
 
 (** [transl_expr a] returns the Csharpminor code that computes the value
@@ -405,7 +406,8 @@ loop s1 s2          --->     block {
                              // break in s1 and s2 branches here
 *)
 
-Fixpoint transl_statement (tyret: type) (nbrk ncnt: nat)
+Fixpoint transl_statement `{sc_ops: SyntaxConfigOps}
+                          (tyret: type) (nbrk ncnt: nat)
                           (s: Clight.statement) {struct s} : res stmt :=
   match s with
   | Clight.Sskip =>
@@ -461,7 +463,8 @@ Fixpoint transl_statement (tyret: type) (nbrk ncnt: nat)
       OK (Sgoto lbl)
   end
 
-with transl_lbl_stmt (tyret: type) (nbrk ncnt: nat)
+with transl_lbl_stmt `{sc_ops: SyntaxConfigOps}
+                     (tyret: type) (nbrk ncnt: nat)
                      (sl: Clight.labeled_statements)
                      {struct sl}: res lbl_stmt :=
   match sl with
@@ -473,6 +476,9 @@ with transl_lbl_stmt (tyret: type) (nbrk ncnt: nat)
       do tsl' <- transl_lbl_stmt tyret nbrk ncnt sl';
       OK (LScase n ts tsl')
   end.
+
+Section WITHEF2.
+Context `{Hsc: SyntaxConfiguration}.
 
 (*** Translation of functions *)
 
@@ -512,4 +518,4 @@ Definition transl_globvar (ty: type) := OK tt.
 Definition transl_program (p: Clight.program) : res program :=
   transform_partial_program2 transl_fundef transl_globvar p.
 
-End WITHEF.
+End WITHEF2.
