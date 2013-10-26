@@ -315,9 +315,9 @@ Local Instance ec_proof: ExternalCalls mem external_function := {
   external_call_spec := external_call_spec
 }.
 
-Local Instance cc_ops: CompilerConfigOps := {}.
+Local Instance cc_ops: CompilerConfigOps mem external_function := {}.
 
-Local Instance ec_spec: CompilerConfiguration := {}.
+Local Instance ec_spec: CompilerConfiguration mem external_function := {}.
 
 End WITHMEM.
 
