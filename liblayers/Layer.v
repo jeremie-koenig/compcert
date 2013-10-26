@@ -9,11 +9,11 @@ Require Import LiftExtCall.
 (** * The [Layer] interface *)
 
 Class Layer mem external_function data prim
-  `{ec_ops: ExtCallOps mem external_function}
+  `{ec_ops: CompilerConfigOps mem external_function}
   `{data_ops: !AbstractDataOps data}
   `{prim_ops: !AbstractPrimOps mem data prim} :=
 {
-  layer_extfun_spec :> ExternalCalls mem external_function;
+  layer_base_config :> CompilerConfiguration mem external_function;
   layer_abstract_prim :> AbstractPrimitives mem data prim
 }.
 
@@ -62,7 +62,7 @@ Section EFPLUS.
   }.
 End EFPLUS.
 
-(** * Deriving the [ExternalCalls] associated with a layer *)
+(** * Deriving the [CompilerConfiguration] associated with a layer *)
 
 Section LAYER.
   Context `{Hl: Layer}.
@@ -73,6 +73,10 @@ Section LAYER.
   Instance: ExternalCalls (mem × data) external_function :=
     liftmem_ec_spec.
 
+  Instance: CompilerConfigOps (mem × data) external_function := {}.
+
+  Instance: CompilerConfiguration (mem × data) external_function := {}.
+
   Global Instance layer_ef_ops:
     ExtFunOps (external_function + prim) :=
       efplus_ef_ops.
@@ -81,7 +85,21 @@ Section LAYER.
     ExtCallOps (mem × data) (external_function + prim) :=
       efplus_ec_ops.
 
-  Global Instance layer_ec_spec:
+  Global Instance layer_sc_ops:
+    SyntaxConfigOps (external_function + prim) := {}.
+
+  Global Instance layer_cc_ops:
+    CompilerConfigOps (mem × data) (external_function + prim) := {}.
+
+  Local Instance layer_ec_spec:
     ExternalCalls (mem × data) (external_function + prim) :=
       efplus_ec_spec.
+
+  Local Instance layer_sc_spec:
+    SyntaxConfiguration (external_function + prim) := {
+      ugly_workaround_depender := tt
+    }.
+
+  Global Instance layer_cc_spec:
+    CompilerConfiguration (mem × data) (external_function + prim) := {}.
 End LAYER.
