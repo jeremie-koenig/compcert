@@ -16,6 +16,7 @@ open Printf
 open Camlcoq
 open AST
 open ExtFunImpl
+open BuiltinFunctions
 
 let name_of_type = function Tint -> "int" | Tfloat -> "float"
 
@@ -31,6 +32,10 @@ let name_of_chunk = function
 
 let name_of_external = function
   | EF_external(name, sg) -> sprintf "extern %S" (extern_atom name)
+  | EF_malloc -> "malloc"
+  | EF_free -> "free"
+
+let name_of_builtin = function
   | EF_vload chunk -> sprintf "volatile load %s" (name_of_chunk chunk)
   | EF_vstore chunk -> sprintf "volatile store %s" (name_of_chunk chunk)
   | EF_vload_global(chunk, id, ofs) ->
@@ -39,8 +44,6 @@ let name_of_external = function
   | EF_vstore_global(chunk, id, ofs) ->
       sprintf "volatile store %s global %S %ld"
               (name_of_chunk chunk) (extern_atom id) (camlint_of_coqint ofs)
-  | EF_malloc -> "malloc"
-  | EF_free -> "free"
   | EF_memcpy(sz, al) ->
       sprintf "memcpy size %s align %s " (Z.to_string sz) (Z.to_string al)
   | EF_annot(text, targs) -> sprintf "annot %S" (extern_atom text)

@@ -28,6 +28,7 @@ open Cop
 open Csyntax
 open Initializers
 open Floats
+open BuiltinFunctions
 
 (** Record useful information about global variables and functions,
   and associate it with the corresponding atoms. *)

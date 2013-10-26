@@ -69,7 +69,7 @@ let print_instruction pp i =
         ros fn regs args
   | Lbuiltin(ef, args, res) ->
       fprintf pp "%a = builtin %s(%a)@ "
-        reg res (name_of_external ef) regs args
+        reg res (name_of_builtin ef) regs args
   | Llabel lbl ->
       fprintf pp "%ld:@ " (P.to_int32 lbl)
   | Lgoto lbl ->

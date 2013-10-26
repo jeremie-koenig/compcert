@@ -26,6 +26,7 @@ open Globalenvs
 open Ctypes
 open Cop
 open Csyntax
+open BuiltinFunctions
 
 let name_unop = function
   | Onotbool -> "!"
