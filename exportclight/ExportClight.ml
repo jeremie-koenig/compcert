@@ -175,8 +175,6 @@ let assertions = ref ([]: (ident * annot_arg list) list)
 let external_function p = function
   | EF_external(name, sg) ->
       fprintf p "@[<hov 2>(EF_external %a@ %a)@]" ident name signatur sg
-  | EF_builtin(name, sg) ->
-      fprintf p "@[<hov 2>(EF_builtin %a@ %a)@]" ident name signatur sg
   | EF_vload chunk ->
       fprintf p "(EF_vload %s)" (name_of_chunk chunk)
   | EF_vstore chunk ->

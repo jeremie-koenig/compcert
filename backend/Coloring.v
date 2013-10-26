@@ -22,6 +22,7 @@ Require Import RTLtyping.
 Require Import Locations.
 Require Import Conventions.
 Require Import InterfGraph.
+Require Import BuiltinFunctions.
 
 (** * Construction of the interference graph *)
 
@@ -92,8 +93,7 @@ Require Import InterfGraph.
 *)
 
 Section WITHEF.
-Require Import ExtFunImpl.
-Existing Instances ef_ops ef_spec.
+Context `{Hsc: SyntaxConfiguration}.
 
 Definition add_interf_live
     (filter: reg -> bool) (res: reg) (live: Regset.t) (g: graph): graph :=
@@ -143,7 +143,7 @@ Fixpoint add_prefs_call
   | _, _ => g
   end.
 
-Definition add_prefs_builtin (ef: external_function)
+Definition add_prefs_builtin (ef: builtin_function)
                             (args: list reg) (res: reg) (g: graph) : graph :=
   match ef, args with
   | EF_annot_val txt targ, arg1 :: _ => add_pref arg1 res g

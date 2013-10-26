@@ -76,9 +76,9 @@ let print_instruction pp i =
       fprintf pp "tailcall %a@ " ros fn
   | Mbuiltin(ef, args, res) ->
       fprintf pp "%a = builtin %s(%a)@ "
-        reg res (name_of_external ef) regs args
+        reg res (name_of_builtin ef) regs args
   | Mannot(ef, args) ->
-      fprintf pp "%s(%a)@ " (name_of_external ef) annot_params args
+      fprintf pp "%s(%a)@ " (name_of_builtin ef) annot_params args
   | Mlabel lbl ->
       fprintf pp "%ld:@ " (P.to_int32 lbl)
   | Mgoto lbl ->

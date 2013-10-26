@@ -30,12 +30,11 @@ Require Import Cstrategy.
 Require Import Clight.
 Require Import SimplExpr.
 Require Import SimplExprspec.
+Require Import BuiltinFunctions.
 
 Section PRESERVATION.
 
-Require Import ExtFunImpl ExtCallImpl.
-Existing Instances ef_ops ef_spec ec_ops ec_spec.
-Context `{Hmem: Mem.MemoryModel}.
+Context `{Hcc: CompilerConfiguration}.
 Variable prog: Csyntax.program.
 Variable tprog: Clight.program.
 Hypothesis TRANSL: transl_program prog = OK tprog.

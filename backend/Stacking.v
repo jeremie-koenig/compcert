@@ -25,7 +25,7 @@ Require Import Conventions.
 Require Import Stacklayout.
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** * Layout of activation records *)
 

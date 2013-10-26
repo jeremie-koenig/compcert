@@ -26,8 +26,7 @@ Require Import InterfGraph.
 Require Import Coloring.
 
 Section WITHEF.
-Require Import ExtFunImpl.
-Existing Instances ef_ops ef_spec.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** * Correctness of the interference graph *)
 

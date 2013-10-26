@@ -25,7 +25,7 @@ Require Import Linear.
 Open Local Scope error_monad_scope.
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** * Spilling and reloading *)
 

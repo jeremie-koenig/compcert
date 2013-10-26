@@ -414,7 +414,6 @@ Qed.
 
 Class ExtFunOps (external_function: Type) := {
   ef_sig: external_function -> signature;
-  ef_inline: external_function -> bool;
   ef_reloads: external_function -> bool
 }.
 
@@ -424,6 +423,25 @@ Class ExternalFunctions (external_function: Type)
 }.
 
 Arguments ExternalFunctions external_function {ef_ops}.
+
+Class SyntaxConfigOps external_function
+  `{ef_ops: ExtFunOps external_function} :=
+{
+}.
+
+Class SyntaxConfiguration external_function
+  `{sf_ops: SyntaxConfigOps external_function}: Prop :=
+{
+  syntax_external_functions :> ExternalFunctions external_function;
+
+  (* Prevent [intuition] from destructing instances of [SyntaxConfiguration],
+    so that the old proof scripts continue to work. *)
+  ugly_workaround_dependee: Type;
+  ugly_workaround_depender: ugly_workaround_dependee
+}.
+
+Arguments SyntaxConfigOps external_function {ef_ops}.
+Arguments SyntaxConfiguration external_function {ef_ops sf_ops}.
 
 Inductive annot_arg : Type :=
   | AA_arg (ty: typ)
@@ -439,15 +457,15 @@ Fixpoint annot_args_typ (targs: list annot_arg) : list typ :=
 
 (** Function definitions are the union of internal and external functions. *)
 
-Inductive fundef `{ef_ops: ExtFunOps} (F: Type): Type :=
+Inductive fundef `{sc_ops: SyntaxConfigOps} (F: Type): Type :=
   | Internal: F -> fundef F
   | External: external_function -> fundef F.
 
-Arguments External {external_function ef_ops} [F] _.
+Arguments External {external_function ef_ops sc_ops} [F] _.
 
 Section TRANSF_FUNDEF.
 
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 Variable A B: Type.
 Variable transf: A -> B.
 
@@ -461,7 +479,7 @@ End TRANSF_FUNDEF.
 
 Section TRANSF_PARTIAL_FUNDEF.
 
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 Variable A B: Type.
 Variable transf_partial: A -> res B.
 
@@ -472,4 +490,3 @@ Definition transf_partial_fundef (fd: fundef A): res (fundef B) :=
   end.
 
 End TRANSF_PARTIAL_FUNDEF.
-

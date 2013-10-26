@@ -21,7 +21,7 @@ Require Import Lineartyping.
 Require Import Conventions.
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** * Resource bounds for a function *)
 

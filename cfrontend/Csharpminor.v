@@ -23,9 +23,7 @@ Require Import Events.
 Require Import Globalenvs.
 Require Cminor.
 Require Import Smallstep.
-
-Section WITHMEM1.
-Context `{Hcc: CompilerConfiguration}.
+Require Import BuiltinFunctions.
 
 (** Abstract syntax *)
 
@@ -57,12 +55,12 @@ Inductive expr : Type :=
 
 Definition label := ident.
 
-Inductive stmt `{ef_ops: ExtFunOps external_function} : Type :=
+Inductive stmt : Type :=
   | Sskip: stmt
   | Sset : ident -> expr -> stmt
   | Sstore : memory_chunk -> expr -> expr -> stmt
   | Scall : option ident -> signature -> expr -> list expr -> stmt
-  | Sbuiltin : option ident -> external_function -> list expr -> stmt
+  | Sbuiltin : option ident -> builtin_function -> list expr -> stmt
   | Sseq: stmt -> stmt -> stmt
   | Sifthenelse: expr -> stmt -> stmt -> stmt
   | Sloop: stmt -> stmt
@@ -73,9 +71,12 @@ Inductive stmt `{ef_ops: ExtFunOps external_function} : Type :=
   | Slabel: label -> stmt -> stmt
   | Sgoto: label -> stmt
 
-with lbl_stmt `{ef_ops: ExtFunOps external_function} : Type :=
+with lbl_stmt : Type :=
   | LSdefault: stmt -> lbl_stmt
   | LScase: int -> stmt -> lbl_stmt -> lbl_stmt.
+
+Section WITHMEM.
+Context `{Hcc: CompilerConfiguration}.
 
 (** Functions are composed of a return type, a list of parameter names,
   a list of local variables with their sizes, a list of temporary variables,
@@ -167,18 +168,16 @@ Inductive state `{mem_ops: Mem.MemoryOps mem}: Type :=
              (m: mem),                  (**r memory state *)
       state.
 
-End WITHMEM1.
-
 (** Pop continuation until a call or stop *)
 
-Fixpoint call_cont `{ef_ops: ExtFunOps} (k: cont) : cont :=
+Fixpoint call_cont (k: cont) : cont :=
   match k with
   | Kseq s k => call_cont k
   | Kblock k => call_cont k
   | _ => k
   end.
 
-Definition is_call_cont `{ef_ops: ExtFunOps} (k: cont) : Prop :=
+Definition is_call_cont (k: cont) : Prop :=
   match k with
   | Kstop => True
   | Kcall _ _ _ _ _ => True
@@ -187,13 +186,13 @@ Definition is_call_cont `{ef_ops: ExtFunOps} (k: cont) : Prop :=
 
 (** Resolve [switch] statements. *)
 
-Fixpoint select_switch `{ef_ops: ExtFunOps} (n: int) (sl: lbl_stmt) {struct sl} : lbl_stmt :=
+Fixpoint select_switch (n: int) (sl: lbl_stmt) {struct sl} : lbl_stmt :=
   match sl with
   | LSdefault _ => sl
   | LScase c s sl' => if Int.eq c n then sl else select_switch n sl'
   end.
 
-Fixpoint seq_of_lbl_stmt `{ef_ops: ExtFunOps} (sl: lbl_stmt) : stmt :=
+Fixpoint seq_of_lbl_stmt (sl: lbl_stmt) : stmt :=
   match sl with
   | LSdefault s => s
   | LScase c s sl' => Sseq s (seq_of_lbl_stmt sl')
@@ -202,7 +201,7 @@ Fixpoint seq_of_lbl_stmt `{ef_ops: ExtFunOps} (sl: lbl_stmt) : stmt :=
 (** Find the statement and manufacture the continuation 
   corresponding to a label *)
 
-Fixpoint find_label `{ef_ops: ExtFunOps} (lbl: label) (s: stmt) (k: cont)
+Fixpoint find_label (lbl: label) (s: stmt) (k: cont)
                     {struct s}: option (stmt * cont) :=
   match s with
   | Sseq s1 s2 =>
@@ -226,7 +225,7 @@ Fixpoint find_label `{ef_ops: ExtFunOps} (lbl: label) (s: stmt) (k: cont)
   | _ => None
   end
 
-with find_label_ls `{ef_ops: ExtFunOps} (lbl: label) (sl: lbl_stmt) (k: cont)
+with find_label_ls (lbl: label) (sl: lbl_stmt) (k: cont)
                    {struct sl}: option (stmt * cont) :=
   match sl with
   | LSdefault s => find_label lbl s k
@@ -236,9 +235,6 @@ with find_label_ls `{ef_ops: ExtFunOps} (lbl: label) (sl: lbl_stmt) (k: cont)
       | None => find_label_ls lbl sl' k
       end
   end.
-
-Section WITHMEM2.
-Context `{Hcc: CompilerConfiguration}.
 
 (** Evaluation of operator applications. *)
 
@@ -481,4 +477,4 @@ Inductive final_state: state -> int -> Prop :=
 Definition semantics (p: program) :=
   Semantics step (initial_state p) final_state (Genv.globalenv p).
 
-End WITHMEM2.
+End WITHMEM.

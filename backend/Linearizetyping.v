@@ -28,7 +28,7 @@ Require Import Conventions.
 (** * Type preservation for the linearization pass *)
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 Lemma wt_add_instr:
   forall f i k, wt_instr f i -> wt_code f k -> wt_code f (i :: k).

@@ -28,6 +28,7 @@ Require Import Smallstep.
 Require Import Op.
 Require Import Locations.
 Require Import Conventions.
+Require Import BuiltinFunctions.
 Require Stacklayout.
 
 (** * Abstract syntax *)
@@ -49,16 +50,13 @@ Require Stacklayout.
   distinction between the caller's frame and the callee's frame is
   made explicit. *)
 
-Section WITHEF.
-Context `{Hef: ExternalFunctions}.
-
 Definition label := positive.
 
 Inductive annot_param: Type :=
   | APreg: mreg -> annot_param
   | APstack: memory_chunk -> Z -> annot_param.
 
-Inductive instruction `{ef_ops: ExtFunOps external_function}: Type :=
+Inductive instruction: Type :=
   | Mgetstack: int -> typ -> mreg -> instruction
   | Msetstack: mreg -> int -> typ -> instruction
   | Mgetparam: int -> typ -> mreg -> instruction
@@ -67,13 +65,16 @@ Inductive instruction `{ef_ops: ExtFunOps external_function}: Type :=
   | Mstore: memory_chunk -> addressing -> list mreg -> mreg -> instruction
   | Mcall: signature -> mreg + ident -> instruction
   | Mtailcall: signature -> mreg + ident -> instruction
-  | Mbuiltin: external_function -> list mreg -> mreg -> instruction
-  | Mannot: external_function -> list annot_param -> instruction
+  | Mbuiltin: builtin_function -> list mreg -> mreg -> instruction
+  | Mannot: builtin_function -> list annot_param -> instruction
   | Mlabel: label -> instruction
   | Mgoto: label -> instruction
   | Mcond: condition -> list mreg -> label -> instruction
   | Mjumptable: mreg -> list label -> instruction
   | Mreturn: instruction.
+
+Section WITHEF.
+Context `{Hsc: SyntaxConfiguration}.
 
 Definition code := list instruction.
 

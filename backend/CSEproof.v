@@ -296,7 +296,7 @@ Proof.
   destruct chunk; auto; apply wf_add_rhs; auto.
 Qed.
 
-Lemma wf_transfer `{ef_ops: ExtFunOps}:
+Lemma wf_transfer:
   forall f pc n, wf_numbering n -> wf_numbering (transfer f pc n).
 Proof.
   intros. unfold transfer. 
@@ -313,7 +313,7 @@ Qed.
 (** As a consequence, the numberings computed by the static analysis
   are well formed. *)
 
-Theorem wf_analyze `{ef_ops: ExtFunOps}:
+Theorem wf_analyze:
   forall f approx pc, analyze f = Some approx -> wf_numbering approx!!pc.
 Proof.
   unfold analyze; intros.

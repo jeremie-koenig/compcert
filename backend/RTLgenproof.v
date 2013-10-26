@@ -1122,7 +1122,7 @@ Proof.
   inv TS. 
   exploit transl_exprlist_correct; eauto.
   intros [rs' [E [F [G J]]]].
-  edestruct external_call_mem_extends as [tv [tm' [A [B [C D]]]]]; eauto.
+  edestruct (external_call_mem_extends ef) as [tv [tm' [A [B [C D]]]]]; eauto.
   econstructor; split.
   left. eapply plus_right. eexact E.
   eapply exec_Ibuiltin. eauto. 

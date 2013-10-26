@@ -700,7 +700,7 @@ Opaque loadind.
   inv AT. monadInv H3. 
   exploit functions_transl; eauto. intro FN.
   generalize (transf_function_no_overflow _ _ H2); intro NOOV.
-  exploit external_call_mem_extends; eauto. eapply preg_vals; eauto.
+  exploit (external_call_mem_extends ef); eauto. eapply preg_vals; eauto.
   intros [vres' [m2' [A [B [C D]]]]].
   left. econstructor; split. apply plus_one. 
   eapply exec_step_builtin. eauto. eauto.
@@ -723,7 +723,7 @@ Opaque loadind.
   exploit functions_transl; eauto. intro FN.
   generalize (transf_function_no_overflow _ _ H3); intro NOOV.
   exploit annot_arguments_match; eauto. intros [vargs' [P Q]]. 
-  exploit external_call_mem_extends; eauto.
+  exploit (external_call_mem_extends ef); eauto.
   intros [vres' [m2' [A [B [C D]]]]].
   left. econstructor; split. apply plus_one. 
   eapply exec_step_annot. eauto. eauto.

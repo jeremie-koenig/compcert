@@ -27,9 +27,7 @@ Require Import Smallstep.
 Require Import Op.
 Require Import Locations.
 Require Import LTL.
-
-Section WITHMEM.
-Context `{Hcc: CompilerConfiguration}.
+Require Import BuiltinFunctions.
 
 (** * Abstract syntax *)
 
@@ -42,18 +40,21 @@ Definition label := positive.
   transfer control to the given code label.  Labels are explicitly
   inserted in the instruction list as pseudo-instructions [Llabel]. *)
 
-Inductive instruction `{ef_ops: ExtFunOps external_function}: Type :=
+Inductive instruction: Type :=
   | Lop: operation -> list loc -> loc -> instruction
   | Lload: memory_chunk -> addressing -> list loc -> loc -> instruction
   | Lstore: memory_chunk -> addressing -> list loc -> loc -> instruction
   | Lcall: signature -> loc + ident -> list loc -> loc -> instruction
   | Ltailcall: signature -> loc + ident -> list loc -> instruction
-  | Lbuiltin: external_function -> list loc -> loc -> instruction
+  | Lbuiltin: builtin_function -> list loc -> loc -> instruction
   | Llabel: label -> instruction
   | Lgoto: label -> instruction
   | Lcond: condition -> list loc -> label -> instruction
   | Ljumptable: loc -> list label -> instruction
   | Lreturn: option loc -> instruction.
+
+Section WITHMEM.
+Context `{Hcc: CompilerConfiguration}.
 
 Definition code: Type := list instruction.
 

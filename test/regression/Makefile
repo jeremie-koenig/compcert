@@ -11,8 +11,11 @@ TESTS=attribs1 bitfields1 bitfields2 bitfields3 bitfields4 \
   bitfields5 bitfields6 bitfields7 bitfields8 \
   expr1 expr6 funptr2 initializers volatile1 volatile2 volatile3 \
   funct3 expr5 struct7 struct8 struct11 casts1 casts2 char1 \
-  sizeof1 sizeof2 packedstruct1 packedstruct2 \
+  sizeof1 sizeof2 \
   instrsel bool compar switch
+
+# Disabled after removal of [EF_builtin]
+# packedstruct1 packedstruct2 \
 
 # Other tests: should compile to .s without errors (but expect warnings)
 EXTRAS=annot1 commaprec expr2 expr3 expr4 extern1 funct2 funptr1 init1 \

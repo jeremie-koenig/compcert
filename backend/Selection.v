@@ -30,6 +30,7 @@ Require Cminor.
 Require Import Op.
 Require Import CminorSel.
 Require Import SelectOp.
+Require Import BuiltinFunctions.
 
 Open Local Scope cminorsel_scope.
 
@@ -48,9 +49,9 @@ Definition load (chunk: memory_chunk) (e1: expr) :=
   | (mode, args) => Eload chunk mode args
   end.
 
-Definition store `{ef_ops: ExtFunOps} (chunk: memory_chunk) (e1 e2: expr) :=
+Definition store (chunk: memory_chunk) (e1 e2: expr): stmt :=
   match addressing chunk e1 with
-  | (mode, args) => Sstore (ef_ops := ef_ops) chunk mode args e2
+  | (mode, args) => Sstore chunk mode args e2
   end.
 
 (** Instruction selection for operator applications.  Most of the work
@@ -126,10 +127,9 @@ Fixpoint sel_exprlist (al: list Cminor.expr) : exprlist :=
 (** Recognition of immediate calls and calls to built-in functions
     that should be inlined *)
 
-Inductive call_kind `{ef_ops: ExtFunOps} : Type :=
+Inductive call_kind : Type :=
   | Call_default
-  | Call_imm (id: ident)
-  | Call_builtin (ef: external_function).
+  | Call_imm (id: ident).
 
 Definition expr_is_addrof_ident (e: Cminor.expr) : option ident :=
   match e with
@@ -139,20 +139,12 @@ Definition expr_is_addrof_ident (e: Cminor.expr) : option ident :=
   end.
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 Definition classify_call (ge: Cminor.genv) (e: Cminor.expr) : call_kind :=
   match expr_is_addrof_ident e with
   | None => Call_default
-  | Some id =>
-      match Genv.find_symbol ge id with
-      | None => Call_imm id
-      | Some b =>
-          match Genv.find_funct_ptr ge b with
-          | Some(External ef) => if ef_inline ef then Call_builtin ef else Call_imm id
-          | _ => Call_imm id
-          end
-      end
+  | Some id => Call_imm id
   end.
 
 (** Conversion from Cminor statements to Cminorsel statements. *)
@@ -166,7 +158,6 @@ Fixpoint sel_stmt (ge: Cminor.genv) (s: Cminor.stmt) : stmt :=
       match classify_call ge fn with
       | Call_default => Scall optid sg (inl _ (sel_expr fn)) (sel_exprlist args)
       | Call_imm id  => Scall optid sg (inr _ id) (sel_exprlist args)
-      | Call_builtin ef => Sbuiltin optid ef (sel_exprlist args)
       end
   | Cminor.Sbuiltin optid ef args =>
       Sbuiltin optid ef (sel_exprlist args)

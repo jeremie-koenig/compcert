@@ -25,6 +25,7 @@ Require Import RTL.
 Require Import Lattice.
 Require Import Kildall.
 Require Import ConstpropOp.
+Require Import BuiltinFunctions.
 
 (** * Static analysis *)
 
@@ -190,7 +191,7 @@ Definition approx_reg (app: D.t) (r: reg) :=
 Definition approx_regs (app: D.t) (rl: list reg):=
   List.map (approx_reg app) rl.
 
-Definition transfer `{ef_ops: ExtFunOps} (gapp: global_approx) (f: function) (pc: node) (before: D.t) :=
+Definition transfer (gapp: global_approx) (f: function) (pc: node) (before: D.t) :=
   match f.(fn_code)!pc with
   | None => before
   | Some i =>
@@ -220,7 +221,7 @@ Definition transfer `{ef_ops: ExtFunOps} (gapp: global_approx) (f: function) (pc
 
 Module DS := Dataflow_Solver(D)(NodeSetForward).
 
-Definition analyze `{ef_ops: ExtFunOps} (gapp: global_approx) (f: RTL.function): PMap.t D.t :=
+Definition analyze (gapp: global_approx) (f: RTL.function): PMap.t D.t :=
   match DS.fixpoint (successors f) (transfer gapp f) 
                     ((f.(fn_entrypoint), D.top) :: nil) with
   | None => PMap.init D.top
@@ -265,13 +266,6 @@ Definition transf_ros (app: D.t) (ros: reg + ident) : reg + ident :=
   end.
 
 Parameter generate_float_constants : unit -> bool.
-
-Section WITHEF.
-
-(** For now, [builtin_strength_reduction] below uses the concrete
-  [external_function], therefore we cannot generalize it. *)
-Require Import ExtFunImpl.
-Existing Instances ef_ops ef_spec.
 
 Definition const_for_result (a: approx) : option operation :=
   match a with
@@ -321,7 +315,7 @@ Function annot_strength_reduction
   end.
 
 Function builtin_strength_reduction
-      (app: D.t) (ef: external_function) (args: list reg) :=
+      (app: D.t) (ef: builtin_function) (args: list reg) :=
   match ef, args with
   | EF_vload chunk, r1 :: nil =>
       match approx_reg app r1 with
@@ -406,6 +400,9 @@ Definition transf_function (gapp: global_approx) (f: function) : function :=
     f.(fn_stacksize)
     (transf_code gapp f approxs f.(fn_code))
     f.(fn_entrypoint).
+
+Section WITHEF.
+Context `{Hsc: SyntaxConfiguration}.
 
 Definition transf_fundef (gapp: global_approx) (fd: fundef) : fundef :=
   AST.transf_fundef (transf_function gapp) fd.

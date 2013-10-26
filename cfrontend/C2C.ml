@@ -28,6 +28,7 @@ open Cop
 open Csyntax
 open Initializers
 open Floats
+open BuiltinFunctions
 
 (** Record useful information about global variables and functions,
   and associate it with the corresponding atoms. *)
@@ -179,18 +180,18 @@ let make_builtin_memcpy args =
   match args with
   | Econs(dst, Econs(src, Econs(sz, Econs(al, Enil)))) ->
       let sz1 =
-        match Initializers.constval ef_ops Memimpl.mem_ops sz with
+        match Initializers.constval Memimpl.mem_ops sz with
         | Errors.OK(Vint n) -> n
         | _ -> error "ill-formed __builtin_memcpy_aligned (3rd argument must be 
 a constant)"; Integers.Int.zero in
       let al1 =
-        match Initializers.constval ef_ops Memimpl.mem_ops al with
+        match Initializers.constval Memimpl.mem_ops al with
         | Errors.OK(Vint n) -> n
         | _ -> error "ill-formed __builtin_memcpy_aligned (4th argument must be 
 a constant)"; Integers.Int.one in
       (* to check: sz1 > 0, al1 divides sz1, al1 = 1|2|4|8 *)
       Ebuiltin(EF_memcpy(sz1, al1),
-               Tcons(typeof ef_ops dst, Tcons(typeof ef_ops src, Tnil)),
+               Tcons(typeof dst, Tcons(typeof src, Tnil)),
                Econs(dst, Econs(src, Enil)), Tvoid)
   | _ ->
     assert false
@@ -433,10 +434,10 @@ let rec convertExpr env e =
       Eaddrof(convertLvalue env e1, ty)
   | C.EUnop(C.Opreincr, e1) ->
       check_assignop "pre-increment" env e1;
-      coq_Epreincr ef_ops Incr (convertLvalue env e1) ty
+      coq_Epreincr Incr (convertLvalue env e1) ty
   | C.EUnop(C.Opredecr, e1) ->
       check_assignop "pre-decrement" env e1;
-      coq_Epreincr ef_ops Decr (convertLvalue env e1) ty
+      coq_Epreincr Decr (convertLvalue env e1) ty
   | C.EUnop(C.Opostincr, e1) ->
       check_assignop "post-increment" env e1;
       Epostincr(Incr, convertLvalue env e1, ty)
@@ -576,12 +577,12 @@ and convertLvalue env e =
   | C.EUnop(C.Oarrow id, e1) ->
       let e1' = convertExpr env e1 in
       let ty1 =
-        match typeof ef_ops e1' with
+        match typeof e1' with
         | Tpointer(t, _) -> t
         | _ -> error ("wrong type for ->" ^ id ^ " access"); Tvoid in
       Efield(Evalof(Ederef(e1', ty1), ty1), intern_string id, ty)
   | C.EBinop(C.Oindex, e1, e2, _) ->
-      coq_Eindex ef_ops (convertExpr env e1) (convertExpr env e2) ty
+      coq_Eindex (convertExpr env e1) (convertExpr env e2) ty
   | _ ->
       error "illegal l-value"; ezero
 
@@ -739,9 +740,7 @@ let convertFundecl env (sto, id, ty, optinit) =
   let ef =
     if id.name = "malloc" then EF_malloc else
     if id.name = "free" then EF_free else
-    if List.mem_assoc id.name builtins.functions
-    then EF_builtin(id', sg)
-    else EF_external(id', sg) in
+    EF_external(id', sg) in
   (id', Gfun(External(ef, args, res)))
 
 (** Initializers *)
@@ -770,7 +769,7 @@ and convertInitList env il =
   | i :: il' -> Init_cons(convertInit env i, convertInitList env il')
 
 let convertInitializer env ty i =
-  match Initializers.transl_init ef_ops Memimpl.mem_ops (convertTyp env ty) (convertInit env i)
+  match Initializers.transl_init Memimpl.mem_ops (convertTyp env ty) (convertInit env i)
   with
   | Errors.OK init -> init
   | Errors.Error msg ->

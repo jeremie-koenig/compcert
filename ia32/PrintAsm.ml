@@ -20,6 +20,7 @@ open AST
 open ExtFunImpl
 open Memdata
 open Asm
+open BuiltinFunctions
 
 module StringSet = Set.Make(String)
 
@@ -679,8 +680,6 @@ let print_instruction oc = function
       fprintf oc "	addl	$%ld, %%esp\n" sz
   | Pbuiltin(ef, args, res) ->
       begin match ef with
-      | EF_builtin(name, sg) ->
-          print_builtin_inline oc (extern_atom name) args res
       | EF_vload chunk ->
           print_builtin_vload oc chunk args res
       | EF_vstore chunk ->

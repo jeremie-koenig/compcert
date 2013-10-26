@@ -359,7 +359,7 @@ End WITHMEM.
 (** * Correspondence between Mach code and Asm code *)
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 Lemma find_instr_in:
   forall c pos i,

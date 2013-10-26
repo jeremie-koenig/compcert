@@ -991,7 +991,7 @@ Proof.
 
 (* builtin *)
   exploit tr_funbody_inv; eauto. intros TR; inv TR.
-  exploit external_call_mem_inject; eauto. 
+  exploit (external_call_mem_inject ef); eauto. 
     eapply match_stacks_inside_globals; eauto.
     instantiate (1 := rs'##(sregs ctx args)). eapply agree_val_regs; eauto. 
   intros [F1 [v1 [m1' [A [B [C [D [E [J K]]]]]]]]].
@@ -1002,17 +1002,17 @@ Proof.
   econstructor.
     eapply match_stacks_inside_set_reg. 
     eapply match_stacks_inside_extcall with (F1 := F) (F2 := F1) (m1 := m) (m1' := m'0); eauto.
-    intros; eapply external_call_max_perm; eauto. 
-    intros; eapply external_call_max_perm; eauto. 
+    intros; eapply (external_call_max_perm ef); eauto. 
+    intros; eapply (external_call_max_perm ef); eauto. 
   auto. 
   eapply agree_set_reg. eapply agree_regs_incr; eauto. auto. auto. 
   apply J; auto.
   auto. 
-  eapply external_call_valid_block; eauto. 
+  eapply (external_call_valid_block ef); eauto. 
   eapply range_private_extcall; eauto. 
-    intros; eapply external_call_max_perm; eauto. 
+    intros; eapply (external_call_max_perm ef); eauto. 
   auto. 
-  intros. apply SSZ2. eapply external_call_max_perm; eauto. 
+  intros. apply SSZ2. eapply (external_call_max_perm ef); eauto. 
 
 (* cond *)
   exploit tr_funbody_inv; eauto. intros TR; inv TR.

@@ -22,6 +22,7 @@ Require Import Floats.
 Require Import Values.
 Require Import AST.
 Require Import Memory.
+Require Import ExtFunImpl ExtCallImpl.
 Require Import Events.
 Require Import Globalenvs.
 Require Import Determinism.
@@ -30,6 +31,7 @@ Require Import Cop.
 Require Import Csyntax.
 Require Import Csem.
 Require Cstrategy.
+Require Import BuiltinFunctions.
 
 (** Error monad with options or lists *)
 
@@ -58,8 +60,7 @@ Notation " 'check' A ; B" := (if A then B else nil)
   : list_monad_scope.
 
 Section WITHEF.
-Require Import ExtFunImpl ExtCallImpl.
-Existing Instances ef_ops ef_spec ec_ops ec_spec.
+Existing Instances ef_ops sc_ops ef_spec ec_ops cc_ops ec_spec.
 
 Definition is_val (a: expr) : option (val * type) :=
   match a with
@@ -499,36 +500,34 @@ Definition do_ef_annot_val (text: ident) (targ: typ)
   | _ => None
   end.
 
-Definition do_external (ef: external_function):
+Definition do_builtin (bf: builtin_function):
        world -> list val -> mem -> option (world * trace * val * mem) :=
-  match ef with
-  | EF_external name sg => do_ef_external name sg
-  | EF_builtin name sg => do_ef_external name sg
+  match bf with
   | EF_vload chunk => do_ef_volatile_load chunk
   | EF_vstore chunk => do_ef_volatile_store chunk
   | EF_vload_global chunk id ofs => do_ef_volatile_load_global chunk id ofs
   | EF_vstore_global chunk id ofs => do_ef_volatile_store_global chunk id ofs
-  | EF_malloc => do_ef_malloc
-  | EF_free => do_ef_free
   | EF_memcpy sz al => do_ef_memcpy sz al
   | EF_annot text targs => do_ef_annot text targs
   | EF_annot_val text targ => do_ef_annot_val text targ
   | EF_inline_asm text => do_ef_annot text nil
   end.
 
-Lemma do_ef_external_sound:
+Definition do_external (ef: external_function):
+       world -> list val -> mem -> option (world * trace * val * mem) :=
+  match ef with
+  | EF_external name sg => do_ef_external name sg
+  | EF_malloc => do_ef_malloc
+  | EF_free => do_ef_free
+  end.
+
+Lemma do_bf_builtin_sound:
   forall ef w vargs m w' t vres m',
-  do_external ef w vargs m = Some(w', t, vres, m') ->
+  do_builtin ef w vargs m = Some(w', t, vres, m') ->
   external_call ef ge vargs m t vres m' /\ possible_trace w t w'.
 Proof with try congruence.
+
   intros until m'.
-  assert (IO: forall name sg,
-             do_ef_external name sg w vargs m = Some(w', t, vres, m') ->
-             extcall_io_sem name sg ge vargs m t vres m' /\ possible_trace w t w').
-    intros until sg. unfold do_ef_external. mydestr. destruct p as [res w'']; mydestr.
-    split. econstructor. apply list_eventval_of_val_sound; auto. 
-    apply val_of_eventval_sound; auto. 
-    econstructor. constructor; eauto. constructor.
 
   assert (VLOAD: forall chunk vargs,
     do_ef_volatile_load chunk w vargs m = Some (w', t, vres, m') ->
@@ -547,10 +546,6 @@ Proof with try congruence.
   exploit do_volatile_store_sound; eauto. intuition. econstructor; eauto.
 
   destruct ef; simpl.
-(* EF_external *)
-  auto. 
-(* EF_builtin *)
-  auto.
 (* EF_vload *)
   auto.
 (* EF_vstore *)
@@ -563,14 +558,6 @@ Proof with try congruence.
   rewrite volatile_store_global_charact.
   unfold do_ef_volatile_store_global. destruct (Genv.find_symbol ge)...
   intros. exploit VSTORE; eauto. intros [A B]. split; auto. exists b; auto.
-(* EF_malloc *)
-  unfold do_ef_malloc. destruct vargs... destruct v... destruct vargs...
-  destruct (Mem.alloc m (-4) (Int.unsigned i)) as [m1 b] eqn:?. mydestr.
-  split. econstructor; eauto. constructor.
-(* EF_free *)
-  unfold do_ef_free. destruct vargs... destruct v... destruct vargs... 
-  mydestr. destruct v... mydestr. 
-  split. econstructor; eauto. omega. constructor.
 (* EF_memcpy *)
   unfold do_ef_memcpy. destruct vargs... destruct v... destruct vargs... 
   destruct v... destruct vargs... mydestr. red in m0. 
@@ -590,18 +577,12 @@ Proof with try congruence.
   econstructor. constructor; eauto. constructor.
 Qed.
 
-Lemma do_ef_external_complete:
+Lemma do_bf_builtin_complete:
   forall ef w vargs m w' t vres m',
   external_call ef ge vargs m t vres m' -> possible_trace w t w' ->
-  do_external ef w vargs m = Some(w', t, vres, m').
+  do_builtin ef w vargs m = Some(w', t, vres, m').
 Proof.
   intros.
-  assert (IO: forall name sg,
-             extcall_io_sem name sg ge vargs m t vres m' ->
-             do_ef_external name sg w vargs m = Some (w', t, vres, m')).
-    intros. inv H1. inv H0. inv H8. inv H6. 
-    unfold do_ef_external. rewrite (list_eventval_of_val_complete _ _ _ H2). rewrite H8. 
-    rewrite (val_of_eventval_complete _ _ _ H3). auto.
  
   assert (VLOAD: forall chunk vargs,
              volatile_load_sem chunk ge vargs m t vres m' ->
@@ -616,10 +597,6 @@ Proof.
   exploit do_volatile_store_complete; eauto. intros EQ; rewrite EQ; auto.
 
   destruct ef; simpl in *.
-(* EF_external *)
-  auto.
-(* EF_builtin *)
-  auto.
 (* EF_vload *)
   auto.
 (* EF_vstore *)
@@ -630,12 +607,6 @@ Proof.
 (* EF_vstore *)
   rewrite volatile_store_global_charact in H. destruct H as [b [P Q]]. 
   unfold do_ef_volatile_store_global. rewrite P. auto. 
-(* EF_malloc *)
-  inv H; unfold do_ef_malloc. 
-  inv H0. rewrite H1. rewrite H2. auto.
-(* EF_free *)
-  inv H; unfold do_ef_free.
-  inv H0. rewrite H1. rewrite zlt_true. rewrite H3. auto. omega.
 (* EF_memcpy *)
   inv H; unfold do_ef_memcpy.
   inv H0. rewrite pred_dec_true. rewrite H7; rewrite H8; auto.
@@ -650,6 +621,58 @@ Proof.
   inv H; unfold do_ef_annot. inv H0. inv H6. inv H4. inv H1. simpl. auto.
 Qed.
 
+Lemma do_ef_external_sound:
+  forall ef w vargs m w' t vres m',
+  do_external ef w vargs m = Some(w', t, vres, m') ->
+  external_call ef ge vargs m t vres m' /\ possible_trace w t w'.
+Proof with try congruence.
+  intros until m'.
+
+  assert (IO: forall name sg,
+             do_ef_external name sg w vargs m = Some(w', t, vres, m') ->
+             extcall_io_sem name sg ge vargs m t vres m' /\ possible_trace w t w').
+    intros until sg. unfold do_ef_external. mydestr. destruct p as [res w'']; mydestr.
+    split. econstructor. apply list_eventval_of_val_sound; auto. 
+    apply val_of_eventval_sound; auto. 
+    econstructor. constructor; eauto. constructor.
+
+  destruct ef; simpl.
+(* EF_external *)
+  auto. 
+(* EF_malloc *)
+  unfold do_ef_malloc. destruct vargs... destruct v... destruct vargs...
+  destruct (Mem.alloc m (-4) (Int.unsigned i)) as [m1 b] eqn:?. mydestr.
+  split. econstructor; eauto. constructor.
+(* EF_free *)
+  unfold do_ef_free. destruct vargs... destruct v... destruct vargs... 
+  mydestr. destruct v... mydestr. 
+  split. econstructor; eauto. omega. constructor.
+Qed.
+
+Lemma do_ef_external_complete:
+  forall ef w vargs m w' t vres m',
+  external_call ef ge vargs m t vres m' -> possible_trace w t w' ->
+  do_external ef w vargs m = Some(w', t, vres, m').
+Proof.
+  intros.
+  assert (IO: forall name sg,
+             extcall_io_sem name sg ge vargs m t vres m' ->
+             do_ef_external name sg w vargs m = Some (w', t, vres, m')).
+    intros. inv H1. inv H0. inv H8. inv H6. 
+    unfold do_ef_external. rewrite (list_eventval_of_val_complete _ _ _ H2). rewrite H8. 
+    rewrite (val_of_eventval_complete _ _ _ H3). auto.
+
+  destruct ef; simpl in *.
+(* EF_external *)
+  auto.
+(* EF_malloc *)
+  inv H; unfold do_ef_malloc. 
+  inv H0. rewrite H1. rewrite H2. auto.
+(* EF_free *)
+  inv H; unfold do_ef_free.
+  inv H0. rewrite H1. rewrite zlt_true. rewrite H3. auto. omega.
+Qed.
+ 
 (** * Reduction of expressions *)
 
 Inductive reduction: Type :=
@@ -898,7 +921,7 @@ Fixpoint step_expr (k: kind) (a: expr) (m: mem): reducts expr :=
       match is_val_list rargs with
       | Some vtl =>
           do vargs <- sem_cast_arguments vtl tyargs;
-          match do_external ef w vargs m with
+          match do_builtin ef w vargs m with
           | None => stuck
           | Some(w',t,v,m') => topred (Rred (Eval v ty) m' t)
           end
@@ -1528,15 +1551,15 @@ Proof with (try (apply not_invert_ok; simpl; intro; myinv; intuition congruence;
   exploit is_val_list_all_values; eauto. intros ALLVAL.
   (* top *)
   destruct (sem_cast_arguments vtl tyargs) as [vargs|] eqn:?... 
-  destruct (do_external ef w vargs m) as [[[[? ?] v] m'] | ] eqn:?...
-  exploit do_ef_external_sound; eauto. intros [EC PT].
+  destruct (do_builtin ef w vargs m) as [[[[? ?] v] m'] | ] eqn:?...
+  exploit do_bf_builtin_sound; eauto. intros [EC PT].
   apply topred_ok; auto. red. split; auto. eapply red_builtin; eauto. 
   eapply sem_cast_arguments_sound; eauto.
   exists w0; auto.
   apply not_invert_ok; simpl; intros; myinv. specialize (H ALLVAL). myinv.
   assert (x = vargs). 
     exploit sem_cast_arguments_complete; eauto. intros [vtl' [A B]]. congruence.
-  subst x. exploit do_ef_external_complete; eauto. congruence.
+  subst x. exploit do_bf_builtin_complete; eauto. congruence.
   apply not_invert_ok; simpl; intros; myinv. specialize (H ALLVAL). myinv. 
   exploit sem_cast_arguments_complete; eauto. intros [vtl' [A B]]. congruence.
   (* depth *)
@@ -1631,7 +1654,7 @@ Proof.
 (* builtin *)
   simpl in *.
   exploit sem_cast_arguments_complete; eauto. intros [vtl [A B]].
-  exploit do_ef_external_complete; eauto. intros C. 
+  exploit do_bf_builtin_complete; eauto. intros C. 
   rewrite A. rewrite B. rewrite C. auto.
 Qed.
 

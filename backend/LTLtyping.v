@@ -29,7 +29,7 @@ Require Import Conventions.
   i.e. either non-temporary registers or [Local] stack locations. *)
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 Section WT_INSTR.
 

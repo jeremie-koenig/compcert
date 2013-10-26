@@ -29,6 +29,7 @@ Require Import Ctypes.
 Require Import Cop.
 Require Import Csyntax.
 Require Import Smallstep.
+Require Import BuiltinFunctions.
 
 Section WITHMEM.
 Context `{Hcc: CompilerConfiguration}.
@@ -160,7 +161,6 @@ Fixpoint select_switch (n: int) (sl: labeled_statements)
 (** Turn a labeled statement into a sequence *)
 
 Fixpoint seq_of_labeled_statement
-                 {external_function} `{ef_ops: ExtFunOps external_function}
                  (sl: labeled_statements) : statement :=
   match sl with
   | LSdefault s => s
@@ -444,7 +444,7 @@ End EXPR.
     after the statement or expression under consideration has
     evaluated completely. *)
 
-Inductive cont {external_function} `{ef_ops: ExtFunOps external_function}: Type :=
+Inductive cont: Type :=
   | Kstop: cont
   | Kdo: cont -> cont       (**r [Kdo k] = after [x] in [x;] *)
   | Kseq: statement -> cont -> cont    (**r [Kseq s2 k] = after [s1] in [s1;s2] *)
@@ -527,8 +527,7 @@ Inductive state `{mem_ops: Mem.MemoryOps mem}: Type :=
 (** Find the statement and manufacture the continuation 
   corresponding to a label. *)
 
-Fixpoint find_label {external_function} `{ef_ops: ExtFunOps external_function}
-                    (lbl: label) (s: statement) (k: cont) 
+Fixpoint find_label (lbl: label) (s: statement) (k: cont) 
                     {struct s}: option (statement * cont) :=
   match s with
   | Ssequence s1 s2 =>
@@ -561,8 +560,7 @@ Fixpoint find_label {external_function} `{ef_ops: ExtFunOps external_function}
   | _ => None
   end
 
-with find_label_ls {external_function} `{ef_ops: ExtFunOps external_function}
-                    (lbl: label) (sl: labeled_statements) (k: cont) 
+with find_label_ls (lbl: label) (sl: labeled_statements) (k: cont) 
                     {struct sl}: option (statement * cont) :=
   match sl with
   | LSdefault s => find_label lbl s k
@@ -800,7 +798,7 @@ Proof.
   assert (ASSIGN: forall chunk m b ofs t v m', assign_loc ge chunk m b ofs v t m' -> (length t <= 1)%nat).
     intros. inv H0; simpl; try omega. inv H3; simpl; try omega.
   inv H; simpl; try omega. inv H0; eauto; simpl; try omega.
-  eapply external_call_trace_length; eauto.
+  eapply (external_call_trace_length ef); eauto.
   inv H; simpl; try omega. eapply external_call_trace_length; eauto.
 Qed.
 

@@ -27,9 +27,7 @@ Require Import Smallstep.
 Require Import Op.
 Require Import Locations.
 Require Import Conventions.
-
-Section WITHMEM.
-Context `{Hcc: CompilerConfiguration}.
+Require Import BuiltinFunctions.
 
 (** * Abstract syntax *)
 
@@ -37,17 +35,20 @@ Context `{Hcc: CompilerConfiguration}.
 
 Definition node := positive.
 
-Inductive instruction `{ef_ops: ExtFunOps external_function}: Type :=
+Inductive instruction: Type :=
   | Lnop: node -> instruction
   | Lop: operation -> list loc -> loc -> node -> instruction
   | Lload: memory_chunk -> addressing -> list loc -> loc -> node -> instruction
   | Lstore: memory_chunk -> addressing -> list loc -> loc -> node -> instruction
   | Lcall: signature -> loc + ident -> list loc -> loc -> node -> instruction
   | Ltailcall: signature -> loc + ident -> list loc -> instruction
-  | Lbuiltin: external_function -> list loc -> loc -> node -> instruction
+  | Lbuiltin: builtin_function -> list loc -> loc -> node -> instruction
   | Lcond: condition -> list loc -> node -> node -> instruction
   | Ljumptable: loc -> list node -> instruction
   | Lreturn: option loc -> instruction.
+
+Section WITHMEM.
+Context `{Hcc: CompilerConfiguration}.
 
 Definition code: Type := PTree.t instruction.
 

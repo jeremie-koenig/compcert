@@ -72,7 +72,7 @@ let print_instruction pp (pc, i) =
         ros fn regs args
   | Ibuiltin(ef, args, res, s) ->
       fprintf pp "%a = builtin %s(%a)@ "
-        reg res (name_of_external ef) regs args;
+        reg res (name_of_builtin ef) regs args;
       print_succ pp s (Int32.pred pc)
   | Icond(cond, args, s1, s2) ->
       fprintf pp "if (%a) goto %ld else goto %ld@ "

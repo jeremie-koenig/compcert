@@ -21,6 +21,7 @@ open Camlcoq
 open AST
 open Integers
 open Cminor
+open BuiltinFunctions
 
 exception Error of string
 
@@ -276,7 +277,7 @@ let rec type_stmt env blk ret s =
         raise (Error (sprintf "In call:\n%s" s))
       end
   | Sbuiltin(optid, ef, el) ->
-      let sg = ef_sig ExtFunImpl.ef_ops ef in
+      let sg = bf_sig ef in
       let tel = type_exprlist env [] el in
       begin try
         unify_list (ty_of_sig_args sg.sig_args) tel;

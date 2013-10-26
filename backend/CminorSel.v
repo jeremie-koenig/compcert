@@ -24,6 +24,7 @@ Require Import Op.
 Require Import Globalenvs.
 Require Import Switch.
 Require Import Smallstep.
+Require Import BuiltinFunctions.
 
 (** * Abstract syntax *)
 
@@ -55,13 +56,13 @@ Infix ":::" := Econs (at level 60, right associativity) : cminorsel_scope.
   arguments), and the [Sstore] construct uses a machine-dependent
   addressing mode. *)
 
-Inductive stmt `{ef_ops: ExtFunOps} : Type :=
+Inductive stmt : Type :=
   | Sskip: stmt
   | Sassign : ident -> expr -> stmt
   | Sstore : memory_chunk -> addressing -> exprlist -> expr -> stmt
   | Scall : option ident -> signature -> expr + ident -> exprlist -> stmt
   | Stailcall: signature -> expr + ident -> exprlist -> stmt
-  | Sbuiltin : option ident -> external_function -> exprlist -> stmt
+  | Sbuiltin : option ident -> builtin_function -> exprlist -> stmt
   | Sseq: stmt -> stmt -> stmt
   | Sifthenelse: condition -> exprlist -> stmt -> stmt -> stmt
   | Sloop: stmt -> stmt

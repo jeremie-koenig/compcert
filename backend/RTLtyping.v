@@ -351,7 +351,7 @@ Proof.
   apply check_regs_correct; auto.
   apply check_reg_correct; auto.
   auto.
-  destruct (ef_reloads e); auto. 
+  destruct (ef_reloads b); auto. 
   apply check_successor_correct; auto.
   (* cond *)
   constructor. apply check_regs_correct; auto.

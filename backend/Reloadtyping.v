@@ -27,7 +27,7 @@ Require Import Reload.
 Require Import Reloadproof.
 
 Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** * Typing Linear constructors *)
 
@@ -291,7 +291,8 @@ Proof.
     rewrite loc_arguments_type; auto.
   destruct ros. destruct H2 as [A [B C]]. auto 10 with reloadty. 
   auto 10 with reloadty.
-  destruct (ef_reloads ef) eqn:?.
+  destruct (BuiltinFunctions.bf_reloads ef) eqn:?.
+  simpl ef_reloads in *.
   assert (arity_ok (sig_args (ef_sig ef)) = true) by intuition congruence.
   assert (map mreg_type (regs_for args) = map Loc.type args).
     apply wt_regs_for. apply arity_ok_enough. congruence.

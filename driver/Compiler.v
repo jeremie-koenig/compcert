@@ -87,7 +87,7 @@ Require Stackingproof.
 Require Asmgenproof.
 
 Require Import ExtFunImpl ExtCallImpl.
-Local Existing Instances ef_ops ef_spec ec_ops ec_spec.
+Local Existing Instances ef_ops sc_ops ef_spec ec_ops cc_ops ec_spec.
 
 (** Pretty-printers (defined in Caml). *)
 Parameter print_Clight: Clight.program -> unit.

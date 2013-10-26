@@ -31,9 +31,7 @@ Require Import Parallelmove.
 Require Import Reload.
 
 Section WITHMEM.
-Require Import ExtFunImpl ExtCallImpl.
-Existing Instances ef_ops ef_spec ec_ops ec_spec.
-Context `{Hmem: Mem.MemoryModel}.
+Context `{Hcc: CompilerConfiguration}.
 
 (** * Exploitation of the typing hypothesis *)
 
@@ -839,7 +837,7 @@ Proof.
     FL. FL. 
   destruct s0; FL; FL; FL.
   destruct s0; FL; FL; FL.
-  destruct (ef_reloads e). FL. FL. FL.
+  destruct (BuiltinFunctions.bf_reloads b). FL. FL. FL.
   destruct o; FL.
 Qed.
 
@@ -1296,11 +1294,11 @@ Proof.
 
   (* Lbuiltin *)
   ExploitWT; inv WTI.
-  case_eq (ef_reloads ef); intro RELOADS.
+  case_eq (BuiltinFunctions.bf_reloads ef); intro RELOADS.
   exploit add_reloads_correct; simpl in *.
     instantiate (1 := args). apply arity_ok_enough. rewrite H3. destruct H5. auto. congruence. auto.
   intros [ls2 [A [B C]]].
-  exploit external_call_mem_extends; eauto. 
+  exploit (external_call_mem_extends ef); eauto. 
   apply agree_locs; eauto. 
   intros [v' [tm' [P [Q [R S]]]]].
   exploit add_spill_correct.
@@ -1317,7 +1315,7 @@ Proof.
   intros. rewrite F; auto. rewrite Locmap.gso. rewrite undef_temps_others; auto. 
   apply reg_for_diff; auto. simpl in *; tauto.
   (* no reload *)
-  exploit external_call_mem_extends; eauto. 
+  exploit (external_call_mem_extends ef); eauto. 
   apply agree_locs; eauto. 
   intros [v' [tm' [P [Q [R S]]]]].
   assert (EQ: v = Vundef).

@@ -25,7 +25,7 @@ Require Import RTL.
 Require Import Inlining.
 
 Section WITHEF1.
-Context `{Hef: ExternalFunctions}.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** ** Soundness of function environments. *)
 
@@ -134,7 +134,7 @@ End WITHEF1.
 
 (** ** Working with the state monad *)
 
-Remark bind_inversion `{ef_ops: ExtFunOps}:
+Remark bind_inversion:
   forall (A B: Type) (f: mon A) (g: A -> mon B) 
          (y: B) (s1 s3: state) (i: sincr s1 s3),
   bind f g s1 = R y s3 i ->
@@ -186,9 +186,6 @@ Ltac monadInv H :=
   end.
 
 (** ** Relational specification of the translation of moves *)
-
-Section WITHEF2.
-Context `{Hef: ExternalFunctions}.
 
 Inductive tr_moves (c: code) : node -> list reg -> list reg -> node -> Prop :=
   | tr_moves_cons: forall pc1 src srcs dst dsts pc2 pc3,
@@ -698,5 +695,3 @@ Opaque initstate.
 Qed.
 
 End INLINING_SPEC.
-
-End WITHEF2.

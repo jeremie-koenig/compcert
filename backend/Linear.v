@@ -29,15 +29,13 @@ Require Import Op.
 Require Import Locations.
 Require Import LTL.
 Require Import Conventions.
-
-Section WITHMEM.
-Context `{Hcc: CompilerConfiguration}.
+Require Import BuiltinFunctions.
 
 (** * Abstract syntax *)
 
 Definition label := positive.
 
-Inductive instruction `{ef_ops: ExtFunOps external_function}: Type :=
+Inductive instruction: Type :=
   | Lgetstack: slot -> mreg -> instruction
   | Lsetstack: mreg -> slot -> instruction
   | Lop: operation -> list mreg -> mreg -> instruction
@@ -45,13 +43,16 @@ Inductive instruction `{ef_ops: ExtFunOps external_function}: Type :=
   | Lstore: memory_chunk -> addressing -> list mreg -> mreg -> instruction
   | Lcall: signature -> mreg + ident -> instruction
   | Ltailcall: signature -> mreg + ident -> instruction
-  | Lbuiltin: external_function -> list mreg -> mreg -> instruction
-  | Lannot: external_function -> list loc -> instruction
+  | Lbuiltin: builtin_function -> list mreg -> mreg -> instruction
+  | Lannot: builtin_function -> list loc -> instruction
   | Llabel: label -> instruction
   | Lgoto: label -> instruction
   | Lcond: condition -> list mreg -> label -> instruction
   | Ljumptable: mreg -> list label -> instruction
   | Lreturn: instruction.
+
+Section WITHMEM.
+Context `{Hcc: CompilerConfiguration}.
 
 Definition code: Type := list instruction.
 

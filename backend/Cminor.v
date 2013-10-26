@@ -26,9 +26,7 @@ Require Import Memory.
 Require Import Globalenvs.
 Require Import Smallstep.
 Require Import Switch.
-
-Section WITHMEM.
-Context `{Hcc: CompilerConfiguration}.
+Require Import BuiltinFunctions.
 
 (** * Abstract syntax *)
 
@@ -98,13 +96,13 @@ Inductive expr : Type :=
 
 Definition label := ident.
 
-Inductive stmt `{ef_ops: ExtFunOps external_function} : Type :=
+Inductive stmt : Type :=
   | Sskip: stmt
   | Sassign : ident -> expr -> stmt
   | Sstore : memory_chunk -> expr -> expr -> stmt
   | Scall : option ident -> signature -> expr -> list expr -> stmt
   | Stailcall: signature -> expr -> list expr -> stmt
-  | Sbuiltin : option ident -> external_function -> list expr -> stmt
+  | Sbuiltin : option ident -> builtin_function -> list expr -> stmt
   | Sseq: stmt -> stmt -> stmt
   | Sifthenelse: expr -> stmt -> stmt -> stmt
   | Sloop: stmt -> stmt
@@ -114,6 +112,9 @@ Inductive stmt `{ef_ops: ExtFunOps external_function} : Type :=
   | Sreturn: option expr -> stmt
   | Slabel: label -> stmt -> stmt
   | Sgoto: label -> stmt.
+
+Section WITHMEM.
+Context `{Hcc: CompilerConfiguration}.
 
 (** Functions are composed of a signature, a list of parameter names,
   a list of local variables, and a  statement representing
@@ -505,12 +506,13 @@ Proof.
   assert (t1 = E0 -> exists s2, step (Genv.globalenv p) s t2 s2).
     intros. subst. inv H0. exists s1; auto.
   inversion H; subst; auto.
-  exploit external_call_receptive; eauto. intros [vres2 [m2 EC2]]. 
+  exploit (external_call_receptive ef); eauto. intros [vres2 [m2 EC2]]. 
   exists (State f Sskip k sp (set_optvar optid vres2 e) m2). econstructor; eauto. 
   exploit external_call_receptive; eauto. intros [vres2 [m2 EC2]]. 
   exists (Returnstate vres2 k m2). econstructor; eauto.
 (* trace length *)
-  red; intros; inv H; simpl; try omega; eapply external_call_trace_length; eauto.
+  red; intros; inv H; simpl; try omega;
+    eapply (external_call_trace_length ef); eauto.
 Qed.
 
 (** * Alternate operational semantics (big-step) *)

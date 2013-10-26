@@ -22,9 +22,7 @@ Require Import Values.
 Require Import AST.
 Require Import Ctypes.
 Require Import Cop.
-
-Section WITHEF.
-Context `{Hef: ExternalFunctions}.
+Require Import BuiltinFunctions.
 
 (** ** Expressions *)
 
@@ -34,7 +32,7 @@ Context `{Hef: ExternalFunctions}.
   the [&&] and [||] operators.  All expressions are annotated with
   their types. *)
 
-Inductive expr `{ef_ops: ExtFunOps external_function} : Type :=
+Inductive expr : Type :=
   | Eval (v: val) (ty: type)                                  (**r constant *)
   | Evar (x: ident) (ty: type)                                (**r variable *)
   | Efield (l: expr) (f: ident) (ty: type)
@@ -60,13 +58,13 @@ Inductive expr `{ef_ops: ExtFunOps external_function} : Type :=
   | Ecomma (r1 r2: expr) (ty: type)       (**r sequence expression [r1, r2] *)
   | Ecall (r1: expr) (rargs: exprlist) (ty: type)
                                              (**r function call [r1(rargs)] *)
-  | Ebuiltin (ef: external_function) (tyargs: typelist) (rargs: exprlist) (ty: type)
+  | Ebuiltin (ef: builtin_function) (tyargs: typelist) (rargs: exprlist) (ty: type)
                                                  (**r builtin function call *)
   | Eloc (b: block) (ofs: int) (ty: type)
                        (**r memory location, result of evaluating a l-value *)
   | Eparen (r: expr) (ty: type)                   (**r marked subexpression *)
 
-with exprlist `{ef_ops: ExtFunOps external_function} : Type :=
+with exprlist : Type :=
   | Enil
   | Econs (r1: expr) (rl: exprlist).
 
@@ -191,9 +189,12 @@ Definition var_names (vars: list(ident * type)) : list ident :=
 (** Functions can either be defined ([Internal]) or declared as
   external functions ([External]). *)
 
-Inductive fundef : Type :=
+Inductive fundef `{sc_ops: SyntaxConfigOps} : Type :=
   | Internal: function -> fundef
   | External: external_function -> typelist -> type -> fundef.
+
+Section WITHEF.
+Context `{Hsc: SyntaxConfiguration}.
 
 (** The type of a function definition. *)
 

@@ -26,6 +26,7 @@ open Globalenvs
 open Ctypes
 open Cop
 open Csyntax
+open BuiltinFunctions
 
 let name_unop = function
   | Onotbool -> "!"
@@ -467,7 +468,7 @@ and collect_fields = function
   | Fcons(id, hd, tl) -> collect_type hd; collect_fields tl
 
 let rec collect_expr e =
-  collect_type (typeof ef_ops e);
+  collect_type (typeof e);
   match e with
   | Eloc _ -> assert false
   | Evar _ -> ()

@@ -71,7 +71,7 @@ Fixpoint reg_list_dead
   (since it computes a useless result), thus its arguments need not
   be live ``before''. *)
 
-Definition transfer `{ef_ops: ExtFunOps}
+Definition transfer
             (f: RTL.function) (pc: node) (after: Regset.t) : Regset.t :=
   match f.(fn_code)!pc with
   | None =>
@@ -114,10 +114,6 @@ Definition transfer `{ef_ops: ExtFunOps}
 
 Module RegsetLat := LFSet(Regset).
 Module DS := Backward_Dataflow_Solver(RegsetLat)(NodeSetBackward).
-
-Section WITHEF.
-Require Import ExtFunImpl.
-Existing Instances ef_ops ef_spec.
 
 Definition analyze (f: RTL.function): option (PMap.t Regset.t) :=
   DS.fixpoint (successors f)  (transfer f) nil.
@@ -210,6 +206,9 @@ Definition transf_function (f: RTL.function) : res LTL.function :=
         end
     end
   end.
+
+Section WITHEF.
+Context `{Hsc: SyntaxConfiguration}.
 
 Definition transf_fundef (fd: RTL.fundef) : res LTL.fundef :=
   AST.transf_partial_fundef transf_function fd.

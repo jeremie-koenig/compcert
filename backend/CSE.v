@@ -414,9 +414,6 @@ End Numbering.
 
 Module Solver := BBlock_solver(Numbering).
 
-Section WITHEF.
-Context `{Hef: ExternalFunctions}.
-
 (** The transfer function for the dataflow analysis returns the numbering
   ``after'' execution of the instruction at [pc], as a function of the
   numbering ``before''.  For [Iop] and [Iload] instructions, we add
@@ -431,7 +428,7 @@ Context `{Hef: ExternalFunctions}.
   Finally, the remaining instructions modify neither registers nor
   the memory, so we keep the numbering unchanged. *)
 
-Definition transfer `{ExtFunOps} (f: function) (pc: node) (before: numbering) :=
+Definition transfer (f: function) (pc: node) (before: numbering) :=
   match f.(fn_code)!pc with
   | None => before
   | Some i =>
@@ -464,7 +461,7 @@ Definition transfer `{ExtFunOps} (f: function) (pc: node) (before: numbering) :=
   which produces sub-optimal solutions quickly.  The result is
   a mapping from program points to numberings. *)
 
-Definition analyze `{ExtFunOps} (f: RTL.function): option (PMap.t numbering) :=
+Definition analyze (f: RTL.function): option (PMap.t numbering) :=
   Solver.fixpoint (successors f) (transfer f) f.(fn_entrypoint).
 
 (** * Code transformation *)
@@ -529,6 +526,9 @@ Definition transf_function (f: function) : res function :=
                f.(fn_entrypoint))
       end
   end.
+
+Section WITHEF.
+Context `{Hsc: SyntaxConfiguration}.
 
 Definition transf_fundef (f: fundef) : res fundef :=
   AST.transf_partial_fundef transf_function f.

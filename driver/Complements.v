@@ -36,7 +36,7 @@ Section WITHMEM.
 Context `{Hmem: Mem.MemoryModel}.
 
 Require Import ExtFunImpl ExtCallImpl.
-Local Existing Instances ef_ops ef_spec ec_ops ec_spec.
+Local Existing Instances ef_ops sc_ops ef_spec ec_ops cc_ops ec_spec.
 
 (** * Preservation of whole-program behaviors *)
 

@@ -17,7 +17,6 @@ open RTLtyping
 open InterfGraph
 
 val graph_coloring:
-  ExtFunImpl.external_function coq_function ->
-  graph -> regenv -> Regset.t -> (reg -> loc)
+  coq_function -> graph -> regenv -> Regset.t -> (reg -> loc)
 
 val reserved_registers: Machregs.mreg list ref

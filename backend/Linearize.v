@@ -90,13 +90,13 @@ Open Scope error_monad_scope.
 
 Module DS := Dataflow_Solver(LBoolean)(NodeSetForward).
 
-Definition reachable_aux `{ExtFunOps} (f: LTL.function) : option (PMap.t bool) :=
+Definition reachable_aux (f: LTL.function) : option (PMap.t bool) :=
   DS.fixpoint
     (successors f)
     (fun pc r => r)
     ((f.(fn_entrypoint), true) :: nil).
 
-Definition reachable `{ExtFunOps} (f: LTL.function) : PMap.t bool :=
+Definition reachable (f: LTL.function) : PMap.t bool :=
   match reachable_aux f with  
   | None => PMap.init true
   | Some rs => rs
@@ -105,14 +105,11 @@ Definition reachable `{ExtFunOps} (f: LTL.function) : PMap.t bool :=
 (** We then enumerate the nodes of reachable instructions.
   This task is performed by external, untrusted Caml code. *)
 
-Parameter enumerate_aux: forall `{ExtFunOps}, LTL.function -> PMap.t bool -> list node.
+Parameter enumerate_aux: LTL.function -> PMap.t bool -> list node.
 
 (** Now comes the a posteriori validation of a node enumeration. *)
 
 Module Nodeset := FSetAVL.Make(OrderedPositive).
-
-Section WITHEF.
-Context `{Hef: ExternalFunctions}.
 
 (** Build a [Nodeset.t] from a list of nodes, checking that the list
   contains no duplicates. *)
@@ -221,6 +218,9 @@ Definition transf_function (f: LTL.function) : res LTLin.function :=
        (LTL.fn_params f)
        (LTL.fn_stacksize f)
        (add_branch (LTL.fn_entrypoint f) (linearize_body f enum))).
+
+Section WITHEF.
+Context `{Hsc: SyntaxConfiguration}.
 
 Definition transf_fundef (f: LTL.fundef) : res LTLin.fundef :=
   AST.transf_partial_fundef transf_function f.

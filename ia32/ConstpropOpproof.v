@@ -29,7 +29,7 @@ Require Import Constprop.
 
 Section ANALYSIS.
 
-Context `{Hec: ExtCallOps}.
+Context `{Hcc: CompilerConfiguration}.
 Variable ge: genv.
 Variable sp: val.
 

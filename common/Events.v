@@ -786,8 +786,17 @@ Qed.
 End WITHEC.
 
 (** The whole compiler is parametrized by an [ExternalCalls] instance *)
-Class CompilerConfiguration
-  `{ec_ops: ExtCallOps} :=
+
+Class CompilerConfigOps mem external_function
+  `{sc_ops: SyntaxConfigOps external_function}
+  `{mm_ops: Mem.ModelOps mem}
+  `{ec_ops: !ExtCallOps mem external_function} :=
 {
+}.
+
+Class CompilerConfiguration mem external_function
+  `{cc_ops: CompilerConfigOps mem external_function} :=
+{
+  cc_syntax :> SyntaxConfiguration external_function;
   cc_ext_calls :> ExternalCalls mem external_function
 }.
