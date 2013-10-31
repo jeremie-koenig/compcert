@@ -119,6 +119,7 @@ LIBLAYERS=\
   Lift.v \
   LiftMem.v \
   LiftExtCall.v \
+  LiftGlobalenvs.v \
   AbstractData.v \
   AbstractPrimitives.v \
   Layer.v \
