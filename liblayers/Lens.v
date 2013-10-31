@@ -251,6 +251,36 @@ Section PROD.
   Proof.
     split; split; intuition.
   Qed.
+
+  (** Here are some product-specific theorems. *)
+
+  Lemma fst_same_context_eq_snd {A B} (x y: A * B):
+    same_context (@fst A B) x y <-> snd x = snd y.
+  Proof.
+    destruct x as [a1 b1].
+    destruct y as [a2 b2].
+    split; intro H.
+    * specialize (H a1).
+      inversion H.
+      reflexivity.
+    * intro a.
+      simpl in *.
+      congruence.
+  Qed.
+
+  Lemma snd_same_context_eq_fst {A B} (x y: A * B):
+    same_context (@snd A B) x y <-> fst x = fst y.
+  Proof.
+    destruct x as [a1 b1].
+    destruct y as [a2 b2].
+    split; intro H.
+    * specialize (H b1).
+      inversion H.
+      reflexivity.
+    * intro b.
+      simpl in *.
+      congruence.
+  Qed.
 End PROD.
 
 (** ** Composing lens *)
