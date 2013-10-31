@@ -103,7 +103,7 @@ Ltac lift_peel Hf leaftac :=
   operations using the original version. *)
 
 
-(** ** Simplifying occurences of [lift] *)
+(** ** Expressing everything in terms of [lift] *)
 
 (** As a first step, in order to be able to apply general theorems
   about it, we will want to make sure the goal and premises are all
@@ -121,14 +121,23 @@ Arguments lift _ _ _ _ : simpl never.
   Then we can rewrite them in terms of [lift] as well. Such proofs are
   collected into the "lift" rewrite database. *)
 
-Ltac lift_simpl :=
-  simpl in *; (* will stop at [lift] *)
-  autorewrite with lift in *.
+Ltac lift_norm :=
+  repeat progress (simpl in *; autorewrite with lift in *).
+
+(** Unfortunately there is no [Create HintDb] command for rewrite
+  databases, so we have to create it by adding a fake entry. *)
+Hint Rewrite injective_projections using fail : lift.
+
+
+(** ** Simplifying occurences of [lift] *)
 
 (** Once everything is stated in terms of lift, futher rewriting rules
-  from this database can be applied. In particular, the theorems below
-  try to ensure that the goal and hypotheses are stated in terms of
-  [get] and [same_context] rather than in terms of [lift]. *)
+  from the [lift_simpl] database can be applied. In particular, the
+  theorems below try to ensure that the goal and hypotheses are stated
+  in terms of [get] and [same_context] rather than in terms of [lift]. *)
+
+Ltac lift_simpl :=
+  repeat progress (lift_norm; autorewrite with lift_simpl in *; lens_norm).
 
 Section LIFTOPTION.
   Context {S V} `{HSV: Lens S V}.
@@ -298,7 +307,7 @@ Hint Rewrite
   @lift_option_eq_iff
   @lift_prod_eq_iff
   @lift_relation_iff
-  using typeclasses eauto : lift.
+  using typeclasses eauto : lift_simpl.
 
 
 (** ** Solving the residual goals *)
@@ -329,8 +338,7 @@ Hint Extern 0 (same_context _ _ _) =>
 (** As a last resort, we unfold [lift] and try to normalize the
   result. Hopefully we'll get something easily solvable. *)
 Ltac lift_unfold :=
-  unfold lift in *; simpl in *;
-  autorewrite with lens in *.
+  repeat progress (lift_simpl; unfold lift in *).
 
 (** We're now ready to define our leaf tactic, and use it in
   conjunction with [peel] to solve the goals automatically. *)

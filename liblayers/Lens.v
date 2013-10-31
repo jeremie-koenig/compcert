@@ -229,6 +229,15 @@ Hint Rewrite
   using typeclasses eauto : lens.
 
 
+(** * Tactics *)
+
+Ltac lens_norm :=
+  autorewrite with lens in *.
+
+Ltac lens_simpl :=
+  autorewrite with lens lens_simpl in *.
+
+
 (** * Instances *)
 
 (** ** Product *)
@@ -282,6 +291,11 @@ Section PROD.
       congruence.
   Qed.
 End PROD.
+
+Hint Rewrite
+  @fst_same_context_eq_snd
+  @snd_same_context_eq_fst
+  : lift_simpl.
 
 (** ** Composing lens *)
 
