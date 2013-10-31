@@ -159,17 +159,12 @@ Section LIFTDERIVED.
   Theorem lift_free_list l wm:
     Mem.free_list wm l =
     lift (fun m => Mem.free_list m l) wm.
-  Proof.
+  Proof with lift_auto.
     revert wm.
-    induction l as [ | [[b lo] hi] l IHl];
-    intros; lift_simpl; lift_unfold.
-    * reflexivity.
-    * destruct (Mem.free (get π wm) b lo hi); [| reflexivity].
-      rewrite IHl.
-      rewrite lens_get_set.
-      destruct (Mem.free_list b0 l); [| reflexivity].
-      rewrite lens_set_set.
-      reflexivity.
+    induction l as [ | [[b lo] hi] l IHl]; intros...
+    destruct (Mem.free (get π wm) b lo hi)...
+    rewrite IHl...
+    destruct (Mem.free_list b0 l)...
   Qed.
 
   Theorem lift_valid_block (wm: mem) (b: block):
