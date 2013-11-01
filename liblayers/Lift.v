@@ -137,7 +137,7 @@ Hint Rewrite injective_projections using fail : lift.
   in terms of [get] and [same_context] rather than in terms of [lift]. *)
 
 Ltac lift_simpl :=
-  repeat progress (lift_norm; autorewrite with lift_simpl in *; lens_norm).
+  repeat progress (lift_norm; autorewrite with lift_simpl in *; lens_simpl).
 
 Section LIFTOPTION.
   Context {S V} `{HSV: Lens S V}.

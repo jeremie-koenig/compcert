@@ -295,7 +295,7 @@ End PROD.
 Hint Rewrite
   @fst_same_context_eq_snd
   @snd_same_context_eq_fst
-  : lift_simpl.
+  : lens_simpl.
 
 (** ** Composing lens *)
 
