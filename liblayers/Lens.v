@@ -19,7 +19,7 @@ Class LensOps {S V: Type} (π: S -> V) := {
 }.
 
 Arguments get {S V} π {_} _.
-Arguments set {S V} π {_} _ _.
+Arguments set {S V} π {_} _ _ : simpl never.
 
 Class LensSetGet {S V} π
   `{lens_ops: LensOps S V π} :=
@@ -232,10 +232,13 @@ Hint Rewrite
 (** * Tactics *)
 
 Ltac lens_norm :=
-  autorewrite with lens in *.
+  repeat progress (simpl in *; autorewrite with lens in *).
 
 Ltac lens_simpl :=
-  autorewrite with lens lens_simpl in *.
+  repeat progress (lens_norm; autorewrite with lens_simpl in *).
+
+Ltac lens_unfold :=
+  repeat progress (lens_simpl; unfold get, set in *).
 
 
 (** * Instances *)
@@ -264,7 +267,7 @@ Section PROD.
   (** Here are some product-specific theorems. *)
 
   Lemma fst_same_context_eq_snd {A B} (x y: A * B):
-    same_context (@fst A B) x y <-> snd x = snd y.
+    same_context (@fst A B) x y <-> get (@snd A B) x = get (@snd A B) y.
   Proof.
     destruct x as [a1 b1].
     destruct y as [a2 b2].
@@ -273,12 +276,12 @@ Section PROD.
       inversion H.
       reflexivity.
     * intro a.
-      simpl in *.
+      compute in *.
       congruence.
   Qed.
 
   Lemma snd_same_context_eq_fst {A B} (x y: A * B):
-    same_context (@snd A B) x y <-> fst x = fst y.
+    same_context (@snd A B) x y <-> get (@fst A B) x = get (@fst A B) y.
   Proof.
     destruct x as [a1 b1].
     destruct y as [a2 b2].
@@ -287,7 +290,7 @@ Section PROD.
       inversion H.
       reflexivity.
     * intro b.
-      simpl in *.
+      compute in *.
       congruence.
   Qed.
 End PROD.
@@ -307,17 +310,23 @@ Section COMPOSE.
     set c a := modify π (set ρ c) a
   }.
 
-  (** XXX: should we add this to the rewrite base? *)
-  Lemma compose_get_get_get a:
+  Lemma lens_compose_get_simpl a:
     get (compose ρ π) a = get ρ (get π a).
   Proof.
     reflexivity.
   Qed.
 
-  Instance compose_get_set: LensGetSet (compose ρ π).
+  Lemma lens_compose_set_simpl c a:
+    set (compose ρ π) c a = modify π (set ρ c) a.
+  Proof.
+    reflexivity.
+  Qed.
+
+  Instance lens_compose_get_set: LensGetSet (compose ρ π).
   Proof.
     constructor; simpl; intros.
-    rewrite compose_get_get_get.
+    rewrite lens_compose_get_simpl.
+    rewrite lens_compose_set_simpl.
     autorewrite with lens.
     reflexivity.
   Qed.
@@ -325,7 +334,8 @@ Section COMPOSE.
   Instance lens_compose_set_get: LensSetGet (compose ρ π).
   Proof.
     constructor; simpl; intros.
-    rewrite compose_get_get_get.
+    rewrite lens_compose_get_simpl.
+    rewrite lens_compose_set_simpl.
     autorewrite with lens.
     reflexivity.
   Qed.
@@ -333,9 +343,15 @@ Section COMPOSE.
   Instance lens_compose_set_set: LensSetSet (compose ρ π).
   Proof.
     constructor; simpl; intros.
+    rewrite !lens_compose_set_simpl.
     autorewrite with lens.
     reflexivity.
   Qed.
 
   Instance lens_compose: Lens (compose ρ π) := {}.
 End COMPOSE.
+
+Hint Rewrite
+    @lens_compose_get_simpl
+    @lens_compose_set_simpl
+  using typeclasses eauto : lens_simpl.
