@@ -8,12 +8,27 @@ Require Import LiftExtCall.
 
 (** * The [Layer] interface *)
 
+(** This is the base configuration which a layer can complement to
+  obtain a [CompilerConfiguration]. *)
+
+Class BaseConfigOps mem external_function
+  `{cc_ops: CompilerConfigOps mem external_function} := {}.
+
+Class BaseConfiguration mem external_function
+  `{bc_ops: BaseConfigOps mem external_function} :=
+{
+  base_config_compiler_config: CompilerConfiguration mem external_function
+}.
+
+(** A layer combines a base configuration with a type of abstract
+  data and a set of abstract primitives. *)
+
 Class Layer mem external_function data prim
-  `{ec_ops: CompilerConfigOps mem external_function}
+  `{ec_ops: BaseConfigOps mem external_function}
   `{data_ops: !AbstractDataOps data}
   `{prim_ops: !AbstractPrimOps mem data prim} :=
 {
-  layer_base_config :> CompilerConfiguration mem external_function;
+  layer_base_config :> BaseConfiguration mem external_function;
   layer_abstract_prim :> AbstractPrimitives mem data prim
 }.
 
@@ -66,6 +81,7 @@ End EFPLUS.
 
 Section LAYER.
   Context `{Hl: Layer}.
+  Local Existing Instance base_config_compiler_config.
 
   Instance: ExtCallOps (mem × data) external_function :=
     liftmem_ec_ops.
